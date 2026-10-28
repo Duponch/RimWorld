@@ -1,4 +1,15 @@
-# Validation courante — V474 publiée
+# Validation courante — intégration V492, schéma 297
+
+## Accord d’intégration Source12 — portée et dette
+
+L’accord humain du 28 octobre accepte provisoirement **9,98–11,28 % de débit en moins à ×6** et autorise l’intégration locale puis le commit. L’absence de recul n’est donc pas qualifiée et la dette reste ouverte. ×1/×3 tiennent leurs cibles mesurées, sans coût nul démontré ; ×4 n’est pas mesuré. [Résultats complets](movement-parity-v492-status.md).
+
+**Contrôles après intégration locale acquis :** typage16,204 s ;49fichiers durables,360casPASS/3échecsDraftinghistoriques/1ignoré en195,731 s ; deux voisins18casPASS20,225 s ; compilationPages5,377 s. Les378cas ciblés réussis ne sont pas un PASS global. Les trois rouges ont été comparés aux reproductions V486/V491 sans modifier leurs assertions ; les raisons sont identiques. [Correspondance](../../tmp/movement-parity-v492/drafting-known-red-identity-console-v1/identity.md). Aucun nouveau benchmark ni qualification de visibilité n'est ajouté.
+Les preuves sur Source12 privée comprennent les23 contrats de capture,15 contrats de présentation et13 voisins de pause, le typage réel post-stage19,696 s et37 modules HTTP capturés puis relus exactement. Les91 contrats acquis précédemment par reprises restent décrits dans le checkpoint ; on ne les additionne pas automatiquement à ces groupes. Le plan d’intégration propose54 payloads de tests, quatre supports et une configuration, soit59 artefacts et non59 cas. Les dérivations canoniques conservent corps/assertions ; leur découverte et leurs contrôles après copie sont décrits ci-dessus. Aucun nouveau PASS durable n’est déduit de leur seule préparation.
+
+Le parcours réel Source12 de huit ordres au premier plan passe en76,602 s avec sauvegarde/recharge entière exacte et350 ms sans retour à un ancien ordre. La première pause cohérente est60,8 ms depuis le relâchement observé ; les bleus isolés sont65,6 / 151,7 / 181,0 / 121,9 ms depuis le listener. Ce sont des soumissions CPU, sans instantanéité générale ni mesure GPU. La visibilité reste `NOT_QUALIFIED_VISIBILITY_NOT_ACQUIRED` : zéro événement dans les essais conservés, cause inconnue, pas un échec expliqué par headless.
+
+Le W/C12/W utilise trois fenêtres8s à×1/×3/×6 et des finales propres rechargées ; le déficit×6 et les pointes restent dans les résultats. La campagne réelle94de/T3328 n’est pas une QA. Les anciens rouges, essais rejetés et refus de contrôle restent conservés. Les contrôles produit après intégration sont consignés ci-dessus ; le commit local reste distinct de toute publication Cloudflare. Les entrées suivantes sont historiques.
 
 **V483 qualifiée localement — schéma 296, non publiée :** [Porte sur mur fini](../gameplay/door-over-wall-v483.md). Retrait réel, phase ouverte et porte payée, intentions séparées et propriétaires conservés. 303cas distincts par reprises, natif68,954s/16exports/9captures, type15,573s/build5,052s, présentation160,082s/44changements≤41,3ms. Coût ciblé résiduel trois plans17,439/6,457ms checkpoint/delta ; aucun gain FPS global. Production295/b969 inchangée. Reprendre le réarbitrage vers une continuation réelle des Éclaircies ; six ensembles ouverts.
 

@@ -1,3 +1,4 @@
+import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import { automaticPermission } from './automatic-combat-state.ts';
 import { hostileTo,isColonist } from './affiliation.ts';
 import type { Pawn,World } from './types.ts';
@@ -9,8 +10,9 @@ export function validAutomaticAttack(v:unknown,version:number,tick:number):boole
   if(v===undefined)return true;if(version<60||!object(v))return false;
   return v.kind==='draft'?Object.keys(v).length===1:v.kind==='response'&&Object.keys(v).length===3&&int(v.remaining,0,2)&&int(v.until,tick+1,tick+200);
 }
-export function validAttackMemory(v:unknown,version:number,tick:number):boolean {
-  return v===undefined||version>=60&&object(v)&&Object.keys(v).length===(Object.hasOwn(v,'suspendedTicks')?3:2)&&int(v.targetId,1)&&int(v.atCore,0,tick*10)&&validSuspendedMemory271(v,version,tick,Math.floor(Number(v.atCore)/10));
+export function validAttackMemory(v:unknown,version:number,tick:number,coreNow297?:number):boolean {
+ const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return false;
+  return v===undefined||version>=60&&object(v)&&Object.keys(v).length===(Object.hasOwn(v,'suspendedTicks')?3:2)&&int(v.targetId,1)&&int(v.atCore,0,physicalCoreNow297)&&validSuspendedMemory271(v,version,tick,Math.floor(Number(v.atCore)/10));
 }
 export function automaticPost(p:Pawn):boolean {
   return !!p.draft&&!p.draft.queue.length&&(!p.draft.target||p.draft.target.x===p.x&&p.draft.target.z===p.z)&&!p.path.length;

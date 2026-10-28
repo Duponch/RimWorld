@@ -1,3 +1,4 @@
+import type {CoreActorScene297} from '../bridge/core-phase-projection-297';
 import {ActorPlayback435} from './ActorPlayback435';
 import {arrivalRotationYaw256} from '../sim/arrival-rotation-256';
 import {actorExplorationMaterial256} from './ExplorationMask256';
@@ -54,6 +55,7 @@ class SpeciesRig {
   private selected:ReadonlySet<number>=new Set();
   readonly blend=uniform(1).setGroup(renderGroup);private time=uniform(0).setGroup(renderGroup);
   private readonly keys=new WildlifeFrameState();private readonly bodyScale=new WildlifeBodyScale();private source:World|undefined;
+  private readonly phaseIndices297=new Map<number,number>();
   private readonly playback435=new ActorPlayback435<VisualAnimal>(animal=>animal.carrierId!==undefined||!!animal.corpsePile&&animal.corpsePile.owner.type!=='ground');
   playbackMetrics435(){return this.playback435.snapshot();}
   clearPlayback435():void{this.playback435.clear();}
@@ -206,14 +208,19 @@ class SpeciesRig {
     const fire=this.mesh.geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
     if(fire.getX(0)!==0){fire.setX(0,0);fire.needsUpdate=true;}
   }
+  adoptPhase297(world:World,animals:readonly NonNullable<World['wildlife']>['animals'][number][]):void {
+    const indices:number[]=[];
+    for(const animal of animals){const i=this.phaseIndices297.get(animal.id);if(i===undefined)continue;this.animals[i]=animal;this.keys.invalidate(animal.id);indices.push(i);}
+    this.source=world;this.playback435.adoptPhase297(world,this.animals,indices);
+  }
   updateClock(tick:number,pawns?:PawnLayer):void {
     this.time.value=pawns?.time.value??localTimeSeconds(tick)%(2*Math.PI);this.blend.value=pawns?.blend.value??1;
   }
-  update(world:World,group:VisualAnimal[],burning:ReadonlyMap<number,number>,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,pileSurface:ReadonlyMap<number,PileSurface>,reset=false,pawns?:PawnLayer,quotaTargets:ReadonlySet<number>=new Set(),pileIdentities?:ReadonlyMap<number,PileSurface>):void {
+  update(world:World,group:VisualAnimal[],burning:ReadonlyMap<number,number>,timeline:MotionTimeline|undefined,surfaces:ReadonlyMap<number,number>,pileSurface:ReadonlyMap<number,PileSurface>,reset=false,pawns?:PawnLayer,quotaTargets:ReadonlySet<number>=new Set(),pileIdentities?:ReadonlyMap<number,PileSurface>,actorScene?:CoreActorScene297):void {
     const changed=this.source!==world;
     if(changed||reset)this.revision++;
     if(reset){this.headings.clear();this.keys.clear();this.gait.clear();}
-    if(changed){this.source=world;this.keys.clear();this.animals=group;this.surfaces=surfaces;this.mesh.visible=group.length>0;
+    if(changed){this.source=world;this.keys.clear();this.animals=group;this.phaseIndices297.clear();for(let i=0;i<group.length;i++)this.phaseIndices297.set(group[i]!.id,i);this.surfaces=surfaces;this.mesh.visible=group.length>0;
       if(this.animals.length>this.mesh.geometry.getAttribute('aFrom').count)growPawnBuffers([this.mesh,this.flames,this.selection,this.slaughter],this.animals.length);
       this.setSelected(this.selected);
       const markers=this.slaughter.geometry as THREE.InstancedBufferGeometry,flags=markers.getAttribute('aSlaughter') as THREE.InstancedBufferAttribute;
@@ -306,12 +313,12 @@ class SpeciesRig {
       blood.setX(i,bodyBloodWord(a.health));
       absent.setX(i,a.health?corpseVisualMask({animalId:a.id,species:a.species,sex:a.sex,ageTicks:a.ageTicks,health:a.health}):0);
       const fallen=a.state==='dead'||a.state==='downed';
-      const traveling=!!edge&&(active||a.state==='moving'&&world.tick<edge.end);
+      const traveling=!!edge&&(active||a.state==='moving'&&(actorScene?actorScene.core/10:world.tick)<edge.end);
       const f=traveling?edge.from:a,t=traveling?edge.to:a;
       let yaw=edge?Math.atan2(edge.to.x-edge.from.x,edge.to.z-edge.from.z):arrivalRotationYaw256(a)??0;
       if(!traveling&&a.meal){const m=a.meal,target=m.kind==='plant'?world.resources.find(r=>r.id===m.id):world.piles.find(p=>p.id===m.id)?.owner;if(target&&'x' in target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
       if(!traveling&&(a.strike||a.threat||a.predation||a.manhunter?.targetId)){const targetId=a.strike?.targetId??a.threat?.targetId??a.predation?.targetId??a.manhunter?.door?.targetId??a.manhunter?.targetId;
-        const target=a.strike?.structure??world.pawns.find(p=>p.id===targetId)??world.wildlife?.animals.find(p=>p.id===targetId)??world.structures.find(s=>s.id===a.manhunter?.door?.targetId);
+        const target=a.strike?.structure??(actorScene&&targetId!==undefined?actorScene.byId[targetId]?.actor:undefined)??world.pawns.find(p=>p.id===targetId)??world.wildlife?.animals.find(p=>p.id===targetId)??world.structures.find(s=>s.id===a.manhunter?.door?.targetId);
         if(target&&(target.x!==a.x||target.z!==a.z))yaw=Math.atan2(target.x-a.x,target.z-a.z);}
       const previous=this.headings.get(a.id);
       let heading=turnToward(previous,yaw,traveling?edge.start:tick);
@@ -384,7 +391,7 @@ export class WildlifeLayer {
   forEachPose(visit:(id:number,species:string,x:number,y:number,z:number,height:number,radius:number)=>void):void {for(const rig of this.activeRigs)rig.forEachPose(visit);}
   cpuPoseForId(id:number){for(const rig of this.activeRigs){const pose=rig.cpuPoseForId(id);if(pose)return pose;}}
   presentedPose(id:number){return this.cpuPoseForId(id);}
-  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void {
+  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer,actorScene?:CoreActorScene297):void {
     if(this.source!==world){
       this.source=world;this.groups=wildlifePresentationGroups(world,pawns?pileId=>pawns.animalCorpseTransferCarrier(pileId):undefined);
       // Retain canonical species order for pointer iteration and submission.
@@ -400,7 +407,14 @@ export class WildlifeLayer {
     // These scalar writes preserve each resident graph's independent clocks,
     // including during compile preparation; only active rigs prepare actors.
     for(const rig of this.rigs)rig.updateClock(tick,pawns);
-    for(const rig of this.activeRigs)rig.update(world,this.groups.get(rig.species)!,this.burning,timeline,this.surfaces,this.pileSurface,reset,pawns,this.quotaTargets,this.pileIdentities);
+    for(const rig of this.activeRigs)rig.update(world,this.groups.get(rig.species)!,this.burning,timeline,this.surfaces,this.pileSurface,reset,pawns,this.quotaTargets,this.pileIdentities,actorScene);
+  }
+  adoptPhase297(world:World,indices:readonly number[],actorScene?:CoreActorScene297,changedActorIds?:ReadonlySet<number>):void {
+    const population=actorScene?.animals??world.wildlife?.animals??[],dirty=new Set(indices);
+    if(actorScene){const targets=changedActorIds??new Set(indices.map(i=>population[i]!.id));
+      population.forEach((a,i)=>{const target=a.strike?.targetId??a.threat?.targetId??a.predation?.targetId??a.manhunter?.door?.targetId??a.manhunter?.targetId;if(target!==undefined&&targets.has(target))dirty.add(i);});}
+    const animals=[...dirty].map(i=>{const a=population[i];if(!a)throw Error('Missing resident animal');return a;});
+    this.source=world;for(const rig of this.activeRigs)rig.adoptPhase297(world,animals);
   }
   actorPlaybackMetrics435(){return this.activeRigs.map(rig=>({species:rig.species,...rig.playbackMetrics435()}));}
   presentAnimations(pawns?:PawnLayer):void {for(const rig of this.activeRigs)rig.presentAnimations(pawns);}

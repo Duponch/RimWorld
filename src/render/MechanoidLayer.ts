@@ -1,3 +1,4 @@
+import type {CoreActorScene297} from '../bridge/core-phase-projection-297';
 import {ActorPlayback435} from './ActorPlayback435';
 import {actorExplorationMaterial256} from './ExplorationMask256';
 import * as THREE from 'three/webgpu';
@@ -40,6 +41,7 @@ class MechanicalRaceBatch {
   private body?:THREE.Mesh;private selection?:THREE.Mesh;
   private selected:ReadonlySet<number>=new Set();private source?:World;
   private records:VisualMech[]=[];private readonly keys=new Map<number,string>();
+  private readonly phaseIndices297=new Map<number,number>();
   private readonly playback435=new ActorPlayback435<VisualMech>(actor=>!!actor.pile||actor.carrierId!==undefined);
   playbackMetrics435(){return this.playback435.snapshot();}
   private readonly headings=new Map<number,TurnHeading>();private readonly gait=new GaitPhaseTracker();
@@ -113,12 +115,17 @@ class MechanicalRaceBatch {
     this.records.forEach((actor,i)=>{const value=!actor.pile&&ids.has(actor.id)?1:0;if(flags.getX(i)!==value){flags.setX(i,value);dirty=true;}any||=value!==0;});
     if(dirty)flags.needsUpdate=true;this.selection.visible=any;
   }
-  update(world:World,timeline:MotionTimeline|undefined,records:VisualMech[],reset=false,pawns?:PawnLayer):void {
+  adoptPhase297(world:World,actors:readonly NonNullable<World['mechanoids']>[number][]):void {
+    const indices:number[]=[];
+    for(const actor of actors){const i=this.phaseIndices297.get(actor.id);if(i===undefined)continue;this.records[i]=actor;this.keys.delete(actor.id);indices.push(i);}
+    this.source=world;this.playback435.adoptPhase297(world,this.records,indices);
+  }
+  update(world:World,timeline:MotionTimeline|undefined,records:VisualMech[],reset=false,pawns?:PawnLayer,actorScene?:CoreActorScene297):void {
     const changed=this.source!==world||reset;
     if(reset){this.headings.clear();this.keys.clear();this.gait.clear();}
     if(changed){
       this.source=world;this.keys.clear();
-      this.records=records;
+      this.records=records;this.phaseIndices297.clear();for(let i=0;i<records.length;i++)this.phaseIndices297.set(records[i]!.id,i);
       if(this.records.length){this.allocate();this.surfaces=furnitureSurfaces(world);this.pileSurface=pileSurfaces(world);}if(!this.body)return;
       if(this.records.length>this.body.geometry.getAttribute('aFrom').count)growPawnBuffers([this.body,this.selection!],this.records.length);
       this.setSelected(this.selected);const present=new Set(this.records.map(m=>m.id));
@@ -159,7 +166,7 @@ class MechanicalRaceBatch {
       const visualMask=mechanoidVisualMask(actor);
       const key=JSON.stringify([i,origin,edge?.start,edge?.end,fa,fb,active,actor.state,actor.heading,actor.melee?.strike,actor.melee?.order,actor.stun?.untilCore,actor.ranged?.stance?.phase,...visualMask]);
       if(this.keys.get(actor.id)===key)return;this.keys.set(actor.id,key);dirty=true;
-      const traveling=!!edge&&(active||actor.state==='moving'&&world.tick<edge.end),f=traveling?edge.from:actor,t=traveling?edge.to:actor;
+      const traveling=!!edge&&(active||actor.state==='moving'&&(actorScene?actorScene.core/10:world.tick)<edge.end),f=traveling?edge.from:actor,t=traveling?edge.to:actor;
       const yaw=traveling?Math.atan2(edge.to.x-edge.from.x,edge.to.z-edge.from.z):actor.heading,previous=this.headings.get(actor.id);
       let heading=turnToward(previous,yaw,traveling?edge.start:tick);
       if(traveling&&previous&&heading===previous&&previous.startTick!==edge.start)heading={from:headingAt(previous,edge.start),to:previous.to,startTick:edge.start};
@@ -211,7 +218,7 @@ export class MechanoidLayer {
   private records=new Map<MechanoidKind,VisualMech[]>();
   constructor(private readonly configure?:(material:THREE.MeshStandardNodeMaterial)=>void,private readonly animationDetail=new AnimationDetail()){this.group.name='Mechanical bodies — conditional race batches';}
   setSelected(ids:ReadonlySet<number>):void {this.selected=ids;for(const batch of this.batches.values())batch.setSelected(ids);}
-  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer):void {
+  update(world:World,timeline:MotionTimeline|undefined,reset=false,pawns?:PawnLayer,actorScene?:CoreActorScene297):void {
     if(this.source!==world||reset){
       this.source=world;this.records=new Map();
       const add=(actor:VisualMech)=>{let list=this.records.get(actor.mechKind);if(!list){list=[];this.records.set(actor.mechKind,list);}list.push(actor);};
@@ -222,7 +229,11 @@ export class MechanoidLayer {
         pile,carrierId:pile.owner.type==='pawn'?pile.owner.pawnId:pawns?.animalCorpseTransferCarrier(pile.id)});
       for(const kind of this.records.keys())if(!this.batches.has(kind))this.batches.set(kind,new MechanicalRaceBatch(kind,this.group,this.animationDetail,this.configure));
     }
-    for(const [kind,batch] of this.batches){batch.update(world,timeline,this.records.get(kind)??[],reset,pawns);batch.setSelected(this.selected);}
+    for(const [kind,batch] of this.batches){batch.update(world,timeline,this.records.get(kind)??[],reset,pawns,actorScene);batch.setSelected(this.selected);}
+  }
+  adoptPhase297(world:World,indices:readonly number[],actorScene?:CoreActorScene297):void {
+    const actors=indices.map(i=>{const a=(actorScene?.mechanical??world.mechanoids)?.[i];if(!a)throw Error('Missing resident mechanical actor');return a;});
+    this.source=world;for(const batch of this.batches.values())batch.adoptPhase297(world,actors);
   }
   forEachPose(visit:(id:number,x:number,y:number,z:number,height:number,radius:number,dead:boolean,kind:MechanoidKind)=>void):void {
     for(const [kind,batch] of this.batches)batch.forEachPose((id,x,y,z,height,radius,dead)=>visit(id,x,y,z,height,radius,dead,kind));

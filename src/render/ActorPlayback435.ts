@@ -59,6 +59,16 @@ export class ActorPlayback435<A extends ActorSource> {
   this.slots=actors.map((actor,index)=>{const row=previous.get(actor.id)??{id:actor.id,fallback:undefined,dependent:false,dirty:true,edge:undefined,phase:-1,origin:NaN,generation:-1,timeline:undefined,committedEdge:undefined,committedPhase:-1,committedOrigin:NaN,committedGeneration:-1,committedTimeline:undefined};row.fallback=this.fallbackMotion?actor.motion??undefined:undefined;row.dependent=this.dependent(actor,index);row.dirty=true;return row;});
   this.stats.adoptions++;this.stats.preparedActors+=actors.length;
  }
+ /** Anchored membership is unchanged; only listed slots become dirty. This is
+  * called after the private Native projection has reached its playhead. */
+ adoptPhase297(world:World,actors:readonly A[],indices:readonly number[]):void{
+  if(!actors.length&&!this.slots.length){this.world=world;this.source=actors;return;}
+  if(!this.owned||!isActorPlaybackWorld435(world)||this.slots.length!==actors.length)throw Error('Phase actor layout is not resident');
+  for(const index of indices){const row=this.slots[index],actor=actors[index];if(!row||!actor||row.id!==actor.id)throw Error('Phase actor slot changed membership');}
+  this.world=world;this.source=actors;
+  for(const index of indices){const row=this.slots[index]!,actor=actors[index]!;row.fallback=this.fallbackMotion?actor.motion??undefined:undefined;row.dependent=this.dependent(actor,index);row.dirty=true;}
+  this.stats.adoptions++;this.stats.preparedActors+=indices.length;
+ }
  beginFrame(timeline:ActorTimeline435|undefined):boolean{
   this.retrying=this.pending.length>0;if(this.retrying){for(const row of this.pending)row.dirty=true;this.pending.length=0;this.stats.retries++;}
   const enabled=this.owned&&(!timeline||timeline.playbackEnabled435);if(enabled)this.stats.frames++;return enabled;

@@ -28,7 +28,7 @@ export function worldTargetChoices263(world:World,tile:number):WorldTargetChoice
  for(const site of world.worldSites263?.entries??[]){
   if(site.tile!==tile||site.kind==='item-stash'&&site.closed)continue;
   if(site.kind==='peace-talks'){
-   if((Number(world.schemaVersion)!==293&&(Number(world.schemaVersion)!==294&&(Number(world.schemaVersion)!==295&&Number(world.schemaVersion)!==296)))||site.closed)continue;
+   if((Number(world.schemaVersion)!==293&&(Number(world.schemaVersion)!==294&&(Number(world.schemaVersion)!==295&&(Number(world.schemaVersion)!==296&&Number(world.schemaVersion)!==297))))||site.closed)continue;
    const available=world.tick*10<site.expiresAtCore,faction=world.worldFactions?.factions.find(f=>f.id===site.factionId);
    result.push({key:`peace:${site.id}`,label:`Participer aux pourparlers${faction?` · ${faction.name}`:''}`,target:{kind:'peace-talks',siteId:site.id},ok:available&&!!faction,...!available?{reason:'Le délai des pourparlers est écoulé.'}:!faction?{reason:'La faction destinataire est absente.'}:{},confirmAttack:false});continue;
   }

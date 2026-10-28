@@ -1,3 +1,4 @@
+import {newCorePathBudget297} from './core-path-budget-297.ts';
 import {initialWorldRegistry,finalizeInitialWorldRegistry} from './world-map-context.ts';
 import {createDeteriorationState} from './deterioration-content.ts';
 import { startingPawn } from './starting-pawns.ts';
@@ -164,7 +165,7 @@ export function emptyGeographicLandscape256(seed:number,width:number,height:numb
 }
 function emptyLandscapeState(seed:number,width:number,height:number,coreStartingGear=false):World {
   const registry=createDefaultApparelPolicyRegistry(true,true,true,true,coreStartingGear,true),normalizedSeed=seed>>>0;
-  const world:World={ schemaVersion: SCHEMA_VERSION, drugPolicies:initialDrugPolicies265(),nextDrugPolicyId:5, deterioration:createDeteriorationState(normalizedSeed,0), breakdown:newBreakdownCalendar(normalizedSeed,0), apparelWear:createApparelWearCalendar(0,(normalizedSeed^0x0a77e1)>>>0),apparelPolicies:registry.apparelPolicies,nextApparelPolicyId:registry.nextApparelPolicyId,packed:[],deconstructed: { count: 0, lostWood: 0, fuelTicks: 0 }, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: normalizedSeed, rng: normalizedSeed || 0x9e3779b9,
+  const world:World={ schemaVersion: SCHEMA_VERSION, phaseCore297:0, corePathBudget297:newCorePathBudget297(0), drugPolicies:initialDrugPolicies265(),nextDrugPolicyId:5, deterioration:createDeteriorationState(normalizedSeed,0), breakdown:newBreakdownCalendar(normalizedSeed,0), apparelWear:createApparelWearCalendar(0,(normalizedSeed^0x0a77e1)>>>0),apparelPolicies:registry.apparelPolicies,nextApparelPolicyId:registry.nextApparelPolicyId,packed:[],deconstructed: { count: 0, lostWood: 0, fuelTicks: 0 }, foodPolicies: initialFoodPolicies(), nextFoodPolicyId: 5, restRules: 'adult', spoiled: emptySpoilage(), foodRules: 'adult', seed: normalizedSeed, rng: normalizedSeed || 0x9e3779b9,
     tick: 0, width, height, tiles: [], pawns: [], resources: [], structures: [], jobs: [],
     piles: [], stockpiles: [], growingZones: [], growingCursor: 0, environment: 'temperate-equinox-v1', stock: { wood: 0, food: 0 }, events: [], nextId: 1, logisticsCursor: 0 };
   return world;

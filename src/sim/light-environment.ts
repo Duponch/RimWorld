@@ -7,7 +7,7 @@ import { RoomTopologyCache, type RoomTopology } from './room-topology.ts';
 import type { Cell, World } from './types.ts';
 
 export const lightSpeedFactor = (glow:number):number => .8 + .2 * Math.min(1, Math.max(0, glow) / .3);
-export type LightReader = () => LightEnvironment;
+export type LightReader = (() => LightEnvironment) & {readonly speedAt?:(cell:Cell)=>number};
 
 /** A synchronous decision snapshot; movement does not need furniture roles. */
 export class LightEnvironment {
@@ -35,6 +35,13 @@ export class LightEnvironmentCache {
   private readonly topology=new RoomTopologyCache();
   readonly localLight=new LocalLightCache();
   private readonly nonCaveLight=new LocalLightCache();
+  speedAt(world:World,cell:Cell):number {
+    if(Number.isInteger(cell.x)&&Number.isInteger(cell.z)&&cell.x>=0&&cell.z>=0&&cell.x<world.width&&cell.z<world.height){
+      const sky=annualNaturalLight(world),index=cell.z*world.width+cell.x,roof=world.roofing;
+      if(Number.isFinite(sky)&&sky>=.3&&!roof?.constructed.includes(index)&&!roof?.natural?.thin.includes(index)&&!roof?.natural?.thick.includes(index))return 1;
+    }
+    return this.read(world).speedAt(cell);
+  }
   read(world:World):LightEnvironment {
     const topology=this.topology.read(world);
     const combined=this.localLight.read(world,topology),withoutCaves=caveLightSources256(world).length?this.nonCaveLight.read(world,topology,lightSources(world,false)):combined;

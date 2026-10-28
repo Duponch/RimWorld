@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {prepareAnimalAreaRemoval287} from './animal-area-owners-287.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -29,8 +30,10 @@ const alive=(a:{state:string;health?:WildAnimal['health']})=>a.state!=='dead'&&!
 export function actualCampRemovalAbsCore256(root:CampaignState,map:World):number {
  const p=root.planet,c=map.climate,m=root.worldMaps;
  if(p?.revision!==3||c?.revision!==4||!m||map.site?.revision!==3||c.tileId!==map.site.tileId)throw Error('Actual geographic Camp climate/clock owner required');
- const local=(c.calendarOrigin+map.tick-c.adoptedAt)*10-geographicLongitudeOffsetCore256(c.definition.longitude);
- const home=geographicPlanetClimateDefinition256(p,p.homeTile),shared=(m.calendarOrigin+root.tick)*10-geographicLongitudeOffsetCore256(home.longitude);
+ const localPhase297=Number(root.schemaVersion)===297?effectiveCore297(map)-map.tick*10:0;
+ const sharedPhase297=Number(root.schemaVersion)===297?effectiveCore297(root)-root.tick*10:0;
+ const local=(c.calendarOrigin+map.tick-c.adoptedAt)*10-geographicLongitudeOffsetCore256(c.definition.longitude)+localPhase297;
+ const home=geographicPlanetClimateDefinition256(p,p.homeTile),shared=(m.calendarOrigin+root.tick)*10-geographicLongitudeOffsetCore256(home.longitude)+sharedPhase297;
  if(!Number.isSafeInteger(local)||local<0||local!==shared)throw Error('Camp absolute clock differs from its actual shared geographic anchor');
  return local;
 }

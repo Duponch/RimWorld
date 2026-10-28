@@ -140,10 +140,10 @@ export class ActionFeedbackLayer {
   /** Only an exactly compatible edge follows the executed GPU origin. A newer
    * confirmed suffix starts statically at its own logical origin, without a
    * chord from the actor, prediction or execution-clock/pose change. */
-  updateConfirmedPath(routes:readonly ConfirmedIntentRoute[],executed:World,selected:ReadonlySet<number>,source:THREE.InstancedBufferGeometry):void {
+  updateConfirmedPath(routes:readonly ConfirmedIntentRoute[],executed:World,selected:ReadonlySet<number>,source:THREE.InstancedBufferGeometry,actors:Readonly<World['pawns']>=executed.pawns):void {
     this.bindSource(source);
     const byId=new Map(routes.map(route=>[route.pawnId,route]));
-    const paths=executed.pawns.flatMap((pawn,index)=>{
+    const paths=actors.flatMap((pawn,index)=>{
       const intent=byId.get(pawn.id);if(!selected.has(pawn.id)||!intent)return [];
       const compatible=pawn.x===intent.origin.x&&pawn.z===intent.origin.z
         &&confirmedRouteEdgeSignature(pawn.motion)===intent.edgeSignature;

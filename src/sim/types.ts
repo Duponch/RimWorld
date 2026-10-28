@@ -1,6 +1,6 @@
 import type { ItemId } from './items.ts';
 import type { StorageConditions } from './storage-condition.ts';
-export const SCHEMA_VERSION = 296 as const;
+export const SCHEMA_VERSION = 297 as const;
 export const TICKS_PER_SECOND = 6;
 export const TICKS_PER_DAY = 6000;
 
@@ -294,6 +294,9 @@ export interface World {
   nextFoodPolicyId: number;
   restRules: 'legacy' | 'adult';
   schemaVersion: typeof SCHEMA_VERSION;
+  /** Prospective physical frontier; required by297 RAW, absent on older saves. */
+  phaseCore297?: number;
+  corePathBudget297?: {tick:number;remaining:number;pairs:number};
   /** V1–V4 continuations retain their former nutrition economy explicitly. */
   foodRules: 'legacy' | 'adult';
   seed: number;

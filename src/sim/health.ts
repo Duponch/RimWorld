@@ -1,3 +1,4 @@
+import {stopCapturedTravel297} from './movement.ts';
 import {isSchema285OrLater} from './schema-compatibility-257.ts';
 import {notifyKidnapLordHarm261} from './caravan-kidnap-lord-261.ts';
 import {notifyBillWorkerUnavailable283} from './bill-worker-owners-283.ts';
@@ -39,6 +40,7 @@ export function reconcilePawnHealth(world:World,pawn:Pawn,body=pawnBody(pawn),ex
   if(externalViolence)notifyKidnapLordHarm261(world,pawn);
   const status=medicalStatus(pawn.health,body);if(status==='dead')commitToxicDeath256(pawn.health,()=>healthRandom(world));
   if(status!=='mobile') {
+    if(Number(world.schemaVersion)===297&&pawn.state!==status)stopCapturedTravel297(world,pawn);
     if(pawn.state!==status||status==='dead'||!body.canBeAwake)cancelAlcoholSpatial265(pawn.health);
     cancelCryptosleepVomit256(pawn.health);if(pawn.state!==status||status==='dead'||!body.canBeAwake)cancelToxicVomit256(pawn.health);
     delete pawn.bombRefuge;

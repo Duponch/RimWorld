@@ -43,3 +43,13 @@ export function readTerrainJournal(tiles:readonly Tile[],before:TerrainJournalCu
  for(let version=before.version+1;version<=journal.version;version++)indices.add(journal.cells[version%TERRAIN_JOURNAL_CAPACITY]!);
  return {cursor:cursor(journal),indices:[...indices].sort((a,b)=>a-b)};
 }
+
+/** Read-only transport observation. Unlike captureTerrainJournal this NEVER
+ * enrolls, resets or repairs a journal. An unknown owner remains unknown;
+ * the actor publisher must use a genuine complete capture on any gap.
+ * A cursor conveys no simulation, Native or renderer capability. */
+export function peekTerrainJournalCursor(tiles:readonly Tile[]):TerrainJournalCursor|undefined {
+ const journal=journals.get(tiles);
+ if(!journal||journal.poisoned||journal.length!==tiles.length)return;
+ return cursor(journal);
+}

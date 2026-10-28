@@ -5,7 +5,8 @@ import { footprintCells } from './definitions.ts';
 import type { Cell,StructureKind,World } from './types.ts';
 import type { ProjectileScene,ProjectileTarget } from './projectile-rules.ts';
 import { animalBodySize } from './animal-life.ts';
-import type { LivingTargetKey } from './combat-target.ts';
+import {combatCell297,type LivingTargetKey} from './combat-target.ts';
+import {effectiveCore297} from './core-phase-297.ts';
 
 export interface WorldProjectileTargets {
   readonly width:number;readonly height:number;readonly capturedAt:number;
@@ -49,8 +50,9 @@ export function captureWorldProjectileTargets(world:World):WorldProjectileTarget
   // Preserve the current package's zero cover profile; do not give its inner
   // furniture footprint/fill to the map. Object damage is still unimplemented.
   for(const p of world.packed)if(p.owner.type==='ground')append(5,p.building.id,p.owner.x,p.owner.z,0,SHOT_LAYER.item);
+  const spatialCore297=Number(world.schemaVersion)===297?effectiveCore297(world):0;
   const carried=new Set(world.pawns.filter(p=>p.rescue?.phase==='carry').map(p=>p.rescue!.patientId));
-  for(const p of world.pawns)if(p.state!=='dead'&&!p.health?.death&&!carried.has(p.id))append(6,p.id,p.x,p.z,0,SHOT_LAYER.pawn,['sleeping','resting','downed'].includes(p.state)?0:2);
+  for(const p of world.pawns)if(p.state!=='dead'&&!p.health?.death&&!carried.has(p.id)){const c=combatCell297(Number(world.schemaVersion),p,spatialCore297);append(6,p.id,c.x,c.z,0,SHOT_LAYER.pawn,['sleeping','resting','downed'].includes(p.state)?0:2);}
   if(world.schemaVersion>=77)for(const a of world.wildlife?.animals??[])if(a.state!=='dead')append(7,a.id,a.x,a.z,0,SHOT_LAYER.pawn,['sleeping','downed'].includes(a.state)?0:2,undefined,animalBodySize(a));
   if(world.schemaVersion>=194)for(const m of world.mechanoids??[])if(m.state!=='dead'&&!m.health?.death)append(8,m.id,m.x,m.z,0,SHOT_LAYER.pawn,m.state==='downed'?0:2,undefined,1);
   for(const p of pods)append(9,p.id,p.cell.x,p.cell.z,0,SHOT_LAYER.item);

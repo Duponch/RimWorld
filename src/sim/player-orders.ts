@@ -223,7 +223,7 @@ export function applyOrderCommand(world:World,command:OrderCommand):CommandResul
   if(!pawn)return fail('Colon introuvable.');
   if(command.type==='clear-orders') {
     if(isForcedConsuming(pawn)){interruptDraftWork(world,pawn);return {ok:true};}
-    const active=pawn.orders.active!==null||!!pawn.shipCasketTask277||!!pawn.cryptosleepTask||!!pawn.openCasket||!!pawn.firefoamTask290||!!pawn.orbitalTrade||!!pawn.allowedAreaReturn||(Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)&&pawn.recreation.task?.activity==='read'&&pawn.recreation.task.manual===true;
+    const active=pawn.orders.active!==null||!!pawn.shipCasketTask277||!!pawn.cryptosleepTask||!!pawn.openCasket||!!pawn.firefoamTask290||!!pawn.orbitalTrade||!!pawn.allowedAreaReturn||(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))&&pawn.recreation.task?.activity==='read'&&pawn.recreation.task.manual===true;
     const drops=active?planCommandDrops(world,command):new Map();
     if(!drops)return fail('Pas de place pour déposer la cargaison.');
     if(active&&!releaseWork(world,pawn,drops))return fail('Impossible d’interrompre ce travail.');

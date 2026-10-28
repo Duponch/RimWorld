@@ -1,3 +1,4 @@
+import {effectiveLocal297} from '../sim/core-phase-297.ts';
 import { travelPieces,type PresentationSegment } from '../sim/travel-timing.ts';
 import type { World } from '../sim/types.ts';
 export interface PawnTrack { id:number; segments:PresentationSegment[] }
@@ -9,9 +10,25 @@ export class MotionRecorder {
   capture(world:World):void {
     for(const pawn of [...world.pawns,...world.wildlife?.animals??[],...world.mechanoids??[]]) {
       let track=this.tracks.get(pawn.id);if(!track){track=[];this.tracks.set(pawn.id,track);}
-      const motion=pawn.motion;
+      const motion=pawn.motion,now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
+      if(Number(world.schemaVersion)===297&&track.length){
+        const prior=track.at(-1)!;
+        const source=motion?.from??pawn;
+        const replaced=!!motion&&(prior.edgeStart??prior.start)===motion.start&&(prior.from.x!==source.x||prior.from.z!==source.z||prior.to.x!==motion.to.x||prior.to.z!==motion.to.z);
+        const stopped=!motion&&(prior.end>now||prior.to.x!==pawn.x||prior.to.z!==pawn.z);
+        if(replaced||stopped){
+          track=track.filter(segment=>segment.start<now).map(segment=>{
+            if(segment.end<=now)return segment;
+            const from=segment.fromFraction??0,to=segment.toFraction??1;
+            return {...segment,toFraction:from+(to-from)*Math.max(0,Math.min(1,(now-segment.start)/(segment.end-segment.start))),end:now};
+          });
+          const c=motion?.from??pawn;
+          track.push({from:{x:c.x,z:c.z},to:{x:c.x,z:c.z},start:now,end:now,fromFraction:0,toFraction:0,stop297:true});
+          this.tracks.set(pawn.id,track);
+        }
+      }
       const last=track.at(-1),edgeStart=last?.edgeStart??last?.start;
-      if(motion&&(edgeStart!==motion.start||last?.end!==motion.end)) {
+      if(motion&&(edgeStart!==motion.start||last?.end!==motion.end||Number(world.schemaVersion)===297&&(last?.from.x!==motion.from.x||last?.from.z!==motion.from.z||last?.to.x!==motion.to.x||last?.to.z!==motion.to.z))) {
         if(edgeStart===motion.start){track=track.filter(s=>(s.edgeStart??s.start)!==motion.start);this.tracks.set(pawn.id,track);}
         if(motion.stagger||motion.stuns)for(const s of travelPieces(motion))track.push({...s,from:{...s.from},to:{...s.to}});
         else track.push({...motion,from:{...motion.from},to:{...motion.to}});

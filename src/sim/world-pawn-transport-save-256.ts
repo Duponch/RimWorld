@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {linkedStorageUsesRetiredOrigin286} from './world-pawn-origin-projection-256.ts';
 import {settlementMemoryUsesRetiredOrigin259} from './world-pawn-origin-projection-256.ts';
 import type {World} from './types.ts';
@@ -7,7 +8,7 @@ import {validWorldPawnsEnvelope256,validateWorldPawnOwners256} from './world-paw
 /** Actual shared owners, once per candidate, after every transported local,
  * caravan, terminal and faction owner. No inactive local grid is fabricated. */
 export function registerProjectedWorldPawns256(world:World,ids:NumericMembershipSink,summary?:CampaignSummary):string[] {
- if(!validWorldPawnsEnvelope256(world,world.schemaVersion,world.tick*10,world.nextId))return ['Invalid projected WorldPawns header'];
+ if(!validWorldPawnsEnvelope256(world,world.schemaVersion,effectiveCore297(world),world.nextId))return ['Invalid projected WorldPawns header'];
  const metadata=summary??(world.campaignMap?.revision===2?world.campaignMap:undefined);
  const state=world.worldPawns;if(!state)return metadata?.worldPawnOrigins?.some(origin=>!settlementMemoryUsesRetiredOrigin259(metadata,origin,world.schemaVersion)&&!linkedStorageUsesRetiredOrigin286(world,origin))?['WorldPawn origin metadata has no actual WorldPawns owner']:[];
  if(!metadata||world.planet?.revision!==3)return ['WorldPawns projection lacks its actual geographic campaign header'];

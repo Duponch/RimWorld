@@ -1,14 +1,26 @@
 # Déplacement des colons et changement de destination
 
+## Mise à jour V492 — comportement Source12 retenu, schéma 297
+
+L’accord humain du 28 octobre autorise l’intégration locale de Source12 testée, avec une dette acceptée provisoirement de 9,98–11,28 % de débit à ×6. Le lot local est intégré et ses contrôles sont consignés ; aucune publication nouvelle n’est attestée et Cloudflare reste V491. [État, mesures et réserves](../development/movement-parity-v492-status.md).
+
+Pour les nouvelles arêtes humaines297, la base neutre Jog est dérivée de60/4,6 Core par case cardinale, soit environ0,217 s nominal ; la diagonale applique1,41421, soit environ0,307 s avant autres facteurs. Le temps physique avance à 60 Core/s à×1, séparé des systèmes macro à 6 Hz. Les facteurs, le mode et la durée sont capturés pour chaque arête ; un segment ancien chargé garde son coût historique. Ce ne sont pas des chronométrages universels de partie.
+
+Un premier ordre valide peut engager sa première arête au point sûr de la commande, sans attendre un pas macro. Le reclic ordinaire pendant une arête déjà payée conserve cette arête et son temps restant, puis prend la nouvelle route depuis son extrémité. Les cas sans coût encore payé et les pas devenus impossibles ont leurs interruptions propres. Le clic simple de l’unique colon vers la case encore occupée au départ ne crée pas un nouveau Goto universel. L’ordre explicite Arrêter, distinct du reclic, coupe le chemin au temps physique confirmé ; la présentation enregistre cet arrêt au lieu de conserver indéfiniment un ancien tracé. La clinique, les collisions et les détenteurs conservent leurs gardes.
+
+Le World complet conserve son identité et sa date ; les acteurs affichés peuvent avancer via une scène confirmée distincte. Le lissage n’autorise aucune prédiction de trajet ni réponse anticipée. Les fenêtres ×1/×3 tiennent leurs cibles mesurées ; ×4 n’a pas été mesuré. Le parcours au premier plan est acquis, la visibilité native reste non acquise, et une identité totale à tous les cas RimWorld n’est pas revendiquée.
+
+Le rapport du27octobre ci-dessous décrit l’état V491 et la lecture primaire qui a motivé ces adaptations. Ses valeurs de3ticks/6Hz=0,5s sont historiques ; elles ne décrivent pas les nouvelles arêtes297.
+
 L'observation du joueur est confirmée dans Elsewhere : un colon en marche termine normalement le segment déjà engagé entre deux centres de cases avant de suivre sa nouvelle route. La lecture de RimWorld 1.6 retrouve ce principe pour un ordre ordinaire de déplacement qui en remplace un autre. Le ressenti ne peut cependant pas être déclaré identique : la vitesse de base et le lissage de l'image diffèrent sensiblement.
 
-## Ce qui se passe dans Elsewhere
+## État historique V491 observé le 27 octobre
 
 Prenons une marche de A vers B. Le colon est encore visuellement entre ces deux cases lorsque le joueur clique vers C. La commande peut être acceptée et la route vers C calculée immédiatement ; elle part de B, extrémité du segment engagé. Le colon termine A→B puis commence le nouveau trajet depuis B. Il n'attend pas d'atteindre son ancienne destination finale.
 
 Le [démarrage du segment](../../src/sim/movement.ts) enregistre son départ, son arrivée et sa durée ; il affecte dès cet instant la position logique du colon à B. Le [nouvel ordre tactique](../../src/sim/drafting.ts) remplace la cible et le chemin, mais conserve ce segment et son temps restant. Le [traitement de simulation](../../src/sim/engine.ts) attend que ce temps soit épuisé avant d'engager le prochain segment. Ce comportement existe indépendamment du coût de traitement du clic et du nouveau style graphique.
 
-Un premier ordre donné à un colon immobile n'est pas exactement le même cas : le chemin peut être accepté immédiatement, puis le premier segment est engagé au prochain vrai tick de simulation. Une file d'ordres ajoute des destinations au lieu de remplacer le trajet actif. L'arrêt tactique et la démobilisation annulent les intentions suivantes mais conservent, dans notre fonctionnement actuel, le segment physique déjà capturé. Les récupérations de combat, portes, collisions, étourdissements et incapacités ont leurs gardes propres.
+Un premier ordre donné à un colon immobile n'est pas exactement le même cas : le chemin peut être accepté immédiatement, puis le premier segment est engagé au prochain vrai tick de simulation. Une file d'ordres ajoute des destinations au lieu de remplacer le trajet actif. L'arrêt tactique et la démobilisation annulent les intentions suivantes mais conservent, dans le fonctionnement V491 décrit ici, le segment physique déjà capturé. Les récupérations de combat, portes, collisions, étourdissements et incapacités ont leurs gardes propres.
 
 ## Fonctionnement ordinaire de RimWorld 1.6
 
@@ -26,7 +38,7 @@ La représentation interne diffère également : RimWorld garde la position de d
 
 Les valeurs suivantes supposent un humain sans ralentissement, une marche normale, aucun surcoût de terrain ou bâtiment et un rythme de simulation nominal. Ce sont des calculs de calibration, pas un chronométrage de partie.
 
-| Paramètre | Elsewhere actuel | RimWorld 1.6 examiné |
+| Paramètre | Elsewhere V491 historique | RimWorld 1.6 examiné |
 | --- | --- | --- |
 | Fréquence nominale à ×1 | 6 ticks/s | 60 ticks/s |
 | Traversée cardinale neutre | 3 ticks, soit 0,5 s | 60/4,6 ticks, soit environ 0,217 s |
@@ -50,7 +62,7 @@ La V491 ne modifie ni la vitesse ni cette règle de déplacement. Elle corrige d
 
 Il reste des phénomènes différents : attente de traitement dans le Worker, fin physique du segment courant, et réserve de deux ticks lors de la reprise visuelle, soit environ 333 ms à ×1 nominal. La pause après quatre ordres rapprochés a encore pris 299,5 ms dans le test de rafale. Il serait faux d'annoncer une instantanéité générale à partir du gain d'affichage.
 
-Aucune modification de gameplay n'est faite sur la base de ce rapport. Si l'on veut rapprocher la sensation de déplacement de RimWorld, la prochaine comparaison utile concerne d'abord la calibration des durées et les facteurs de vitesse, puis le lissage et les interruptions ; autoriser arbitrairement un virage au milieu d'un segment ne reproduirait pas le fonctionnement ordinaire examiné.
+À la rédaction initiale du 27 octobre, aucune modification de gameplay n’avait été faite sur la base de ce rapport. Si l'on veut rapprocher la sensation de déplacement de RimWorld, la prochaine comparaison utile concerne d'abord la calibration des durées et les facteurs de vitesse, puis le lissage et les interruptions ; autoriser arbitrairement un virage au milieu d'un segment ne reproduirait pas le fonctionnement ordinaire examiné.
 
 ## Sources et portée
 

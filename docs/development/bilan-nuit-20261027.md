@@ -1,4 +1,14 @@
-# Bilan du travail du 26 au 27 octobre 2026
+# Bilan du travail du 26 au 28 octobre 2026
+
+## Mise à jour du 28 octobre au soir — accord d’intégration V492
+
+Après le contrôle Source12, l’utilisateur accepte provisoirement la perte mesurée de **9,98–11,28 % de débit à ×6** et demande l’intégration locale puis le commit. Le schéma courant local est297. Cette décision est un compromis explicite, pas une preuve d’absence de recul : coût global et réactivité complète restent ouverts. ×1/×3 tiennent leurs rythmes mesurés sans gratuité CPU ; ×4 n’a pas été mesuré.
+
+Le parcours Source12 des huit ordres au premier plan, pauses/reprise et dernier ordre stable passe avec sauvegarde/recharge exacte. Les bleus isolés mesurent65,6–181,0 ms depuis le relâchement observé ; la première pause cohérente60,8 ms. Les essais de visibilité restent non acquis, de cause inconnue. Les mesures, pointes et pistes rejetées sont détaillées dans le [statut V492](movement-parity-v492-status.md), sans les convertir en gain général.
+
+Les résultats du 26 au 27, les nettoyages et la vraie campagne94de/T3328 restent inchangés. Source12 est intégrée localement avec typage, compilation et378cas ciblés acquis, trois rouges historiques et un ignoré conservés ; Cloudflare reste V491/schéma 296 jusqu’à un déploiement distinct. La demande de commit n’autorise pas par inférence une publication. L’objectif général, le heartbeat et les six ensembles demeurent en pause.
+
+Le bilan historique ci-dessous garde ses heures et ses décisions avant le nouvel accord ; ses formulations de non-intégration ou de reprise automatique ne constituent plus le statut courant.
 
 Le travail de la soirée et de la nuit a livré la fiabilisation de l'interface carton, plusieurs corrections de réactivité, un aller/camp/retour réel de campagne et une optimisation du calcul de peinture. La dernière version V491 est publiée sur [Elsewhere](https://elsewhere-cq7.pages.dev/), source435f04a2/Production7c8f5074. Les six ensembles restent ouverts : cette nuit ne constitue pas leur achèvement ni une victoire jouable.
 
@@ -51,7 +61,7 @@ Cela représente **1601562170 octets logiques supplémentaires, environ 1,60 Go*
 
 Sauvegardes, RAW, références, données récentes uniques et serveurs humains sont conservés. Les six ensembles, SYS069, durabilité, victoire et confort global restent ouverts. Après livraison du présent bilan et du rapport demandé, la poursuite autonome reprend depuis les points de reprise actuels, sans réinitialiser la vraie campagne.
 
-## Complément du 28 octobre au soir — déplacements V492 toujours non livrés
+## Constat du 28 octobre au soir avant l’accord d’intégration
 
 Le travail demandé ensuite pour rapprocher les déplacements de RimWorld 1.6 reste privé. Le candidat Source12 a acquis ses huit ordres réels et la correction des pointes de rendu, mais sa dernière comparaison confirme encore 9,98 à 11,28 % de débit en moins à ×6. La dernière piste de navigation isolée ne démontre pas de gain fiable et a été écartée. Aucun code V492 n'est intégré ni publié ; le produit reste V491.
 

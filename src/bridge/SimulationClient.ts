@@ -16,7 +16,7 @@ import type { AudioCue } from './audio-cues';
 import type {BillWorkerOption283,BillWorkerOptions283} from '../sim/bill-worker-state-283';
 
 /** Transport readers are selected by a fixed client implementation, never by a packet flag. */
-export type SnapshotReader=Pick<SnapshotDecoder,'adopt'|'adoptCampaignOnly'|'prepareDraftPreview'|'authorizeDraftPreview'|'discardDraftPreview'>&{readMotion?(packet:import('./snapshots').SnapshotMessage<true>):import('./motion-tracks').PawnTrack[]|undefined};
+export type SnapshotReader=Pick<SnapshotDecoder,'adopt'|'adoptCampaignOnly'|'prepareDraftPreview'|'authorizeDraftPreview'|'discardDraftPreview'>&{readMotion?(packet:import('./snapshots').SnapshotMessage<true>):import('./motion-tracks').PawnTrack[]|undefined;readCorePhase297?(packet:import('./snapshots').SnapshotMessage<true>):object|undefined};
 
 type Payload = Request extends infer R ? R extends { id: number } ? Omit<R, 'id'> : never : never;
 interface PendingWorldDraft256 {
@@ -58,6 +58,8 @@ export class SimulationClient {
   private fault?: SimulationFault;
   private resyncing = false;
   private readonly pending = new Map<number, PendingRequest>();
+  /** Scheduling hint only; includes ordinary requests before the15s warning. */
+  get hasPendingPresentationRequests():boolean{return this.pending.size>0;}
   private tradeArrivals261:import('./protocol').CaravanTradeArrivalMessage261[]=[];
   onCaravanTradeArrival:(message:import('./protocol').CaravanTradeArrivalMessage261)=>void=()=>{};
   onCaravanEncounterProgress:(message:import('./protocol').CaravanEncounterProgressMessage261)=>void=()=>{};
@@ -88,7 +90,9 @@ export class SimulationClient {
   protected dispatchWorkerMessage(source:Worker,event:MessageEvent<unknown>,dispatch:(raw:unknown)=>void):void {this.withWorkerMessage(source,event,()=>dispatch(event.data));}
   protected dispatchWorkerFailure(_source:Worker,dispatch:()=>void):void {dispatch();}
 
-  protected deliverSnapshot(world: World, stepMs: number, speed: number, replaced: boolean, motion?: import('./motion-tracks').PawnTrack[]): void {
+  /** Fixed native client overrides this; public shape alone has no authority. */
+  protected deliverCorePhase297(_raw:unknown):void {throw Error('Actor phase outside fixed Native receiver');}
+  protected deliverSnapshot(world: World, stepMs: number, speed: number, replaced: boolean, motion?: import('./motion-tracks').PawnTrack[], _coreInput297?:object): void {
     this.onSnapshot(world, stepMs, speed, replaced, motion);
   }
 
@@ -109,6 +113,7 @@ export class SimulationClient {
       if(source!==this.worker||this.stopped)return;
       let data:Response;
       try{data=this.readWorkerMessage(raw);}catch{this.stop('La projection reçue ne correspond pas au Worker courant.');return;}
+      if(data.type==='actor-phase-297'||data.type==='actor-frontier-297'){try{this.deliverCorePhase297(data);}catch(error){this.stop(`Phase physique reçue invalide : ${String(error)}`);}return;}
       if(data.type==='world-draft-progress'){
         const pending=this.pending.get(data.id),d=pending?.draft,s=pending?.draftStart,p=data.progress;
         const receiver=d&&!d.aborted?d:s&&!s.cancelRequested?s:undefined;
@@ -166,7 +171,7 @@ export class SimulationClient {
           for (const pending of this.pending.values()) if (pending.type === 'init' || pending.type === 'load' || pending.type === 'world-draft-start') {
             if (result.replaced) pending.replacementEpoch = data.epoch;
           }
-          try { this.deliverSnapshot(result.world, data.stepMs, data.speed, result.replaced, this.snapshots.readMotion?this.snapshots.readMotion(data):data.motion);this.deliverTradeArrivals261(); }
+          try { this.deliverSnapshot(result.world, data.stepMs, data.speed, result.replaced, this.snapshots.readMotion?this.snapshots.readMotion(data):data.motion,this.snapshots.readCorePhase297?.(data));this.deliverTradeArrivals261(); }
           catch (error) { this.onError(`Présentation interrompue : ${error instanceof Error ? error.message : String(error)}`); }
           try { if (result.replaced || data.audioCues?.length) this.deliverAudioCues(data.audioCues ?? [], result.world, result.replaced); }
           catch (error) { this.onError(`Audio interrompu : ${error instanceof Error ? error.message : String(error)}`); }

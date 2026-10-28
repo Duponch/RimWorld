@@ -1,3 +1,5 @@
+import {effectiveLocal297} from './core-phase-297.ts';
+import {effectiveCore297} from './core-phase-297.ts';
 import type { ArmorCategory } from './armor.ts';
 import type { ImpactProtection } from './apparel-protection.ts';
 import { mechanoidDefinition,type MechanoidKind } from './mechanoid-definition.ts';
@@ -25,7 +27,7 @@ export function mechanoidProtection(category:ArmorCategory,penetration:number,ra
 const impactRecord=(w:World,m:Mechanoid)=>({...structuredClone(m.health??createMechaMedicalRecord(w.tick,m.mechKind)),tick:w.tick});
 function owner(w:World,m:Mechanoid,core:number):void {
   if(w.schemaVersion<194||!w.mechanoids?.includes(m))throw new RangeError('Invalid mechanical impact owner');
-  if(!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)throw new RangeError('Invalid mechanical impact clock');
+  if(!Number.isSafeInteger(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))throw new RangeError('Invalid mechanical impact clock');
 }
 export function damageMechanoidWithBullet(w:World,m:Mechanoid,hit:UnarmoredBullet,core:number,penetration=0):BulletImpactResult|null {
   owner(w,m,core);const record=impactRecord(w,m);validateUnarmoredBullet(hit,medicalModel(record));
@@ -53,5 +55,5 @@ export function delayMechanoidImpact(w:World,m:Mechanoid,core:number,stun=false,
   const next={...motion};
   if(m.stagger)next.stagger=mergeSlowIntervals([...(motion.stagger??[]),{start:Math.max(motion.start,core/10),end:m.stagger.untilCore/10}]);
   if(m.stun)next.stuns=mergeSlowIntervals([...(motion.stuns??[]),{start:Math.max(motion.start,core/10),end:m.stun.untilCore/10}]);
-  next.end=travelEnd(next);m.motion=next;m.moveCooldown=Math.max(0,next.end-w.tick);
+  next.end=travelEnd(next);m.motion=next;m.moveCooldown=Math.max(0,next.end-(Number(w.schemaVersion)===297?effectiveLocal297(w):w.tick));
 }

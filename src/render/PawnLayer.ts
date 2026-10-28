@@ -1,3 +1,7 @@
+import {POSE_SLEEP,POSE_DEAD,POSE_FIGHT_READY,READING_ACTIVITY295,seatedOnFurniture,workActivity,animationPose,humanCorpseVisualStage,humanWorkContact297} from '../bridge/actor-phase-dependencies-297';
+export {humanCorpseVisualStage} from '../bridge/actor-phase-dependencies-297';
+import type {CoreActorScene297} from '../bridge/core-phase-projection-297';
+import {PawnTweener297} from './PawnTweener297';
 import {ActorPlayback435} from './ActorPlayback435';
 import {isSmithingApparel267} from '../sim/smithing-apparel-267';
 import {groupHumanCarryPairs257} from '../sim/group-human-admission-257.ts';
@@ -74,14 +78,8 @@ const CROUCH_TICKS=.28*TICKS_PER_SECOND;
 // short pose transition: quarter-tick start, initial crouch fraction, and the
 // locomotion bit. Work subtype (y), pose (z), and strike clock (w) stay intact.
 const CROUCH_QUANTA=4,CROUCH_PADDING=16,CROUCH_WALK_MARK=8192;
-const POSE_SLEEP=18,POSE_DEAD=19,POSE_FIGHT_READY=22,READING_ACTIVITY295=14;
+
 const crouched=(pose:number|undefined):boolean=>pose===WORK_POSE.ground||pose===WORK_POSE.groundMelee;
-function seatedOnFurniture(pawn:Pawn):boolean {
-  if(pawn.state==='eating')return pawn.need?.kind==='eat'&&typeof pawn.need.dining?.seatId==='number';
-  if(pawn.state!=='recreating')return false;
-  const task=pawn.recreation.task;
-  return !!task&&(task.activity==='read'||task.activity==='watch-television'||task.activity==='chess'||task.activity==='social-relax'||task.activity==='visit-sick')&&typeof task.seatId==='number';
-}
 function crouchAt(transition:CrouchTransition,tick:number):number {
   const fraction=THREE.MathUtils.clamp((tick-transition.start)/CROUCH_TICKS,0,1);
   const smooth=fraction*fraction*(3-2*fraction);
@@ -91,11 +89,6 @@ function motionX(walking:boolean,transition:CrouchTransition|undefined,origin:nu
   if(!transition)return walking?1:0;
   const quarterTick=Math.round(transition.start*CROUCH_QUANTA)-origin*CROUCH_QUANTA+CROUCH_PADDING;
   return -1-quarterTick-Math.min(.999,Math.max(0,transition.from))-(walking?CROUCH_WALK_MARK:0);
-}
-function workActivity(pawn:Pawn):number {
-  if(pawn.state!=='working'||pawn.stun)return 0;
-  if(pawn.cooking?.recipe==='make-plate-armor'||pawn.cooking?.recipe==='make-simple-helmet')return 1;
-  return pawn.cooking?2:pawn.research||pawn.deepWork||pawn.cryptosleepTask?3:1;
 }
 /** Decode the already published equipment scalar; no pile lookup in a frame. */
 function presentationActivity(pawn:Pawn,equipmentCode:number):number {
@@ -114,28 +107,6 @@ function presentationActivity(pawn:Pawn,equipmentCode:number):number {
   }
   return workActivity(pawn);
 }
-function animationPose(pawn:Pawn,workPose:number,smallMelee:boolean,seated:boolean,lyingAwake=false):number {
-  if(pawn.state==='dead')return POSE_DEAD;
-  if(pawn.state==='sleeping'||pawn.medicalSleep||anestheticStage(pawn.health?.anesthetic?.severity??0)==='sedated')return POSE_SLEEP;
-  if(lyingAwake)return 1;
-  if(pawn.health?.foodPoisoning?.vomit||pawn.health?.flu?.vomit||pawn.health?.immuneDiseases?.malaria?.vomit)return 10;
-  if(pawn.stun&&!medicallyStopped(pawn))return 9;
-  if(pawn.melee?.strike)return smallMelee?WORK_POSE.groundMelee:8;
-  if(pawn.shooting?.stance?.phase==='cooldown')return 15;
-  if(pawn.shooting?.stance)return 7;
-  if(pawn.social?.fight&&!medicallyStopped(pawn))return POSE_FIGHT_READY;
-  if(pawn.state==='recreating'){
-    const activity=pawn.recreation.task?.activity;
-    if(activity==='horseshoes')return 4;
-    if(activity==='skygaze')return 5;
-    if(activity==='party')return 0;
-    if(activity==='read'||activity==='watch-television'||activity==='chess'||activity==='social-relax'||activity==='visit-sick')return seated?3:0;
-  }
-  if(pawn.state==='resting'||medicallyStopped(pawn))return 1;
-  if(pasteCollectionSource(pawn))return 0;
-  if(pawn.state==='eating')return seated?3:2;
-  return workPose;
-}
 function approachAt(transition:ApproachTransition,tick:number):{x:number;z:number} {
   const alpha=THREE.MathUtils.clamp((tick-transition.start)/APPROACH_TICKS,0,1);
   return {x:THREE.MathUtils.lerp(transition.fromX,transition.toX,alpha),z:THREE.MathUtils.lerp(transition.fromZ,transition.toZ,alpha)};
@@ -153,13 +124,6 @@ function cargoAppearance(load:MaterialPile|undefined):readonly [number,number] {
   return [kind,size];
 }
 /** Packed into the existing appearance stream; no extra vertex buffer. */
-export function humanCorpseVisualStage(world:World,pawn:Pawn,body?:MaterialPile):0|1|2 {
-  if(pawn.state!=='dead')return 0;
-  const pile=body??(pawn.body?.pileId!==undefined?world.piles.find(p=>p.id===pawn.body?.pileId):undefined);
-  if(pile){const stage=corpseStage(pile,world.tick);return stage==='desiccated'?2:stage==='rotting'?1:0;}
-  const age=humanCorpseAge(world,pawn);
-  return age>=CORPSE_DESSICATION_TICKS?2:age>=CORPSE_ROT_TICKS?1:0;
-}
 /** Bodies awaiting a free pile cell remain logically where they fell. Fan only
  * coincident presentations within that cell so their surfaces do not fight. */
 export function retainedHumanCorpseOffsets(world:World):ReadonlyMap<number,{x:number;z:number;y:number}> {
@@ -979,6 +943,7 @@ export class PawnLayer {
     if(!world.pawns.length)flames.setX(0,0);flames.needsUpdate=true;
     // Keep actor indices and shared attributes; omit only the unused tail.
     (this.fireMesh!.geometry as THREE.InstancedBufferGeometry).instanceCount=fireCount;
+    this.springValid297.fill(0);if(newMap)this.tweener297.reset();
     const fromAttribute = geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
     const toAttribute = geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
     const travelAttribute = geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute;
@@ -1048,36 +1013,9 @@ export class PawnLayer {
       // A task already owns the final travel edge before the worker changes to
       // `working`. Resolve that target early so the edge ends at its visual
       // contact pose instead of arriving at the cell centre and sliding later.
-      const arriving=pawn.state==='moving'&&pawn.moveCooldown>0&&pawn.path.length===0&&!!pawn.motion&&pawn.motion.to.x===pawn.x&&pawn.motion.to.z===pawn.z;
-      const job=pawn.jobId===null?undefined:(jobsById??=new Map(world.jobs.map(j=>[j.id,j]))).get(pawn.jobId);
-      const garment=pawn.equipmentTask?.action==='wear'?world.piles.find(p=>p.id===pawn.equipmentTask!.itemId):undefined;
-      const dressing=garment?.owner.type==='ground'?garment.owner:undefined;
-      const fighting=pawn.firefighting?world.fires?.items.find(f=>f.id===pawn.firefighting!.fireId):undefined;
-      const fireTarget=fighting?firePosition(world,fighting):undefined;
-      const fuelDestination=pawn.haul?.destination.type==='fuel'||pawn.haul?.destination.type==='turret'?pawn.haul.destination:undefined;
-      const orbitalReady=pawn.orbitalTrade?.phase==='ready'&&!pawn.stun;
-      const pasteCollect=pasteCollectionSource(pawn);
-      const station=pawn.cryptosleepTask&&(pawn.state==='working'||arriving)?world.structures.find(s=>s.id===pawn.cryptosleepTask!.casketId):pasteCollect?world.structures.find(s=>s.id===pasteCollect.dispenserId):orbitalReady||arriving&&pawn.orbitalTrade ? world.structures.find(s=>s.id===pawn.orbitalTrade!.consoleId) : pawn.state==='working'||arriving ? pawn.deepWork ? world.structures.find(s=>s.id===pawn.deepWork!.structureId) : pawn.research ? world.structures.find(s=>s.id===pawn.research!.stationId) : pawn.cooking?.phase==='work' ? world.structures.find(s=>s.id===pawn.cooking!.stationId) : pawn.haul?.serviceProgress!==undefined&&fuelDestination ? world.structures.find(s=>s.id===fuelDestination.structureId) : undefined : undefined;
-      const workPose=pawnWorkPose(pawn,job,station?.kind);
-      const stationCell=station ? footprintCells(station).reduce((best,cell)=>Math.hypot(cell.x-pawn.x,cell.z-pawn.z)<Math.hypot(best.x-pawn.x,best.z-pawn.z)?cell:best) : undefined;
-      const patient=pawn.feed?.phase==='feed'?pawnsById.get(pawn.feed.patientId):pawn.tend?.phase==='tend'?pawnsById.get(pawn.tend.patientId):pawn.surgery?.phase==='work'?pawnsById.get(pawn.surgery.patientId):undefined;
-      const handledAnimal=pawn.animalFeed?.phase==='feed'?world.wildlife?.animals.find(a=>a.id===pawn.animalFeed!.animalId)
-        :pawn.animalCare?.phase==='treat'?world.wildlife?.animals.find(a=>a.id===pawn.animalCare!.animalId)
-        :pawn.animalHandling?.phase==='interact'?world.wildlife?.animals.find(a=>a.id===pawn.animalHandling!.animalId):undefined;
-      const work = pawn.state==='working'||arriving ? fireTarget ?? (job?constructionWorkTarget(world,job):dressing) ?? (pawn.hunting?.phase==='finish' ? world.wildlife?.animals.find(a=>a.id===pawn.hunting!.animalId) : patient ?? handledAnimal ?? stationCell ?? pawn.cooking?.actionCell ?? pawn.haul?.pickupCell) : undefined;
-      if(work&&pawn.state==='working') yaw=Math.atan2(work.x-pawn.x,work.z-pawn.z);
-      if(orbitalReady&&stationCell)yaw=Math.atan2(stationCell.x-pawn.x,stationCell.z-pawn.z);
-      if(pasteCollect&&stationCell)yaw=Math.atan2(stationCell.x-pawn.x,stationCell.z-pawn.z);
-      const contactPose=arriving?pawnWorkPose({...pawn,state:'working'},job,station?.kind):workPose;
-      const atBench=station?.kind==='fueled-smithy'||station?.kind==='electric-smithy'||station?.kind==='electric-crematorium'||station?.kind==='electric-smelter'||station?.kind==='biofuel-refinery'||station?.kind==='deep-drill'||station?.kind==='ground-scanner'||station?.kind==='drug-lab'||station?.kind==='research-bench'||station?.kind==='hi-tech-research-bench'||station?.kind==='fabrication-bench'||station?.kind==='butcher-table'||station?.kind==='machining-table'||station?.kind==='stonecutter'||station?.kind==='art-bench'||station?.kind==='tailor-bench'||station?.kind==='electric-tailor-bench'||station?.kind==='electric-stove'||station?.kind==='fueled-stove';
-      const clearance=job?.kind==='mine' ? .9 : atBench ? .88 : .82;
-      const pair=pawn.social?.fight?pawnsById.get(pawn.social.fight.opponentId):undefined;
-      const socialOpponent=pair?.social?.fight?.opponentId===pawn.id&&!medicallyStopped(pair)?pair:undefined;
-      const humanOpponent=pawn.melee?.order&&!pawn.melee.order.structure?pawnsById.get(pawn.melee.order.targetId):socialOpponent;
-      const fightContact=humanOpponent&&humanOpponent.state!=='dead'&&!medicallyStopped(pawn)&&(pawn.state!=='moving'||arriving)
-        ? meleeApproach(pawn,humanOpponent):undefined;
-      const reach=fightContact&&(fightContact.x!==0||fightContact.z!==0)?fightContact
-        :contactPose!==WORK_POSE.ground&&contactPose!==0&&!station?.kind.includes('spot') ? workApproach(pawn,work,clearance) : {x:0,z:0};
+      const contact297=humanWorkContact297(world,pawn,pawnsById,jobsById,yaw);
+      const {arriving,workPose,reach,humanOpponent,pasteCollect}=contact297;
+      jobsById=contact297.jobsById;yaw=contact297.yaw;
       this.workOffsets.set(pawn.id,reach);
       if(newMap)this.approachTransitions.set(pawn.id,{fromX:reach.x,fromZ:reach.z,toX:reach.x,toZ:reach.z,start:world.tick,baseX:pawn.x,baseZ:pawn.z});
       px+=reach.x;pz+=reach.z;
@@ -1147,8 +1085,62 @@ export class PawnLayer {
     this.playback435.prepare(world,world.pawns,true);
   }
 
+  /** No appearance, surface, ownership or job reconstruction on an actor-only
+   * phase. Those changes are explicit Full barriers in the producer. */
+  adoptPhase297(world:World,indices:readonly number[],actorScene?:CoreActorScene297,changedActorIds?:ReadonlySet<number>):void {
+    const humans=actorScene?.humans??world.pawns,dirty=new Set(indices);
+    // A stationary attacker also depends on the confirmed position of its target.
+    // Resolve this once per adoption, rather than scanning dependencies every RAF.
+    if(actorScene){const targets=changedActorIds??new Set(indices.map(i=>humans[i]!.id));
+      humans.forEach((pawn,i)=>{const target=pawn.melee?.strike?.targetId??(pawn.shooting?.stance?pawn.shooting.order?.targetId??(pawn.shooting.stance.phase==='cooldown'?pawn.lastAttack?.targetId:undefined):undefined);if(target!==undefined&&target!==null&&targets.has(target))dirty.add(i);});}
+    const changed=[...dirty];
+    this.playback435.adoptPhase297(world,humans,changed);
+    for(const i of changed){const pawn=humans[i]!,target=this.targetPoses.get(pawn.id);if(!target)throw Error('Missing resident pawn pose');
+      const reach=this.workOffsets.get(pawn.id)??{x:0,z:0};target.x=pawn.x+reach.x;target.z=pawn.z+reach.z;
+      target.y=this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0;
+      const melee=pawn.melee?.strike,shot=pawn.shooting?.stance?pawn.shooting.order?.targetId??(pawn.shooting.stance.phase==='cooldown'?pawn.lastAttack?.targetId:undefined):undefined;
+      const id=melee?.targetId??shot,aim=melee?.structure??(id===undefined||id===null?undefined:(actorScene&&id!==undefined?actorScene.byId[id]?.actor:undefined)??world.pawns.find(p=>p.id===id)??world.wildlife?.animals.find(a=>a.id===id)??world.raids?.departed.find(d=>d.pawnId===id)?.cell);
+      if(aim)target.w=Math.atan2(aim.x-pawn.x,aim.z-pawn.z);
+      this.travelKeys.delete(pawn.id);
+    }
+  }
+
+  private readonly tweener297=new PawnTweener297();
+  private springCapacity297=0;
+  private springFrom297=new THREE.BufferAttribute(new Float32Array(0),4);
+  private springTo297=new THREE.BufferAttribute(new Float32Array(0),4);
+  private springTravel297=new THREE.BufferAttribute(new Float32Array(0),4);
+  private springMotionW297=new Float32Array(0);
+  private springValid297=new Uint8Array(0);
+  private readonly springTarget297={x:0,y:0,z:0,yaw:0};
+  private ensureSpring297(count:number):void {
+    if(count<=this.springCapacity297)return;const n=2**Math.ceil(Math.log2(Math.max(1,count)));
+    const copy=(old:THREE.BufferAttribute)=>{const value=new THREE.BufferAttribute(new Float32Array(n*4),4);(value.array as Float32Array).set(old.array);return value;};
+    this.springFrom297=copy(this.springFrom297);this.springTo297=copy(this.springTo297);this.springTravel297=copy(this.springTravel297);
+    const w=new Float32Array(n),valid=new Uint8Array(n);w.set(this.springMotionW297);valid.set(this.springValid297);this.springMotionW297=w;this.springValid297=valid;this.springCapacity297=n;this.tweener297.ensure(n);
+  }
+  private captureSpring297(slot:number,from:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,to:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,travel:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,motion:THREE.BufferAttribute|THREE.InterleavedBufferAttribute):void {
+    this.springFrom297.setXYZW(slot,from.getX(slot),from.getY(slot),from.getZ(slot),from.getW(slot));
+    this.springTo297.setXYZW(slot,to.getX(slot),to.getY(slot),to.getZ(slot),to.getW(slot));
+    this.springTravel297.setXYZW(slot,travel.getX(slot),travel.getY(slot),travel.getZ(slot),travel.getW(slot));
+    this.springMotionW297[slot]=motion.getW(slot);this.springValid297[slot]=1;
+  }
+  private springPose297(slot:number,pawn:Pawn,dt:number,speed:number,from:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,to:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,travel:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,motion:THREE.BufferAttribute|THREE.InterleavedBufferAttribute):boolean {
+    const target=sampleActorRoot(this.springFrom297,this.springTo297,this.springTravel297,slot,this.travelTime.value,this.blend.value,this.springTarget297);
+    // Body transitions preserve their existing anchor. Ordinary stops retain
+    // the tweened position; map and actor-slot resets clear its history.
+    const explicitReset=pawn.body?.pileId!==undefined||pawn.body?.lostAt!==undefined;
+    const pose=this.tweener297.advance(slot,pawn.id,target.x,target.y,target.z,dt,speed,explicitReset);
+    const stepping=motion.getX(slot)>.5;
+    const phase=Math.fround(this.springMotionW297[slot]!+(stepping?Math.hypot(target.x-this.springFrom297.getX(slot),target.z-this.springFrom297.getZ(slot))*HUMAN_GAIT_RADIANS_PER_UNIT:0));
+    const changed=from.getX(slot)!==pose.x||from.getY(slot)!==pose.y||from.getZ(slot)!==pose.z||to.getX(slot)!==pose.x||to.getY(slot)!==pose.y||to.getZ(slot)!==pose.z||from.getW(slot)!==Math.fround(target.yaw)||to.getW(slot)!==Math.fround(target.yaw)||motion.getW(slot)!==phase;
+    from.setXYZW(slot,pose.x,pose.y,pose.z,target.yaw);to.setXYZW(slot,pose.x,pose.y,pose.z,target.yaw);travel.setXYZW(slot,0,0,0,2);motion.setW(slot,phase);
+    const visual=this.visuals.get(pawn.id)!;visual.from.set(pose.x,pose.y,pose.z,target.yaw);visual.to.copy(visual.from);return changed;
+  }
+
   /** CPU chooses a confirmed edge; translation, orientation and rig evaluation stay on GPU. */
-  updateTravel(world:World,timeline:MotionTimeline):void {
+  updateTravel(world:World,timeline:MotionTimeline,dt297=0,speed297=0,actorScene?:CoreActorScene297):void {
+    const humans=actorScene?.humans??world.pawns,animals=actorScene?.animals??world.wildlife?.animals,actorTick=actorScene?actorScene.core/10:world.tick;
     if(!this.pawnMesh)return;
     const geometry=this.pawnMesh.geometry;
     const from=geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute,times=geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute,motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
@@ -1157,20 +1149,23 @@ export class PawnLayer {
     this.travelOrigin=origin;
     this.travelTime.value=localTimeSeconds(timeline.tick,origin);
     const playback=this.playback435.beginFrame(timeline);if(this.playback435.retrying)this.travelKeys.clear();
+    const spring=Number(world.schemaVersion)===297;if(spring)this.ensureSpring297(humans.length);
     let dirty=false;
-    world.pawns.forEach((pawn,i)=>{
-      const prepared=playback?this.playback435.select(i,timeline,timeline.tick,origin):undefined;if(playback&&!prepared)return;
+    humans.forEach((pawn,i)=>{
+      const prepared=playback?this.playback435.select(i,timeline,timeline.tick,origin):undefined;
+      if(spring&&!this.springValid297[i])this.captureSpring297(i,from,to,times,motion);
+      if(playback&&!prepared){if(spring)dirty=this.springPose297(i,pawn,dt297,speed297,from,to,times,motion)||dirty;return;}
       const segment=pawn.body?.pileId!==undefined||pawn.body?.lostAt!==undefined?undefined:(playback?prepared!.edge:timeline.segment(pawn.id));
       const active=!!segment && timeline.tick<segment.end;
       const pasteCollect=pasteCollectionSource(pawn);
-      const onEdge=!!segment&&(active||pawn.state==='moving'&&!pasteCollect||world.tick<segment.end);
+      const onEdge=!!segment&&(active||pawn.state==='moving'&&!pasteCollect||actorTick<segment.end);
       const stepping=onEdge&&!!segment&&active&&!medicallyStopped(pawn)&&(segment.fromFraction??0)!==(segment.toFraction??1)&&timeline.tick>=segment.start;
-      const smallMelee=!!pawn.melee?.strike&&(world.wildlife?.animals.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
+      const smallMelee=!!pawn.melee?.strike&&(animals?.some(animal=>animal.id===pawn.melee!.strike!.targetId&&animal.species==='hare')??false);
       const shownPose=onEdge?(medicallyStopped(pawn)?1:0)
         :animationPose(pawn,this.workPoses.get(pawn.id)??0,smallMelee,seatedOnFurniture(pawn));
       this.showPose(pawn.id,shownPose,timeline.tick);
       const key=`${origin}:${segment?.start}:${segment?.end}:${segment?.edgeStart}:${segment?.fromFraction}:${segment?.toFraction}:${active}:${!!segment&&timeline.tick>=segment.start}:${pawn.state}:${shownPose}:${pawn.path[0]?.x}:${pawn.path[0]?.z}:${pasteCollect?.dispenserId}`;
-      if(this.travelKeys.get(pawn.id)===key)return;
+      if(this.travelKeys.get(pawn.id)===key){if(spring)dirty=this.springPose297(i,pawn,dt297,speed297,from,to,times,motion)||dirty;return;}
       this.travelKeys.set(pawn.id,key);dirty=true;
       const visual=this.visuals.get(pawn.id)!;
       if(onEdge&&segment) {
@@ -1257,6 +1252,7 @@ export class PawnLayer {
         else motion.setW(i,pawn.id*1.7);
       }
       from.setXYZW(i,visual.from.x,visual.from.y,visual.from.z,visual.from.w);to.setXYZW(i,visual.to.x,visual.to.y,visual.to.z,visual.to.w);
+      if(spring){this.captureSpring297(i,from,to,times,motion);dirty=this.springPose297(i,pawn,dt297,speed297,from,to,times,motion)||dirty;}
     });
     let crouchFinished=false;
     for(const [id,transition] of this.crouchTransitions){
@@ -1276,10 +1272,10 @@ export class PawnLayer {
         from.setXYZW(patient,from.getX(carrier),from.getY(carrier),from.getZ(carrier),from.getW(carrier));
         to.setXYZW(patient,to.getX(carrier),to.getY(carrier),to.getZ(carrier),to.getW(carrier));
         times.setXYZW(patient,times.getX(carrier),times.getY(carrier),times.getZ(carrier),times.getW(carrier));motion.setXYZ(patient,0,0,6);
-        this.crouchTransitions.delete(world.pawns[patient]!.id);this.shownPoses.set(world.pawns[patient]!.id,6);
-        const source=this.visuals.get(world.pawns[carrier]!.id)!,target=this.visuals.get(world.pawns[patient]!.id)!;
+        this.crouchTransitions.delete(humans[patient]!.id);this.shownPoses.set(humans[patient]!.id,6);
+        const source=this.visuals.get(humans[carrier]!.id)!,target=this.visuals.get(humans[patient]!.id)!;
         target.from.copy(source.from);target.to.copy(source.to);
-        const heading=this.headings.get(world.pawns[carrier]!.id);if(heading)this.headings.set(world.pawns[patient]!.id,{...heading});
+        const heading=this.headings.get(humans[carrier]!.id);if(heading)this.headings.set(humans[patient]!.id,{...heading});
       }
       for(const attribute of [from,to,times,motion])attribute.needsUpdate=true;
     }else if(crouchFinished)motion.needsUpdate=true;

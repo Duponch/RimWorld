@@ -14,6 +14,8 @@ export class WeightedSearch {
   private readonly settled: Uint8Array;
   private readonly width:number;
   private readonly height:number;
+  private readonly cardinal:number;
+  private readonly diagonal:number;
   private readonly unavailable:Uint8Array;
   private finished=false;
   private readonly extraCosts:NavigationCostLookup|undefined;
@@ -21,14 +23,15 @@ export class WeightedSearch {
   private readonly floors:NavigationCostLookup;
   private readonly corners:ReadonlySet<number>;
   private readonly additiveCosts?:NavigationCostLookup;
-  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:NavigationCostLookup,repeaters:ReadonlySet<number>=new Set(),floors:NavigationCostLookup=EMPTY_NAVIGATION_COSTS,corners:ReadonlySet<number>=new Set(),additiveCosts?:NavigationCostLookup) {
+  constructor(width:number, height:number, start:number, unavailable:Uint8Array, extraCosts?:NavigationCostLookup,repeaters:ReadonlySet<number>=new Set(),floors:NavigationCostLookup=EMPTY_NAVIGATION_COSTS,corners:ReadonlySet<number>=new Set(),additiveCosts?:NavigationCostLookup,moveCosts?:{cardinal:number;diagonal:number}) {
+    this.cardinal=moveCosts?.cardinal??CARDINAL_COST;this.diagonal=moveCosts?.diagonal??DIAGONAL_COST;
     this.additiveCosts=additiveCosts;
     this.extraCosts=extraCosts;this.repeaters=repeaters;this.floors=floors;this.corners=corners;
     this.width=width;this.height=height;this.unavailable=unavailable;
     const size=width*height,parents=new Int32Array(size).fill(-2),costs=new Float64Array(size).fill(Infinity);
     this.settled=new Uint8Array(size);this.field={parents,costs,start,visited:0,unreachedGroups:0,settled:this.settled};
     const maximum=extraCosts?.maximum??0;
-    this.frontier=new PathFrontier(costs,DIAGONAL_COST+maximum+(additiveCosts?.maximum??0),!!additiveCosts);costs[start]=0;parents[start]=-1;this.frontier.push(start);this.pending=this.frontier.pop();
+    this.frontier=new PathFrontier(costs,this.diagonal+maximum+(additiveCosts?.maximum??0),!!additiveCosts);costs[start]=0;parents[start]=-1;this.frontier.push(start);this.pending=this.frontier.pop();
   }
   advance(goals?:ReadonlySet<number>,allGroups?:readonly ReadonlySet<number>[],isGoal?:(index:number)=>boolean):DistanceField {
     if(this.finished)throw new Error('A finalized path field cannot be resumed.');
@@ -57,7 +60,7 @@ export class WeightedSearch {
         const nx=x+dx,nz=z+dz,next=nz*this.width+nx;
         if(nx<0||nz<0||nx>=this.width||nz>=this.height||blocked[next]||this.settled[next])continue;
         if(dx&&dz&&(blocked[index+dx]||blocked[index+dz*this.width]||this.corners.has(index+dx)||this.corners.has(index+dz*this.width)))continue;
-        const cost=costs[index]!+(dx&&dz?DIAGONAL_COST:CARDINAL_COST)+(this.repeaters.has(index)&&this.repeaters.has(next)?this.floors.get(next)??0:this.extraCosts?.get(next)??0)+(this.additiveCosts?.get(next)??0);
+        const cost=costs[index]!+(dx&&dz?this.diagonal:this.cardinal)+(this.repeaters.has(index)&&this.repeaters.has(next)?this.floors.get(next)??0:this.extraCosts?.get(next)??0)+(this.additiveCosts?.get(next)??0);
         if(cost<costs[next]!) {costs[next]=cost;parents[next]=index;this.frontier.push(next);}
       }
       this.pending=this.frontier.pop();

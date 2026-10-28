@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {isAncientCasket256,type AncientCasket256} from './ancient-casket-state-256.ts';
 import {validAncientCasketBuilding256} from './ancient-casket-physical-256.ts';
 import {planSelectedDrops,releaseWork} from './work-release.ts';
@@ -35,7 +36,7 @@ type Removal={ok:false;reason:string}|{ok:true;commit():boolean};
  * unowned refund. References are captured until this one synchronous commit. */
 export function planEmptyAncientCasketRemoval256(w:World,s:Structure,mode:'vanish'|'deconstruct'|'kill-finalize',explosion?:{core:number;instigatorKey?:BombInstigatorKey},damageRng=w.rng):Removal {
  if(!valid(w,s))return {ok:false,reason:'A real completely empty ancient casket is required; DamageUntilDowned/contents destruction is not substituted.'};
- if(explosion&&(mode!=='kill-finalize'||!int(explosion.core)||explosion.core<Math.max(0,(w.tick-1)*10)||explosion.core>w.tick*10||(w.bombWaves?.length??0)>=w.width*w.height))return {ok:false,reason:'Actual casket explosion owner/clock/capacity is unavailable.'};
+ if(explosion&&(mode!=='kill-finalize'||!int(explosion.core)||(Number(w.schemaVersion)===297?explosion.core!==effectiveCore297(w):explosion.core<Math.max(0,(w.tick-1)*10)||explosion.core>w.tick*10)||(w.bombWaves?.length??0)>=w.width*w.height))return {ok:false,reason:'Actual casket explosion owner/clock/capacity is unavailable.'};
  if(!Number.isSafeInteger(damageRng)||damageRng<0||damageRng>0xffffffff)return {ok:false,reason:'Invalid actual leaving stream.'};
  const jobs=w.jobs.filter(j=>j.repair?.structureId===s.id||j.deconstruction?.structureId===s.id||j.furniture?.structureId===s.id||j.fixBreakdown?.structureId===s.id||j.flick?.structureId===s.id),ids=new Set(jobs.map(j=>j.id));
  if(mode==='deconstruct'){
@@ -100,8 +101,8 @@ export function planEmptyAncientCasketRemoval256(w:World,s:Structure,mode:'vanis
  * A raw lethal hit cannot be converted into a favourable free Eject. */
 export function damageEmptyAncientCasket256(w:World,s:Structure,amount:number,cause:StructureDamageCause,rng:number,external?:StructureDamageContext):boolean {
  if(!validActual(w,s)||!Number.isSafeInteger(amount)||amount<=0||!Number.isSafeInteger(rng)||rng<0||rng>0xffffffff)return false;
- if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!int(external.core)||external.core<Math.max(0,(w.tick-1)*10)||external.core>w.tick*10))return false;
- const core=external?.core??w.tick*10,before=s.damage??0,next=before+amount,raw=external?.rawAmount??amount;
+ if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!int(external.core)||(Number(w.schemaVersion)===297?external.core!==effectiveCore297(w):external.core<Math.max(0,(w.tick-1)*10)||external.core>w.tick*10)))return false;
+ const core=external?.core??(Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10),before=s.damage??0,next=before+amount,raw=external?.rawAmount??amount;
  if(!Number.isSafeInteger(next)||!Number.isSafeInteger(core+150))return false;
  if(external?.detonate&&(!s.casketWick||s.casketWick.endCore>core))return false;
  const detonates=!!external?.detonate||raw>=250-before;

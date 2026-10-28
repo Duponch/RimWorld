@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
 import {wakeSiteMechGroup263} from './world-site-mechanoids-263.ts';
 import {mechanicalOrder256,wakeTempleMechGroup256} from './temple-mech-duty-256.ts';
@@ -58,7 +59,7 @@ export interface MechanoidImpactContext {externalViolence?:boolean}
 export function commitMechanoidImpact(w:World,m:Mechanoid,record:MedicalRecord,random:{rng:number},atCore:number,
   context:MechanoidImpactContext={}):boolean {
   if(w.schemaVersion<194||!w.mechanoids?.includes(m)||m.state==='dead'||m.health?.death
-    ||!Number.isSafeInteger(atCore)||atCore<Math.max(0,(w.tick-1)*10)||atCore>w.tick*10
+    ||!Number.isSafeInteger(atCore)||(Number(w.schemaVersion)===297?atCore!==effectiveCore297(w):atCore<Math.max(0,(w.tick-1)*10)||atCore>w.tick*10)
     ||!Number.isSafeInteger(random.rng)||random.rng<0||random.rng>0xffffffff
     ||context.externalViolence!==undefined&&typeof context.externalViolence!=='boolean'
     ||record.tick!==w.tick||validateMechanoidMedicalRecord(record,w.schemaVersion,m.mechKind))return false;

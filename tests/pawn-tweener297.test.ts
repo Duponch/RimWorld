@@ -1,0 +1,6 @@
+import {test,expect} from 'vitest';
+import {PawnTweener297} from '../src/render/PawnTweener297';
+test('recurrent smoothing follows actual confirmed roots at the primary coefficient',()=>{const t=new PawnTweener297();t.ensure(1);t.advance(0,7,0,0,0,0,1);expect(t.advance(0,7,1,0,0,1/60,1).x).toBeCloseTo(.09);expect(t.advance(0,7,1,0,0,1/60,1).x).toBeCloseTo(.1719);});
+test('pause freezes and high speed or explicit reset adopts the confirmed root',()=>{const t=new PawnTweener297();t.ensure(1);t.advance(0,7,0,0,0,0,1);expect(t.advance(0,7,1,2,3,1,0)).toEqual({x:0,y:0,z:0});expect(t.advance(0,7,1,2,3,1/60,6)).toEqual({x:1,y:2,z:3});expect(t.advance(0,7,4,5,6,0,0,true)).toEqual({x:4,y:5,z:6});});
+test('slot reuse and map reset never inherit a different actors old position',()=>{const t=new PawnTweener297();t.ensure(1);t.advance(0,7,1,2,3,0,1);expect(t.advance(0,8,5,6,7,1/60,1)).toEqual({x:5,y:6,z:7});t.reset();expect(t.advance(0,8,8,9,10,1/60,1)).toEqual({x:8,y:9,z:10});});
+test('result storage is reused and capacity growth preserves existing roots',()=>{const t=new PawnTweener297();t.ensure(1);const a=t.advance(0,7,1,0,0,0,1);t.ensure(80);expect(t.advance(0,7,2,0,0,0,0)).toBe(a);expect(a.x).toBe(1);});

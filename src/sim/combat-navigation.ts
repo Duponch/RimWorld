@@ -1,3 +1,4 @@
+import {effectiveLocal297} from './core-phase-297.ts';
 import {targetDoorCanOpen263} from './world-target-building-263.ts';
 import { hostileTo,isColonist } from './affiliation.ts';
 import { isRoomDoor,isPassageDoor } from './door-rules.ts';
@@ -11,13 +12,14 @@ const actor=(world:World,origin:Cell):Pawn|Mechanoid|undefined=>'id' in origin?w
 const opensDoors=(pawn:Pawn|Mechanoid)=>!isMechanoidTarget(pawn)&&(isColonist(pawn)||!!pawn.visitor||pawn.prisoner?.releasedAt!==undefined||prisonBreakActive(pawn));
 /** Capture only within one synchronous decision. Both endpoints protect 3D travel. */
 export function hostileCells(world:World,pawn:Pawn|Mechanoid):Set<number> {
+  const local=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
   const cells=new Set<number>();
   for(const p of world.pawns)if(p!==pawn&&(isMechanoidTarget(pawn)?!p.prisoner:hostileTo(pawn,p)||!!pawn.melee?.order&&!!p.melee?.order&&!(pawn.prisoner&&p.prisoner&&(prisonBreakActive(pawn)||prisonBreakActive(p))))&&p.state!=='dead'&&p.state!=='downed') {
     cells.add(p.z*world.width+p.x);
-    if(p.motion&&p.motion.end>world.tick)cells.add(p.motion.from.z*world.width+p.motion.from.x);
+    if(p.motion&&p.motion.end>local)cells.add(p.motion.from.z*world.width+p.motion.from.x);
   }
   for(const m of world.mechanoids??[])if(m!==pawn&&m.state!=='dead'&&m.state!=='downed'){
-    cells.add(m.z*world.width+m.x);if(m.motion&&m.motion.end>world.tick)cells.add(m.motion.from.z*world.width+m.motion.from.x);
+    cells.add(m.z*world.width+m.x);if(m.motion&&m.motion.end>local)cells.add(m.motion.from.z*world.width+m.motion.from.x);
   }
   return cells;
 }

@@ -1,3 +1,5 @@
+import {worldPawnsPhysicalCore297} from './world-pawn-physical-clock-297.ts';
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {nativeWorldPawnOrderCurrent256,commitNativeWorldPawnOrder256} from './world-pawn-native-order-256.ts';
 import {CORE_STARTING_ARRIVAL_PROFILE_256,finishCoreStartingArrival256,type CoreStartingPod256} from './starting-pod-state-256.ts';
@@ -44,22 +46,22 @@ function adopt<T extends object>(original:T,next:T):void {for(const k of Object.
  * is NOT Kill(), does not produce a corpse and does not run death thoughts.
  * Only touched records/placement columns are staged, never another World.
  * Unrepresented held jobs/possessions refuse before the first original edit. */
-export function prepareStartingPodDamage256(w:World,pod:CoreStartingPod256,amount:number,mode:'kill'|'vanish'='kill',atCore=w.tick*10):StartingPodDamagePreparation256 {
+export function prepareStartingPodDamage256(w:World,pod:CoreStartingPod256,amount:number,mode:'kill'|'vanish'='kill',atCore=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10):StartingPodDamagePreparation256 {
  const no=(reason:string):StartingPodDamagePreparation256=>({ok:false,reason}),a=w.startingArrival;
- if(!isSchema256Or257(w.schemaVersion)||a?.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||a.phase==='opened'||!a.pods.includes(pod)||pod.phase!=='landed'||!Number.isSafeInteger(amount)||amount<=0||!['kill','vanish'].includes(mode)||!Number.isSafeInteger(atCore)||atCore<Math.max(0,(w.tick-1)*10)||atCore>w.tick*10||atCore<pod.fallCore)return no('No actual landed active transporter damage target');
+ if(!isSchema256Or257(w.schemaVersion)||a?.profile!==CORE_STARTING_ARRIVAL_PROFILE_256||a.phase==='opened'||!a.pods.includes(pod)||pod.phase!=='landed'||!Number.isSafeInteger(amount)||amount<=0||!['kill','vanish'].includes(mode)||!Number.isSafeInteger(atCore)||(Number(w.schemaVersion)===297?atCore!==effectiveCore297(w):atCore<Math.max(0,(w.tick-1)*10)||atCore>w.tick*10)||atCore<pod.fallCore)return no('No actual landed active transporter damage target');
  const damage=(pod.damage??0)+amount;
  if(!Number.isSafeInteger(damage)||!ownMutable(pod))return no('Active transporter damage owner is not mutable');
- const beforePod=JSON.stringify(pod),tick=w.tick;
+ const beforePod=JSON.stringify(pod),tick=w.tick,plannedCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined;
  if(damage<STARTING_POD_MAX_HP_256&&mode==='kill'){
   if(!writableSlot(pod,'damage'))return no('Active transporter damage slot is not writable');
-  let used=false;const current=()=>!used&&writableSlot(pod,'damage')&&w.tick===tick&&w.startingArrival===a&&a.pods.includes(pod)&&JSON.stringify(pod)===beforePod;
+  let used=false;const current=()=>!used&&writableSlot(pod,'damage')&&w.tick===tick&&(plannedCore297===undefined||plannedCore297===effectiveCore297(w))&&w.startingArrival===a&&a.pods.includes(pod)&&JSON.stringify(pod)===beforePod;
   return {ok:true,current,commit(){if(!current())throw Error('Stale active transporter damage');used=true;pod.damage=damage;}};
  }
  const root=registeredCampaign(w),mapId=registeredMapId(w),state=root.worldPawns,factions=root.worldFactions;
  if(!state||!factions||mapId===undefined||!root.worldMaps||registeredMap(root,mapId)!==w||root.tick!==tick)return no('Active transporter destruction requires its actual born campaign and map owners');
  // No constructor/default registry at destruction. Root may be in its final
  // local substep before WorldPawns itself reaches this confirmed boundary.
- if(state.atCore!==tick*10&&state.atCore!==(tick-1)*10)return no('Active transporter lost its actual WorldPawns frontier');
+ if(plannedCore297===undefined?state.atCore!==tick*10&&state.atCore!==(tick-1)*10:state.atCore!==tick*10||worldPawnsPhysicalCore297(state,w.schemaVersion)!==plannedCore297)return no('Active transporter lost its actual WorldPawns frontier');
  // nextId belongs to this actual campaign authority; local views may forward
  // it through accessors. Commit writes the proven root data slot directly.
  const terminalRecipientsMutable=()=>appendable(state.owners)&&writableSlot(state,'currentRate')&&removableAt(a.pods,a.pods.indexOf(pod))&&writableSlot(a,'phase')
@@ -68,7 +70,7 @@ export function prepareStartingPodDamage256(w:World,pod:CoreStartingPod256,amoun
   &&(mode!=='kill'||writableSlot(w,'piles'))&&writableSlot(w,'stock')&&w.jobs.every(job=>writableSlot(job,'escrow'));
  if(!terminalRecipientsMutable())return no('Actual terminal recipient slot/array is not mutable');
  const admitted=validateCoreStartingArrivalContents256(w,a);if(admitted.length)return no(admitted[0]!);
- let enteredAtAbsCore:number;try{enteredAtAbsCore=actualCampRemovalAbsCore256(root,w)-(w.tick*10-atCore);}catch(e){return no(e instanceof Error?e.message:String(e));}
+ let enteredAtAbsCore:number;try{enteredAtAbsCore=actualCampRemovalAbsCore256(root,w)-((Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10)-atCore);}catch(e){return no(e instanceof Error?e.message:String(e));}
  const actors=new Set<Pawn|WildAnimal>([pod.pawn,...pod.animals]),context={seed:w.seed,width:w.width,height:w.height,...w.climate?{climate:w.climate}:{},...w.site?{site:w.site}:{},...w.scenario?{scenario:w.scenario}:{}};
  const nativeBefore=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,nativeBefore))return no('Actual native pod terminal order is not mutable/admitted');
  const staged:WorldPawnsState256={...state,owners:state.owners.slice()},outcomes:{original:Pawn|WildAnimal;row:WorldPawnOwner256}[]=[];
@@ -119,7 +121,7 @@ export function prepareStartingPodDamage256(w:World,pod:CoreStartingPod256,amoun
   }catch(e){return no(e instanceof Error?e.message:String(e));}
  }
  const members=a.pods.slice(),rows=state.owners.slice(),at=state.atCore,piles=w.piles,pileMembers=piles.slice(),nextBefore=w.nextId,rng=root.rng,arrivalBefore=JSON.stringify(a),lossBefore=JSON.stringify(w.destroyed),originals=outcomes.map(p=>JSON.stringify(p.original));let used=false;
- const current=()=>!used&&nativeWorldPawnOrderCurrent256(state,nativeBefore)&&terminalRecipientsMutable()&&w.tick===tick&&root.tick===tick&&w.startingArrival===a&&JSON.stringify(a)===arrivalBefore&&a.pods.length===members.length&&a.pods.every((p,i)=>p===members[i])&&root.worldPawns===state&&state.atCore===at&&state.owners.length===rows.length&&state.owners.every((p,i)=>p===rows[i])&&root.rng===rng&&w.nextId===nextBefore&&w.piles===piles&&piles.length===pileMembers.length&&piles.every((p,i)=>p===pileMembers[i])&&JSON.stringify(w.destroyed)===lossBefore&&outcomes.every((p,i)=>ownMutable(p.original)&&JSON.stringify(p.original)===originals[i])&&masterChanges.every(p=>writableSlot(p.animal,'startingPet')&&JSON.stringify(p.animal)===p.before)&&placementCurrent();
+ const current=()=>!used&&nativeWorldPawnOrderCurrent256(state,nativeBefore)&&terminalRecipientsMutable()&&w.tick===tick&&(plannedCore297===undefined||plannedCore297===effectiveCore297(w))&&root.tick===tick&&w.startingArrival===a&&JSON.stringify(a)===arrivalBefore&&a.pods.length===members.length&&a.pods.every((p,i)=>p===members[i])&&root.worldPawns===state&&state.atCore===at&&(plannedCore297===undefined||worldPawnsPhysicalCore297(state,w.schemaVersion)===plannedCore297)&&state.owners.length===rows.length&&state.owners.every((p,i)=>p===rows[i])&&root.rng===rng&&w.nextId===nextBefore&&w.piles===piles&&piles.length===pileMembers.length&&piles.every((p,i)=>p===pileMembers[i])&&JSON.stringify(w.destroyed)===lossBefore&&outcomes.every((p,i)=>ownMutable(p.original)&&JSON.stringify(p.original)===originals[i])&&masterChanges.every(p=>writableSlot(p.animal,'startingPet')&&JSON.stringify(p.animal)===p.before)&&placementCurrent();
  return {ok:true,current,commit(){if(!current())throw Error('Stale active transporter terminal transaction');used=true;cancelWorldPawnGC256(state);
   for(const {original,row}of outcomes){adopt(original,row.actor);if(row.kind==='human'&&!('species'in original))row.actor=original;else if(row.kind==='animal'&&'species'in original)row.actor=original;state.owners.push(row);}
   commitNativeWorldPawnOrder256(state,nativeBefore,staged.nativeOrder);
@@ -129,6 +131,6 @@ export function prepareStartingPodDamage256(w:World,pod:CoreStartingPod256,amoun
   a.phase=a.pods.some(p=>p.phase==='incoming')?'incoming':'landed';finishCoreStartingArrival256(w,a);refreshStock(w);
  }};
 }
-export function damageStartingPod256(w:World,pod:CoreStartingPod256,amount:number,atCore=w.tick*10):boolean {
+export function damageStartingPod256(w:World,pod:CoreStartingPod256,amount:number,atCore=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10):boolean {
  const plan=prepareStartingPodDamage256(w,pod,amount,'kill',atCore);if(!plan.ok)return false;plan.commit();return true;
 }

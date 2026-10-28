@@ -1,3 +1,5 @@
+import {registerWorldProjectile297} from './register-projectile-297.ts';
+import {effectiveCore297} from './core-phase-297.ts';
 import {landedStartingPods256,damageStartingPod256} from './starting-pod-damage-256.ts';
 import { damageAnimalWithBullet } from './wildlife-health.ts';
 import { animalImpactNoise } from './wildlife-noise.ts';
@@ -23,6 +25,7 @@ import { damageMechanoidWithBullet,delayMechanoidImpact } from './mechanoid-impa
 /** Commit a producer's validated emission and its private PRNG together.
  * Internal boundary, not a player command or a replacement for aiming/cadence. */
 export function registerWorldProjectile(world:World,flight:BulletFlight,quality:WeaponQuality,relations:ProjectileRelations,rng=world.rng,at=world.tick*CORE_TICKS_PER_LOCAL,weaponItem:ProjectileProfileId='revolver'):WorldProjectile {
+  if(Number(world.schemaVersion)===297)return registerWorldProjectile297(world,flight,quality,relations,rng,arguments[5]===undefined?effectiveCore297(world):at,weaponItem);
   if(world.schemaVersion<55||!Number.isSafeInteger(world.nextId+1)||!Number.isSafeInteger(rng)||rng<1||rng>0xffffffff||world.projectiles&&world.projectiles.length>=world.width*world.height)throw new RangeError('Cannot register projectile');
   if(!Number.isSafeInteger(at)||at<Math.max(0,(world.tick-1)*CORE_TICKS_PER_LOCAL)||at>world.tick*CORE_TICKS_PER_LOCAL)throw new RangeError('Invalid emission time');
   if(weaponItem==='mini-turret-gun'&&!world.structures.some(s=>s.kind==='mini-turret'&&s.turret&&flight.launcherKey===`structure:${s.id}`&&s.id<world.nextId))throw new RangeError('Invalid intrinsic emission owner');

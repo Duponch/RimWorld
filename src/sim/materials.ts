@@ -126,7 +126,7 @@ export function addGroundMaterial(world: World, kind: MaterialKind, quantity: nu
 /** Move the existing stack, merging only when possible. No allocation or identity budget needed. */
 export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):boolean {
   if(!world.piles.includes(pile)||!validOrbitalOwner(world,owner))return false;
-  if((pile.kind==='book'||pile.item==='novel')&&sameOwner(pile.owner,owner))return (Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)&&pile.kind==='book'&&pile.item==='novel'&&pile.quantity===1&&isNovelBook295(pile.book)&&owner.type!=='job'&&owner.type!=='equipment'&&owner.type!=='apparel'&&owner.type!=='grave';
+  if((pile.kind==='book'||pile.item==='novel')&&sameOwner(pile.owner,owner))return (Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))&&pile.kind==='book'&&pile.item==='novel'&&pile.quantity===1&&isNovelBook295(pile.book)&&owner.type!=='job'&&owner.type!=='equipment'&&owner.type!=='apparel'&&owner.type!=='grave';
   if((pile.kind==='book'||pile.item==='novel')&&!materialCanFit(world,pile.kind,pile.quantity,owner,pile.item,pile))return false;
   if(sameOwner(pile.owner,owner))return true;
   if(pile.kind==='plant'){if(owner.type!=='ground'&&owner.type!=='pawn'&&owner.type!=='inventory')return false;if(owner.type==='ground'&&groundCapacity(world,owner,pile,pile.owner.type==='pawn'?pile.owner.pawnId:undefined)<1)return false;pile.owner={...owner};refreshStock(world);return true;}

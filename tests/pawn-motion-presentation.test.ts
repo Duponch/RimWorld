@@ -1,6 +1,6 @@
 import { expect,test } from 'vitest';
 import * as THREE from 'three/webgpu';
-import { createWorld } from '../src/sim/index';
+import { createWorld as createCurrentWorld } from '../src/sim/index';
 import type { Job } from '../src/sim/types';
 import type { RecreationTask } from '../src/sim/recreation-rules';
 import { PawnLayer } from '../src/render/PawnLayer';
@@ -9,8 +9,14 @@ import { WildlifeLayer } from '../src/render/WildlifeLayer';
 import { headingAt,turnToward,TURN_TICKS } from '../src/render/turn-presentation';
 import { pawnWorkPose,workApproach,meleeApproach,WORK_POSE } from '../src/render/work-presentation';
 import { clearGroup } from '../src/render/primitives';
-import { animalCombatCamp } from './scenarios/animal-combat';
+import { animalCombatCamp as currentAnimalCombatCamp } from './scenarios/animal-combat';
 import { WORLD_SCALE } from '../src/world/scale';
+
+/** Historical render-only endpoint fixtures. These are not serialized Raw saves
+ * or simulation continuations. Current297 root smoothing has separate tests
+ * with actual produced edges, explicit dt/speed and current schema. */
+function createWorld(){const world=createCurrentWorld();(world as {schemaVersion:number}).schemaVersion=296;return world;}
+function animalCombatCamp(){const world=currentAnimalCombatCamp();(world as {schemaVersion:number}).schemaVersion=296;return world;}
 
 test('turns take the short arc, remain continuous when interrupted, and finish quickly',()=>{
   const start={from:0,to:0,startTick:10};

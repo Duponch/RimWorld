@@ -1,3 +1,6 @@
+import {noPaidTravel297} from './core-path-progress-297.ts';
+import {effectiveCore297,effectiveLocal297} from './core-phase-297.ts';
+import {stopCapturedTravel297} from './movement.ts';
 import { cancelMelee } from './melee-state.ts';
 import { activeCombatThreat,hostileTarget } from './combat-target.ts';
 import { cancelShooting } from './shooting-state.ts';
@@ -26,7 +29,7 @@ function announce(world:World,pawn:Pawn,reason:string):void {
 /** The logical cell already denotes the end of an active edge. Keep the load on
  * its GPU pose until that edge finishes; never drop it ahead of its carrier. */
 export function interruptDraftWork(world:World,pawn:Pawn):void {
-  const travelling=!!pawn.motion&&pawn.motion.end>world.tick;
+  const travelling=!!pawn.motion&&pawn.motion.end>(Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick);
   const carrying=travelling&&(world.piles.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id)||world.packed.some(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id));
   if(!carrying){interruptWork(world,pawn);return;}
   clearQueuedOrders(world,pawn);delete pawn.priorityWork;releaseAssignments(world,pawn);
@@ -61,34 +64,46 @@ export function applyDraftCommand(world:World,command:DraftCommand):CommandResul
         if(pawn.shooting?.order?.auto?.kind==='draft')cancelShooting(pawn);
         else if(pawn.shooting?.stance?.phase==='aim') {
           // Soft cancellation resets the warmup, but an explicit attack survives.
-          pawn.shooting.stance=null;advanceShooter(world,pawn,world.tick*10,shootingQueries(world));
+          pawn.shooting.stance=null;advanceShooter(world,pawn,Number(world.schemaVersion)===297?effectiveCore297(world):world.tick*10,shootingQueries(world));
         }
       }
     }
     return {ok:true};
   }
   if(command.type==='draft-stop') {
-    for(const pawn of selected){cancelShooting(pawn);cancelMelee(pawn);interruptDraftWork(world,pawn);pawn.draft={lastActiveTick:world.tick,target:null,queue:[],...pawn.draft?.holdFire?{holdFire:true}:{}};pawn.planCooldown=0;}
+    for(const pawn of selected){if(Number(world.schemaVersion)===297)stopCapturedTravel297(world,pawn);cancelShooting(pawn);cancelMelee(pawn);interruptDraftWork(world,pawn);pawn.draft={lastActiveTick:world.tick,target:null,queue:[],...pawn.draft?.holdFire?{holdFire:true}:{}};pawn.planCooldown=0;}
     return {ok:true};
   }
   if(!command.target||!Number.isInteger(command.target.x)||!Number.isInteger(command.target.z)||typeof command.queue!=='boolean')return refuse('Destination tactique invalide.');
   if(command.queue&&selected.some(p=>p.draft!.queue.length>=DRAFT_QUEUE_LIMIT))return refuse('La file de déplacements est pleine.');
+  if(Number(world.schemaVersion)===297&&!command.queue&&selected.length===1){
+    const p=selected[0]!,now=effectiveLocal297(world),occupied=p.motion&&p.motion.end>now?p.motion.from:p;
+    // Native single-selection GoHere does not replace an order by clicking
+    // the cell still occupied during the already committed step.
+    if(sameCell(command.target,occupied))return {ok:true};
+  }
   const blocked=blockedCells(world),context=draftDestinationContext(world,command.queue?new Set():new Set(command.pawnIds));
   const plans=[];
   for(const pawn of selected) {
-    const origin=command.queue?(pawn.draft!.queue.at(-1)??pawn.draft!.target??pawn):pawn;
+    const now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick,m=pawn.motion;
+    const reset297=Number(world.schemaVersion)===297&&!command.queue&&!!m&&m.end>now&&(noPaidTravel297(m,now)||!canStep(world,{...pawn,x:m.from.x,z:m.from.z},m.to,blocked,CIVIL_TRANSIT_BLOCKERS));
+    const origin=command.queue?(pawn.draft!.queue.at(-1)??pawn.draft!.target??pawn):reset297?{...pawn,x:m!.from.x,z:m!.from.z}:pawn;
     const queued=command.queue&&!!(pawn.draft!.target||pawn.draft!.queue.length);
     const plan=draftDestination(world,pawn,command.target,blocked,context,origin,!queued);
     if(!plan)return refuse('Aucune destination accessible et libre près du clic.');
-    context.claimed.add(plan.target.z*world.width+plan.target.x);plans.push({pawn,...plan});
+    context.claimed.add(plan.target.z*world.width+plan.target.x);plans.push({pawn,reset297,...plan});
   }
   // Validate the whole group before releasing any ownership or reservation.
-  for(const {pawn,target,path} of plans) {
+  for(const {pawn,target,path,reset297} of plans) {
     const draft=pawn.draft!;
     if(command.queue&&(draft.target||draft.queue.length)){draft.queue.push(target);continue;}
+    if(reset297)stopCapturedTravel297(world,pawn);
     cancelShooting(pawn);cancelMelee(pawn);interruptDraftWork(world,pawn);draft.target=target;draft.queue=[];draft.lastActiveTick=world.tick;
     pawn.path=path;pawn.planCooldown=0;pawn.state=path.length||pawn.moveCooldown>0?'moving':'idle';
     if(pawn.shooting?.stance?.phase==='cooldown'||pawn.melee?.strike){pawn.path=[];pawn.state='idle';}
+    if(Number(world.schemaVersion)===297&&(pawn.motion?.end??0)<=effectiveLocal297(world)&&pawn.path.length){
+      const next=pawn.path[0]!;if(startTravel(world,pawn,next,undefined,undefined,true))pawn.path.shift();
+    }
   }
   return {ok:true};
 }

@@ -1,3 +1,5 @@
+import {effectiveLocal297} from './core-phase-297.ts';
+import {humanMoveSpeedFactor297} from './human-move-speed-297.ts';
 import type {DuckTerrainOverride256} from './duck-water-256.ts';
 import {naturalTerrainCosts256} from './natural-terrain-movement-256.ts';
 import {isWetTerrain} from './shallow-water.ts';
@@ -20,7 +22,7 @@ export function terrainTravelDelay(world:World,index:number):number {
   if(tile?.floor)return FLOOR_DEFINITIONS[tile.floor].pathCost/10;
   const natural=naturalTerrainCosts256(terrain);if(natural)return natural.pathCostCore/10;
   if(isWetTerrain(terrain))return MARSH_PATH_COST_CORE/10;
-  return terrain==='rough-stone'||terrain==='rich-soil'||terrain==='gravel'||world.site&&terrain==='grass'?.2:0;
+  return terrain==='rough-stone'||terrain==='rich-soil'||terrain==='gravel'||world.site&&terrain==='grass'||Number(world.schemaVersion)===297&&(terrain==='grass'||terrain==='soil')?.2:0;
 }
 
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
@@ -148,7 +150,7 @@ export function furnitureDelay(world:World,from:Cell,to:Cell,terrainOverride?:Du
     +(actor&&spikeTrapKnowsOf(world,actor)?SPIKE_TRAP_WALK_DELAY:0);
 }
 /** Captured once per synchronous search. No shared mutation or cross-tick cache. */
-export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTerrainOverride256,geometry?:StructureNavigationGeometry):{costs:NavigationCostLookup|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:NavigationCostLookup} {
+export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTerrainOverride256,geometry?:StructureNavigationGeometry):{costs:NavigationCostLookup|undefined;repeaters:ReadonlySet<number>;stops:ReadonlySet<number>;floors:NavigationCostLookup;coreMoveCosts297?:{cardinal:number;diagonal:number}} {
   const version=world.schemaVersion,width=world.width,snow=!!world.snow;
   const costs=new Map(frameCosts(world)),repeaters=new Set<number>(),stops=new Set<number>();
   const actor=version>=226?spikeTrapNavigationActor(world,origin):undefined,knows=!!actor&&spikeTrapKnowsOf(world,actor),traps=new Map<number,number>(),marshPerceptionCosts=new Map<number,number>();
@@ -185,7 +187,7 @@ export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTe
     };
     for(let i=0;i<tiles.length;i++){
       const tile=tiles[i]!,kind=tile.terrain;
-      let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'?67:0;
+      let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'||Number(version)===297&&(kind==='grass'||kind==='soil')?67:0;
       const natural=readNatural(kind);
       if(natural&&!tile.bridge&&!tile.floor)cost=natural.pathCost;
       else if(isWetTerrain(kind)&&!tile.bridge&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
@@ -200,10 +202,20 @@ export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTe
   if(version>=29)for(const p of world.piles)if((p.kind==='steel'||version>=32&&p.kind==='blocks'||version>=41&&p.kind==='component'||version>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'){const i=p.owner.z*width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
   // Door wait is added after the terrain/object/material maximum, not compared
   // with it. Preserve present zero entries for fully open doors on bare floors.
-  for(const s of geometry?.roomDoors??world.structures)if(isRoomDoor(s.kind)) {const i=s.z*width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,world.tick)/3*1000));}
+  for(const s of geometry?.roomDoors??world.structures)if(isRoomDoor(s.kind)) {const i=s.z*width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick)/3*1000));}
   const fire=fireNavigationCosts(world);
   // Trap avoidance is additive after the ordinary terrain/object maximum, like
   // fire danger. Its 800 Core cost already includes avoidance: do not add the
   // separate 40 Core physical walk delay to the search a second time.
-  return {costs:addFireNavigationCosts(addFireNavigationCosts(addFireNavigationCosts(costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,fire),traps),marshPerceptionCosts),repeaters,stops,floors:addFireNavigationCosts(addFireNavigationCosts(addFireNavigationCosts(overlayNavigationCosts(terrain,terrainMaximum,floors),fire),traps),marshPerceptionCosts)!};
+  const result={costs:addFireNavigationCosts(addFireNavigationCosts(addFireNavigationCosts(costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,fire),traps),marshPerceptionCosts),repeaters,stops,floors:addFireNavigationCosts(addFireNavigationCosts(addFireNavigationCosts(overlayNavigationCosts(terrain,terrainMaximum,floors),fire),traps),marshPerceptionCosts)!};
+  const human=Number(version)===297&&origin&&'id'in origin?world.pawns.find(p=>p.id===origin.id):undefined;
+  if(!human)return result;
+  const factor=humanMoveSpeedFactor297(world,human),base=60/(4.6*factor);
+  return {...result,costs:coreNavigationUnits297(result.costs),floors:coreNavigationUnits297(result.floors)!,coreMoveCosts297:{cardinal:Math.round(Math.min(450,Math.max(1,base))),diagonal:Math.round(Math.min(450,Math.max(1,base*1.41421)))}};
+}
+
+/** Converts the captured legacy integer normalization back into integer Core
+ * costs. No new dense map, actor lookup or allocation in the search loop. */
+export function coreNavigationUnits297(costs:NavigationCostLookup|undefined):NavigationCostLookup|undefined {
+ return costs?{get(index){const value=costs.get(index);return value===undefined?undefined:Math.round(value*.03);},has:index=>costs.has(index),maximum:Math.round(costs.maximum*.03)}:undefined;
 }

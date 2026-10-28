@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {requireAnimalDeathCapacity256} from './animal-death-explosion-v256.ts';
 import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
 import { fragmentedApparelProtection } from './apparel-protection.ts';
@@ -15,7 +16,7 @@ export { damageMechanoidWithBomb } from './mechanoid-impact.ts';
 
 export function damagePawnWithBomb(w:World,p:Pawn,core:number,amount=BOMB_AMOUNT):BombImpactResult|null {
   if(!validAmount(amount))throw new RangeError('Invalid Bomb damage amount');
-  if(!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)throw new RangeError('Invalid Bomb impact clock');
+  if(!Number.isSafeInteger(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))throw new RangeError('Invalid Bomb impact clock');
   if(w.schemaVersion<193||!w.pawns.includes(p))throw new Error('Invalid Bomb person owner');
   if(p.state==='dead')return null;
   const lying=isLying(p);updatePawnHealth(w,p);if(p.health?.death)return null;
@@ -27,7 +28,7 @@ export function damagePawnWithBomb(w:World,p:Pawn,core:number,amount=BOMB_AMOUNT
 }
 export function damageAnimalWithBomb(w:World,a:WildAnimal,core:number,center:Cell,amount=BOMB_AMOUNT,instigator?:import('./mini-turret-state.ts').BombInstigatorKey):BombImpactResult|null {
   if(!validAmount(amount))throw new RangeError('Invalid Bomb damage amount');
-  if(!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)throw new RangeError('Invalid Bomb impact clock');
+  if(!Number.isSafeInteger(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))throw new RangeError('Invalid Bomb impact clock');
   if(w.schemaVersion<193||!w.wildlife?.animals.includes(a))throw new Error('Invalid Bomb animal owner');
   if(a.state==='dead')return null;
   requireAnimalDeathCapacity256(w,a);advanceAnimalHealth(w,a);if(a.health?.death)return null;

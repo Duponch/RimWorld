@@ -26,12 +26,12 @@ function data(value:unknown,keys:readonly string[]):value is Record<string,unkno
  });
 }
 export function validFirefoamTriggerCommand290(raw:unknown,version:number,nextId:number):raw is FirefoamTriggerCommand290 {
- try{return (version===290||(version===291||(version===292||(version===293||(version===294||(version===295||version===296))))))&&integer(nextId,1)&&data(raw,['type','pawnId','structureId'])&&raw.type==='firefoam-trigger'
+ try{return (version===290||(version===291||(version===292||(version===293||(version===294||(version===295||(version===296||version===297)))))))&&integer(nextId,1)&&data(raw,['type','pawnId','structureId'])&&raw.type==='firefoam-trigger'
   &&integer(raw.pawnId,1,nextId-1)&&integer(raw.structureId,1,nextId-1);}catch{return false;}
 }
 /** Absent is handled by the owner-field fence; explicit undefined is invalid. */
 export function validFirefoamManualTask290(raw:unknown,version:number,tick:number,nextId:number):raw is FirefoamManualTask290 {
- try{return (version===290||(version===291||(version===292||(version===293||(version===294||(version===295||version===296))))))&&integer(tick)&&integer(nextId,1)&&data(raw,['structureId','phase','progressCore','lastWorkedAt'])
+ try{return (version===290||(version===291||(version===292||(version===293||(version===294||(version===295||(version===296||version===297)))))))&&integer(tick)&&integer(nextId,1)&&data(raw,['structureId','phase','progressCore','lastWorkedAt'])
   &&integer(raw.structureId,1,nextId-1)&&(raw.phase==='approach'||raw.phase==='use')
   &&integer(raw.progressCore,0,FIREFOAM_MANUAL_USE_CORE_290-10)&&raw.progressCore%10===0
   &&(raw.phase!=='approach'||raw.progressCore===0)&&integer(raw.lastWorkedAt,0,tick);}catch{return false;}
@@ -91,7 +91,7 @@ function cancel(w:World,p:Pawn):void {
 export function reconcileFirefoamManual290(w:World,p:Pawn):void {
  if(!p.firefoamTask290)return;
  const task=p.firefoamTask290,s=target(w,task.structureId),cell=firefoamManualServiceCell290(p,w);
- if((Number(w.schemaVersion)===290||(Number(w.schemaVersion)===291||(Number(w.schemaVersion)===292||(Number(w.schemaVersion)===293||(Number(w.schemaVersion)===294||(Number(w.schemaVersion)===295||Number(w.schemaVersion)===296))))))&&s&&firefoamManualCapable290(p,w.tick)&&!firefoamManualClaim290(w,s.id,p.id)
+ if((Number(w.schemaVersion)===290||(Number(w.schemaVersion)===291||(Number(w.schemaVersion)===292||(Number(w.schemaVersion)===293||(Number(w.schemaVersion)===294||(Number(w.schemaVersion)===295||(Number(w.schemaVersion)===296||Number(w.schemaVersion)===297)))))))&&s&&firefoamManualCapable290(p,w.tick)&&!firefoamManualClaim290(w,s.id,p.id)
   &&cell&&!allowedAreaReason(w,p,cell)&&canStopAt(w,cell)&&!reservedServiceCells(w,p.id).has(cell.z*w.width+cell.x)
   &&(task.phase==='approach'||p.moveCooldown===0&&(p.motion?.end??0)<=w.tick&&p.path.length===0&&p.state==='working'))return;
  cancel(w,p);

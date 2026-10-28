@@ -34,14 +34,14 @@ const data=(v:object,k:PropertyKey):PropertyDescriptor|undefined=>{const d=Objec
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const record=(v:unknown):v is Record<string,unknown>=>plain(v)&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&!!data(v,k));
 const keys=(v:unknown,required:readonly string[],optional:readonly string[]=[]):v is Record<string,unknown>=>record(v)&&required.every(k=>!!data(v,k))&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&(required.includes(k)||optional.includes(k)));
-const supported=(v:unknown):v is number=>integer(v,1,296);
+const supported=(v:unknown):v is number=>integer(v,1,297);
 
 /** Shape only. Neither a descriptor nor its containing Job can invoke a getter. */
 export function validWallDoorJob296(value:unknown,version:number):boolean {
  try{
   if(!supported(version)||!plain(value))return false;
   if(!('wallDoor296'in value))return true;
-  if(version!==296||!record(value)||value.kind!=='deconstruct'||!keys(value.wallDoor296,['manual'],['plan','fromBlueprint']))return false;
+  if((version!==296&&version!==297)||!record(value)||value.kind!=='deconstruct'||!keys(value.wallDoor296,['manual'],['plan','fromBlueprint']))return false;
   const state=value.wallDoor296;
   if(typeof state.manual!=='boolean'||'fromBlueprint'in state&&state.fromBlueprint!==true)return false;
   if(!keys(value.deconstruction,['structureId','kind'],['material'])||value.deconstruction.kind!=='wall'||!integer(value.deconstruction.structureId,1))return false;

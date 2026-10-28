@@ -1,3 +1,4 @@
+import {heldCore297,effectiveCore297} from './core-phase-297.ts';
 import {hasPartyMemoryField292} from './party-memories-292.ts';
 import {hasCoupleFields285} from './couple-owner-save-285.ts';
 import {validCouplePawnContext285} from './couple-save-285.ts';
@@ -36,8 +37,8 @@ const data=(v:object,k:PropertyKey)=>{const d=Object.getOwnPropertyDescriptor(v,
 type ShipCasketHeader277=Pick<World,'width'|'height'|'nextId'>&Partial<Pick<World,'worldFactions'>>;
 /** No ongoing beam/support/roof requirement is invented for an existing
  * original. Physical admission at construction is a separate authority. */
-export function validShipCasketBuilding277(raw:unknown,version:number,w:ShipCasketHeader277,tick=Number.MAX_SAFE_INTEGER):boolean {
- if(!plain(raw)||!validShipCasketField277(raw,version,tick))return false;
+export function validShipCasketBuilding277(raw:unknown,version:number,w:ShipCasketHeader277,tick=Number.MAX_SAFE_INTEGER,coreNow297?:number):boolean {
+ if(!plain(raw)||!validShipCasketField277(raw,version,tick,coreNow297))return false;
  if(!isShipCasket277(raw))return true;
  if(!isSchema277OrLater(version))return false;
  const allowed=['id','kind','x','z','orientation','footprint','material','power','damage','factionId','shipCryptosleep277','casketWick'];
@@ -48,7 +49,7 @@ export function validShipCasketBuilding277(raw:unknown,version:number,w:ShipCask
   &&(!Object.hasOwn(c,'damage')||integer(c.damage,1,SHIP_CASKET_CONTENT_277.maxHitPoints-1))
   &&(!Object.hasOwn(c,'factionId')||c.factionId===null||integer(c.factionId,1,w.nextId-1)&&c.factionId===w.worldFactions?.playerFactionId)
   &&plain(p)&&Reflect.ownKeys(p).length===2&&!!data(p,'on')&&!!data(p,'parentId')&&p.on===false&&p.parentId===null
-  &&validAncientCasketWickField256(raw,version,tick)
+  &&validAncientCasketWickField256(raw,version,tick,coreNow297)
   &&(!c.casketWick?.instigatorKey||integer(Number(c.casketWick.instigatorKey.slice(c.casketWick.instigatorKey.indexOf(':')+1)),1,w.nextId-1))
   &&shipCasketCells277(c,c.orientation).every(cell=>integer(cell.x,0,w.width-1)&&integer(cell.z,0,w.height-1));
 }
@@ -79,16 +80,16 @@ function validateContents277(c:ShipCasket277,context:RetainedShipCasketContext27
  if(o.kind==='human'){
   if(local&&(hasCoupleFields285(o.pawn)||hasPartyMemoryField292(o.pawn))&&!validCouplePawnContext285(o.pawn,{version,tick:held,civilTick:context.tick,nextId:context.nextId,knownHumanIds:humans}))errors.push('Invalid held spatial-casket couple clock or memory.');
   const p=o.pawn;if(!inactiveHuman277(p)||Object.hasOwn(p,'cryptosleepHeldAt271'))errors.push('Spatial-casket human retains an active job or another holder marker.');
-  errors.push(...(local?validateShipCasketPawnShape277(p as unknown as Record<string,unknown>,local,version,held,c.id):validateRetainedShipCasketPawnShape277(p as unknown as Record<string,unknown>,context,version,held,c.id)),
+  errors.push(...(local?validateShipCasketPawnShape277(p as unknown as Record<string,unknown>,local,version,held,c.id,version===297?heldCore297(h,version,held):undefined):validateRetainedShipCasketPawnShape277(p as unknown as Record<string,unknown>,context,version,held,c.id,version===297?heldCore297(h,version,held):undefined)),
    ...validatePawnHealthRecord(p,{tick:held,width:context.width,height:context.height,schemaVersion:version},true),...validateRecreationRecordShape(p as unknown as Record<string,unknown>,version,held),...validateHumanSocial(p,version,held,humans,[],context.tick));
   if(!validSchedule(p.schedule)||!integer(p.restZeroTicks,0,4500)||typeof p.collapsePending!=='boolean')errors.push('Invalid held human schedule/exhaustion.');
   if(context.foodPolicies&&!context.foodPolicies.some(x=>x.id===p.foodPolicyId)||p.apparelPolicyId!==undefined&&context.apparelPolicies&&!context.apparelPolicies.some(x=>x.id===p.apparelPolicyId))errors.push('Held human lost an actual personal policy.');
   if(!local&&(p.bedId!==null||Object.hasOwn(p,'bedSlot')||Object.hasOwn(p,'mapBed')||Object.hasOwn(p,'allowedAreaId')||Object.hasOwn(p,'allowedAreaReturn')))errors.push('Removed spatial-casket human retains local bed/area authority.');
  }else if(o.kind==='animal'){
-  if(!validCaravanAnimalRecord256(o.animal,{context,tick:held,nextId:context.nextId,version,heldShipCasket277:{heldAt:held,...local?{structures:local.structures}:{}}})||!o.animal.health)errors.push('Invalid actual spatial-casket animal record/clock.');
+  if(!validCaravanAnimalRecord256(o.animal,{context,tick:held,nextId:context.nextId,version,...version===297?{physicalCore297:heldCore297(h,version,held)}:{},heldShipCasket277:{heldAt:held,...local?{structures:local.structures}:{}}})||!o.animal.health)errors.push('Invalid actual spatial-casket animal record/clock.');
  }else {
   const m=o.mech,status=m.health?medicalStatus(m.health):'mobile';
-  if(!validMechanoidShape(m,version,held,held)||!validMechanicalWorldFaction259(m,version,context.worldFactions)||m.id>=context.nextId||m.x>=context.width||m.z>=context.height||m.path.length||m.motion||m.moveCooldown||m.melee?.order||m.ranged?.order||m.raid?.goal||m.temple?.goal||m.site263?.goal||(status==='mobile'?['dead','downed'].includes(m.state):m.state!==status))errors.push('Invalid actual spatial-casket mechanical record/clock.');
+  if(!validMechanoidShape(m,version,held,held,version===297?heldCore297(h,version,held):undefined)||!validMechanicalWorldFaction259(m,version,context.worldFactions)||m.id>=context.nextId||m.x>=context.width||m.z>=context.height||m.path.length||m.motion||m.moveCooldown||m.melee?.order||m.ranged?.order||m.raid?.goal||m.temple?.goal||m.site263?.goal||(status==='mobile'?['dead','downed'].includes(m.state):m.state!==status))errors.push('Invalid actual spatial-casket mechanical record/clock.');
   if(h.items.length||h.packed.length)errors.push('Current mechanical owner cannot possess cargo.');
  }
  if(a.filthFeet!==undefined&&!validFilthFeet(a.filthFeet,version))errors.push('Invalid held occupant carried filth.');
@@ -99,12 +100,12 @@ function validateContents277(c:ShipCasket277,context:RetainedShipCasketContext27
   if(pile.innerResource&&pile.plantPack&&held>=treePackExpiry271(pile as MinifiedTreePile)&&!pile.plantPack.pendingExpiry)errors.push('Held tree passed its actual personal expiry frontier.');
  }
  if(o.kind==='human')errors.push(...validateEquipmentOwners259([o.pawn],h.items),...validateApparelOwners259([o.pawn],h.items,version));
- errors.push(...validatePackedFurnitureRecords(h.packed,{width:context.width,height:context.height,nextId:context.nextId,tick:held},version,new Set(),false),...validateGroupPackedComponents258(context,h.packed,version,held));
+ errors.push(...validatePackedFurnitureRecords(h.packed,{width:context.width,height:context.height,nextId:context.nextId,tick:held},version,new Set(),false),...validateGroupPackedComponents258(context,h.packed,version,held,version===297?heldCore297(h,version,held):undefined));
  for(const p of h.packed)if(p.owner.type!=='inventory'||p.owner.pawnId!==a.id)errors.push('Spatial-casket furniture lost its original personal inventory owner.');
  return errors;
 }
-export function validateRetainedShipCasketOwner277(c:ShipCasket277,context:RetainedShipCasketContext277,humans:ReadonlySet<number>,physicalTick=context.tick):string[] {
- try{return !validShipCasketBuilding277(c,context.schemaVersion,context,physicalTick)||!c.shipCryptosleep277.occupant?['Invalid retained actual spatial casket.']:validateContents277(c,context,humans);}catch{return ['Malformed retained spatial-casket contents.'];}
+export function validateRetainedShipCasketOwner277(c:ShipCasket277,context:RetainedShipCasketContext277,humans:ReadonlySet<number>,physicalTick=context.tick,physicalCore297?:number):string[] {
+ try{return !validShipCasketBuilding277(c,context.schemaVersion,context,physicalTick,physicalCore297)||!c.shipCryptosleep277.occupant?['Invalid retained actual spatial casket.']:validateContents277(c,context,humans);}catch{return ['Malformed retained spatial-casket contents.'];}
 }
 export function validateShipCasketOwners277(w:World,version:number=w.schemaVersion,membership?:NumericMembershipLookup):string[] {
  const errors:string[]=[];
@@ -114,7 +115,7 @@ export function validateShipCasketOwners277(w:World,version:number=w.schemaVersi
   if(!candidates.length)return errors;
   let humans:ReadonlySet<number>|undefined,local=membership;const heldIds=new Set<number>();
   for(const s of candidates){
-   if(!validShipCasketBuilding277(s,version,w,w.tick)){errors.push('Invalid spatial-casket physical header or holder.');continue;}if(!isShipCasket277(s)||!s.shipCryptosleep277.occupant)continue;
+   if(!validShipCasketBuilding277(s,version,w,w.tick,version===297?effectiveCore297(w):undefined)){errors.push('Invalid spatial-casket physical header or holder.');continue;}if(!isShipCasket277(s)||!s.shipCryptosleep277.occupant)continue;
    local??=new Set([...w.pawns,...w.wildlife?.animals??[],...w.mechanoids??[],...w.piles,...w.structures,...w.resources,...w.jobs,...w.stockpiles,...w.packed.map(p=>p.building)].map(t=>t.id));humans??=new Set(captureHumanOwners(w).people.keys());
    const actor=shipCasketActor277(s.shipCryptosleep277)!;if(w.piles.some(p=>'pawnId'in p.owner&&p.owner.pawnId===actor.id)||w.packed.some(p=>p.owner.type!=='ground'&&p.owner.pawnId===actor.id))errors.push('Held occupant has personal goods outside its actual holder.');
    errors.push(...validateContents277(s,w,humans,w));

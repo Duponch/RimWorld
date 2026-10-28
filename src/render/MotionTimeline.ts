@@ -8,9 +8,9 @@ import type { PresentationSegment as TravelSegment } from '../sim/travel-timing'
 // starve playback. A tick-based reserve preserves immediate speed changes.
 export const MOTION_BUFFER_TICKS = 2;
 
-/** Confirmed-time playout. Running speed changes affect the next frame without
- * moving the playhead or inserting a new wait. An authoritative pause may rebase
- * to its latest confirmed tick. No prediction on starvation. */
+/** Confirmed-time playout. Historical positive deliveries retain RAF-only
+ * progress. Fine297 may move forward to one Core behind its received frontier;
+ * pause joins that frontier exactly. Neither mode predicts on starvation. */
 export class MotionTimeline {
   private readonly playbackCursor435=new ConfirmedTrackCursor435();
   get playbackEnabled435():boolean{return this.playbackCursor435.enabled;}
@@ -27,7 +27,9 @@ export class MotionTimeline {
   private previous=0;
   private ready=Infinity;
   private buffering=true;
-  adopt(tick:number,speed:number,tracks:PawnTrack[],now:number,reset=false,closed435=false):void {
+  private reserve=MOTION_BUFFER_TICKS;
+  adopt(tick:number,speed:number,tracks:PawnTrack[],now:number,reset=false,closed435=false,fineCore297=false):void {
+    this.reserve=fineCore297 ? .1 : MOTION_BUFFER_TICKS;
     this.playbackCursor435.configure(closed435,reset);
     if(reset){this.tick=tick;this.latest=tick;this.previous=now;this.ready=Infinity;this.buffering=true;this.tracks.clear();this.speed=speed;this.rate=speed*LOCAL_TICKS_PER_SECOND;this.frameRate=this.rate;this.rateChanges.length=0;}
     // An adopted pause is authoritative presentation state, not a request or
@@ -40,8 +42,8 @@ export class MotionTimeline {
       for(const track of tracks)this.tracks.set(track.id,track.segments);
       return;
     }
-    // Only RAF advances positive playout. A delivery timestamp can be later than
-    // the next frame timestamp; changing rate here never consumes that time.
+    // Rate changes never consume wall time at delivery. Historical playout is
+    // RAF-only; the fine297 confirmed-frontier correction below is separate.
     if(speed!==this.speed) {
       if(speed>0){
         if(this.rate===0){this.buffering=true;this.ready=Infinity;}
@@ -51,9 +53,12 @@ export class MotionTimeline {
       this.speed=speed;
     }
     this.latest=Math.max(this.latest,tick);
+    // A delayed fine297 receipt must not leave a permanent historical lag.
+    // Correct only toward already confirmed time; no World step or extrapolation.
+    if(fineCore297&&speed>0)this.tick=Math.max(this.tick,this.latest-this.reserve);
     // Buffer once at start/fully drained resume, in simulation ticks rather
     // than wall time. At 1x/6x this needs ~333/56 ms; positive rate changes do not refill.
-    if(this.buffering&&(this.latest-this.tick>=MOTION_BUFFER_TICKS||speed===0&&this.latest>this.tick)) {
+    if(this.buffering&&(this.latest-this.tick>=this.reserve-1e-10||speed===0&&this.latest>this.tick)) {
       this.buffering=false;this.ready=now;
     }
     for(const track of tracks)this.tracks.set(track.id,track.segments);

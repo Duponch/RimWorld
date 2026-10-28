@@ -1,3 +1,9 @@
+import {expirePhysicalActorTimers297} from './core-timers-297.ts';
+import {invalidateHumanMoveSpeed297} from './human-move-speed-297.ts';
+import {effectiveCore297} from './core-phase-297.ts';
+import {syncWorldPawnsPhysicalCore297} from './world-pawn-physical-clock-297.ts';
+import {createCorePhysics297,type CoreStepResult297} from './core-physics-297.ts';
+import {createCoreMovement297} from './core-movement-297.ts';
 import {applyReadBook295,applyReadingPolicy295} from './reading-runtime-295.ts';
 import {canPlaceFirefoamPopper290} from './firefoam-placement-290.ts';
 import {initializeFirefoamPopper290,applyFirefoamAutoRebuild290,advanceFirefoamWaves290} from './firefoam-290.ts';
@@ -419,7 +425,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
   const selection = queryArea(world, command);
   if (!selection.ok) return selection;
   if (!selection.cells.length) return refusal('missing-target', 'Aucune case compatible dans ce rectangle.');
-  if([287,288,289,290,291,292,293,294,295,296].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
+  if([287,288,289,290,291,292,293,294,295,296,297].includes(Number(world.schemaVersion))&&(command.action==='home'||command.action==='remove-home'))return applyAnimalHomeArea287(world,command,selection.cells,drops);
   if(command.action==='cancel'){
     const cells=new Set(selection.cells);
     const jobs=new Set(world.jobs.filter(j=>[...footprintCells(j),...furnitureSourceCells(world,j)].some(c=>cells.has(c.z*world.width+c.x))).flatMap(j=>j.wallDoor296?.plan?[j.id,j.wallDoor296.plan.id]:[j.id]));
@@ -462,7 +468,7 @@ function applyArea(world: World, command: AreaCommand, drops:DropPlan): CommandR
     const settings=target??command;
     for(const cells of zoneCellComponents(world.width,selection.cells)){
       const zoneId=target?stockpileZoneId(target):world.nextId;
-      for(const index of cells)world.stockpiles.push({id:world.nextId++,zoneId,x:index%world.width,z:Math.floor(index/world.width),filters:{...(settings.filters??{wood:true,food:true,...(world.schemaVersion>=265?{wort:true,beer:true}:{}),...((Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)?{book:true}:{})})},...(settings.items!==undefined?{items:{...settings.items}}:{}),...copyStorageConditions(settings),priority:settings.priority??2,capacity:settings.capacity??ITEM_DEFINITIONS.silver.stackLimit});
+      for(const index of cells)world.stockpiles.push({id:world.nextId++,zoneId,x:index%world.width,z:Math.floor(index/world.width),filters:{...(settings.filters??{wood:true,food:true,...(world.schemaVersion>=265?{wort:true,beer:true}:{}),...((Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))?{book:true}:{})})},...(settings.items!==undefined?{items:{...settings.items}}:{}),...copyStorageConditions(settings),priority:settings.priority??2,capacity:settings.capacity??ITEM_DEFINITIONS.silver.stackLimit});
     }
   } else {
     const cells = new Set(selection.cells);
@@ -646,6 +652,7 @@ export function canDesignate(world: World, command: DesignateCommand|import('./c
   return { ok: true };
 }
 export function applyCommand(world: World, command: Command,caravans?:import('./group-campaign-runtime-256.ts').GroupCampaignRuntime256): CommandResult {
+ if(Number(world.schemaVersion)===297)invalidateCoreCampaign297(campaignAuthority(world),'command');
  const tradeType=command&&typeof command==='object'?Object.getOwnPropertyDescriptor(command,'type'):undefined;
  if(tradeType&&'value'in tradeType&&typeof tradeType.value==='string'&&tradeType.value.startsWith('trade-request-'))return applyTradeRequestCommand284(world,command);
  if(world.worldMaps){const descriptor=command&&typeof command==='object'&&!Array.isArray(command)?Object.getOwnPropertyDescriptor(command,'type'):undefined;if(!descriptor||!('value'in descriptor)||typeof descriptor.value!=='string')return refusal('invalid-command','Commande invalide.');const root=registeredCampaign(world);if(validCaravanArrivalCommand261(command,Number(world.schemaVersion)))return applyCaravanArrivalCommand261(root,command);if(validCaravanCommand261(command)){const result=applyCaravanCommand261(root,command);if(result.ok)caravans?.encounterChanged261(root,command.groupId);return result;}if(validWorldMapCommand(command))return applyWorldMapCommand(root,command);if(command&&typeof command==='object'&&typeof command.type==='string'&&(command.type==='planet-adopt'||command.type.startsWith('group-')))return applyRegisteredGroupCommand(root,command as import('./group-state.ts').GroupCommand,caravans);if(secondaryCommand(command))return refusal('invalid-command','Choisissez une carte ou un groupe du registre de campagne.');const local=selectedRegisteredMap(root);if(!local)return refusal('invalid-command','Aucune carte locale sélectionnée.');const result=applyLocalCommand(local,command);if(result.ok&&command.type==='commercial-start'){const source=root.worldMaps!.sites.find(s=>s.id===registeredMapId(local))!;if(root.worldGroups!.canonicalPostId===null)delete source.postId;else source.postId=root.worldGroups!.canonicalPostId;}flushRegisteredMap(local);return result;}
@@ -662,8 +669,8 @@ type LocalCommand=Exclude<Command,SecondarySiteCommand>;
 function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   if(command?.type==='read-book-295')return applyReadBook295(world,command.pawnId,command.bookId);
   if(command?.type==='reading-policy-295')return applyReadingPolicy295(world,command.pawnId,command.policyId);
-  if([287,288,289,290,291,292,293,294,295,296].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
-  if([287,288,289,290,291,292,293,294,295,296].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
+  if([287,288,289,290,291,292,293,294,295,296,297].includes(Number(world.schemaVersion))&&command?.type==='animal-area-assign')return applyAnimalAreaAssignmentCommand287(world,command);
+  if([287,288,289,290,291,292,293,294,295,296,297].includes(Number(world.schemaVersion))&&(command?.type==='allowed-area-create'||command?.type==='allowed-area-settings'||command?.type==='allowed-area-paint'||command?.type==='allowed-area-delete'||command?.type==='assign-allowed-area'))return applyAnimalAwareAreaCommand287(world,command);
   if(command&&typeof command==='object'&&hiddenExplorationCommandTarget256(world,command))return refusal('missing-target','Cette cible n’est pas connue sur la carte actuelle.');
   if(command.type==='material-forbid')return applyMaterialPermission256(world,command);
   if(command.type==='egg-forbid')return applyEggPermission256(world,command);
@@ -675,7 +682,7 @@ function applyLocalCommand(world: World, command: LocalCommand): CommandResult {
   const result=applyCommandInternal(world,command);
   if(command.type==='firefoam-auto-rebuild')return result;
   if(command.type==='bill-pause-policy'||command.type==='bill-pause-resume')return result;
-  if([287,288,289,290,291,292,293,294,295,296].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
+  if([287,288,289,290,291,292,293,294,295,296,297].includes(Number(world.schemaVersion))&&command.type==='area'&&(command.action==='home'||command.action==='remove-home'))return result;
   // These cold metadata transactions already reconcile their exact affected
   // destinations. A no-op must not advance unrelated services or clocks.
   if(command.type==='shelf-link'||command.type==='shelf-unlink'||command.type==='shelf-group-rename'
@@ -1012,7 +1019,7 @@ function applyCommandInternal(world: World, command: Exclude<LocalCommand,import
         || [...world.structures, ...world.jobs].some(item => !['deconstruct','uninstall'].includes(item.kind)&&(world.schemaVersion>=219?occupancyOf('furniture' in item?item.furniture?.kind??item.kind:item.kind)?.zones===false:occupancyOf('furniture' in item?item.furniture?.kind??item.kind:item.kind)?.zones!==true)&&occupies(item,command))) return refusal('occupied', 'Stockage impossible sur cette cellule occupée ou infranchissable.');
       if (existing) {
         for(const cell of stockpileZoneCells(world,existing.id))patchStockpilePolicy(cell,command);
-      } else {const id=world.nextId++;world.stockpiles.push({ id,zoneId:id, x: command.x, z: command.z, filters: { ...(command.filters ?? { wood: true, food: true,...(world.schemaVersion>=265?{wort:true,beer:true}:{}),...((Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)?{book:true}:{}) }) },...(command.items!==undefined?{items:{...command.items}}:{}),...copyStorageConditions(command), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });}
+      } else {const id=world.nextId++;world.stockpiles.push({ id,zoneId:id, x: command.x, z: command.z, filters: { ...(command.filters ?? { wood: true, food: true,...(world.schemaVersion>=265?{wort:true,beer:true}:{}),...((Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))?{book:true}:{}) }) },...(command.items!==undefined?{items:{...command.items}}:{}),...copyStorageConditions(command), priority: command.priority ?? 2, capacity: command.capacity ?? ITEM_DEFINITIONS.silver.stackLimit });}
     }
     for(const pawn of world.pawns)if(pawn.cooking?.storageId!==null&&pawn.cooking?.storageId!==undefined&&affectedIds.has(pawn.cooking.storageId)){pawn.cooking.storageId=null;delete pawn.cooking.storageQuantity;pawn.path=[];pawn.planCooldown=0;}
     // Re-evaluate pending capacity reservations atomically after the policy change.
@@ -1123,14 +1130,16 @@ const plantLightSourcesKey=(world:World):string=>lightSources(world).map(s=>`${s
 export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./work-planner.ts').SearchStats,caravans?:import('./group-campaign-runtime-256.ts').GroupCampaignRuntime256):void {
   if(!Number.isInteger(ticks)||ticks<0||ticks>100000)throw new Error('Tick count must be an integer between 0 and 100000.');
   const root=campaignAuthority(world as World);
+  if(Number(root.schemaVersion)===297&&!macro297.has(root)){for(let i=0;i<ticks*10;i++)advanceWorldCore297(root,diagnostics,caravans);return;}
   if(root.worldMaps){
     if(pendingCaravan261(root)||pendingWorldEntry263(root))return;
     if(ticks>0&&root.schemaVersion>=256&&!caravans&&root.worldGroups?.groups.some(r=>'members'in r.state?!!r.state.travel:'manifest'in r.state&&r.state.travelPreparation===true))throw Error('Prospective caravan requires its confirmed Core runtime before advancing time');
     if(ticks)for(const map of registeredMaps(root)){adoptTempMapIncidents261(map);flushRegisteredMap(map);}
     adoptWorldIncidents(campaignClockContext(root));
     for(let i=0;i<ticks;i++){
-      const firefoamWorldOwners290=[290,291,292,293,294,295,296].includes(Number(root.schemaVersion))?captureFirefoamWorldPawnIds290(root):undefined;
+      const firefoamWorldOwners290=[290,291,292,293,294,295,296,297].includes(Number(root.schemaVersion))?captureFirefoamWorldPawnIds290(root):undefined;
       root.tick++;
+      if(Number(root.schemaVersion)===297){root.phaseCore297=0;beginCoreMacro297(root);syncWorldPawnsPhysicalCore297(root);advanceActualWorldPawns256(root,firefoamWorldOwners290);}
       for(const map of registeredMaps(root)){stepLocalWorld(map,1,diagnostics,false);flushRegisteredMap(map);}
       if(root.schemaVersion>=256&&caravans)caravans.step(root);
       else for(const g of root.worldGroups!.groups.slice().sort((a,b)=>a.state.id-b.state.id))if('members' in g.state)withWorldGroup(root,g.state.id,advanceGroup);
@@ -1139,7 +1148,7 @@ export function stepWorld(world:CampaignState,ticks=1,diagnostics?:import('./wor
       for(const row of root.worldGroups!.groups.slice()){const g=row.state;if(!row.encounters261&&'members' in g&&['at-site','awaiting-entry'].includes(g.phase)&&root.worldMaps!.sites.some(m=>m.tile===g.tile&&m.kind==='settlement'))enterRegisteredSite(root,g.id,'visit',false);}
       for(const old of root.worldGroups!.legacyTravellers){const view=legacyTravellerContext(root,old);advanceScoutTrip(view);advanceCommercialTrip(view);if(view.scout)old.scout=view.scout;else delete old.scout;if(view.commercialTrip)old.commercialTrip=view.commercialTrip;else delete old.commercialTrip;}
       advanceTradeRequests284(root);expirePeaceTalks293(root);advanceWorldSites263(root);advanceForeignSettlementDefeat263(root);advanceSettlementProximity263(root);advanceWorldIncidents(campaignClockContext(root));advanceBattlefieldVictory261(root);advanceCampPressure260(root);removeEmptyCamps(root);advanceTempMapIncidents261(root);
-      advanceActualWorldPawns256(root,firefoamWorldOwners290);advanceCaravanMapExits261(root);
+      if(Number(root.schemaVersion)!==297)advanceActualWorldPawns256(root,firefoamWorldOwners290);advanceCaravanMapExits261(root);
       if(pendingCaravan261(root)||pendingWorldEntry263(root)||advanceCaravanIncidents261(root))break;
     }return;
   }
@@ -1169,9 +1178,9 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
   adoptRainElectrical(world);
   let thermal=reconcileTemperature(world);reconcilePlantLighting(world,()=>readPlantLight(world));updateFoodTemperatures(world,thermal);updatePlantTemperatures(world,thermal);
   for (let step = 0; step < ticks; step++) {
-    const firefoamLocalMechs290=[290,291,292,293,294,295,296].includes(Number(world.schemaVersion))?new Set((world.mechanoids??[]).filter(m=>m.state!=='dead'&&m.health?.coveredInFirefoam290).map(m=>m.id)):undefined;
+    const firefoamLocalMechs290=[290,291,292,293,294,295,296,297].includes(Number(world.schemaVersion))?new Set((world.mechanoids??[]).filter(m=>m.state!=='dead'&&m.health?.coveredInFirefoam290).map(m=>m.id)):undefined;
     flushColonyLosses(world);
-    if(advanceClock)world.tick++;advanceActualHiveComponents256(world);advanceAnimalAges256(world);finishSnowSteps(world);
+    if(advanceClock){world.tick++;if(Number(world.schemaVersion)===297){world.phaseCore297=0;beginCoreMacro297(campaignAuthority(world));syncWorldPawnsPhysicalCore297(campaignAuthority(world));}}advanceActualHiveComponents256(world);advanceAnimalAges256(world);finishSnowSteps(world);
     let light:LightEnvironment|undefined,lightKey:string|undefined;
     const getLight=()=>{if(!light){light=readPlantLight(world);lightKey=plantLightSourcesKey(world);}return light;};
     advanceHumanAges(world);
@@ -1193,14 +1202,14 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     thermal=advanceSurfaceTemperature(world,thermal,getLight);
     advanceFermentation265(world,thermal);
     if(burnFuel(world))light=undefined; // Empty torches cannot light later work in this same tick.
-    const trapContacts=spikeTrapWindow(world);
+    const trapContacts=Number(world.schemaVersion)===297?undefined:spikeTrapWindow(world);
     advanceTameness(world);reconcileDomesticWork(world);syncCarriedAnimals(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);
     advanceSiteAmbush263(world);advanceSiteMechanoids263(world);
     if(!trapContacts){advanceWildlife(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);}
     updateDoors(world);
     advancePrisonBreaks(world);
     const structuresBeforeCombat=world.structures;
-    reconcileAllowedAreas(world);advanceWorldCombat(world,trapContacts);
+    reconcileAllowedAreas(world);if(Number(world.schemaVersion)===297)advanceCoreMap297(world,true);else advanceWorldCombat(world,trapContacts);
     if(trapContacts){advanceWildlife(world);reconcileAnimalRescues(world);reconcileAnimalRest(world);}
     syncCarriedAnimals(world);advanceLocalEggs256(world,thermal);reconcileAnimalRescues(world);reconcileAnimalRest(world);advanceCorpses(world,thermal);advanceMechanoidCorpses(world);reconcileDomesticWork(world);advanceAnimalProducts(world);advanceHumanCorpses(world);advanceDeathThoughts(world);reconcileBurials(world);reconcileCommercialOnMap(world);
     detachMissingBills(world);detachMissingSmithingBills267(world);detachMissingGunBills(world);detachMissingFlakBills(world);detachMissingArtBills(world);detachMissingComponentBills(world);detachMissingProstheticBills273(world);if(world.tick%20===0)reconcileBreakdownJobs(world);reconcileRepairs(world);reconcilePowerFlicks(world);
@@ -1230,11 +1239,12 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
     advanceFlowerPots(world,getLight(),new TemperatureView(world,thermal));
     const hasAdversary=world.pawns.some(p=>p.faction==='outlaws'&&!p.prisoner||prisonBreakActive(p)||p.mental?.crisis?.kind==='berserk')||animalThreats.length>0||(world.mechanoids??[]).some(m=>!['dead','downed'].includes(m.state));
     let thermalDirty=structuresBeforeCombat!==world.structures;
-    const invalidateEnvironment=()=>{environment=undefined;light=undefined;furnitureSight=undefined;thermalDirty=true;structureNavigation.invalidate();};
+    const invalidateEnvironment=()=>{if(Number(world.schemaVersion)===297)invalidateHumanMoveSpeed297(world);environment=undefined;light=undefined;furnitureSight=undefined;thermalDirty=true;structureNavigation.invalidate();};
     const getRoofs = () => roofs ??= new RoofContext(world);
     const getBlocked: NavigationGrid = () => blocked ??= blockedCells(world,false,structureNavigation.read());
     const occupied = CIVIL_TRANSIT_BLOCKERS;
-    const budget: SearchBudget = { remaining: PATH_SEARCHES_PER_TICK, pairs: 32768,stats:diagnostics,structureGeometry:structureNavigation.read };
+    const budget: SearchBudget = Number(world.schemaVersion)===297?coreState297(world).movement.budget():{ remaining: PATH_SEARCHES_PER_TICK, pairs: 32768,stats:diagnostics,structureGeometry:structureNavigation.read };
+    if(Number(world.schemaVersion)===297){budget.stats=diagnostics;budget.structureGeometry=structureNavigation.read;}
     const processMechanicalDecisions=()=>{
       const actors=world.mechanoids;if(!actors?.length)return;
       const batch=mechanoidCombatBatch(world,getBlocked);
@@ -1553,3 +1563,70 @@ function stepLocalWorld(world: World, ticks = 1, diagnostics?:import('./work-pla
 import { updatePawnHealth,reconcilePawnHealth } from './health.ts';
 import { advanceStartingArrival } from './starting-arrival.ts';
 import { medicallyStopped,physicalWorkFactor } from './health-rules.ts';
+
+
+interface CoreMap297 {
+ movement:ReturnType<typeof createCoreMovement297>;
+ physics:ReturnType<typeof createCorePhysics297>;
+ result?:CoreStepResult297;
+}
+const coreMaps297=new WeakMap<World,CoreMap297>(),macro297=new WeakSet<World>();
+/** Canonical register plus the explicitly retained historical two-map form. */
+function actualCoreMaps297(root:World):World[]{
+ if(!root.worldMaps&&root.secondarySite){const local=secondaryContext(root);if(!local)throw Error('Legacy secondary owner disappeared');return [root,local];}
+ return registeredMaps(root);
+}
+function beginCoreMacro297(root:World):void {
+ for(const map of actualCoreMaps297(root)){coreState297(map).movement.beginMacro({remaining:PATH_SEARCHES_PER_TICK,pairs:32768});flushRegisteredMap(map);}
+ if(!root.worldMaps&&root.secondarySite)flushSecondaryContext(root);
+}
+
+function coreState297(world:World):CoreMap297 {
+ let state=coreMaps297.get(world);if(!state){state={movement:createCoreMovement297(world),physics:createCorePhysics297(world)};coreMaps297.set(world,state);}return state;
+}
+function invalidateCoreCampaign297(root:World,reason:'macro'|'command'|'movement'|'impact'):void {
+ for(const map of actualCoreMaps297(root)){invalidateHumanMoveSpeed297(map);const state=coreMaps297.get(map);if(state){state.physics.invalidate(reason);state.movement.invalidate();}}
+}
+function advanceCoreMap297(world:World,boundary=false):CoreStepResult297 {
+ const state=coreState297(world);
+ if(boundary){invalidateHumanMoveSpeed297(world);state.physics.invalidate('macro');}
+ const moved=state.movement.advance();if(moved.changedCells||moved.topologyChanged)state.physics.invalidate('movement');
+ const result=state.physics.advance(effectiveCore297(world));
+ const expired=expirePhysicalActorTimers297(world);
+ if(result.requiresFull){state.movement.invalidate();invalidateHumanMoveSpeed297(world);}
+ state.result={...result,observerEffects297:{threatsChanged:result.observerEffects297.threatsChanged||moved.topologyChanged,audioChanged:result.observerEffects297.audioChanged||moved.topologyChanged},requiresFull:result.requiresFull||moved.requiresFull,actorsChanged:[...new Set([...moved.actorsChanged,...result.actorsChanged,...expired])]};return state.result;
+}
+/** requiresFull preserves the existing conservative boundary signal. Only the
+ * fixed bridge may use the separate actual hard receipt to coalesce calm macros. */
+export interface AdvancedCoreMap297 extends CoreStepResult297 {mapId:number;world:World;readonly requiresHardFull297:boolean}
+/** A single authoritative physical step. Phase0 is an atomic global/local macro
+ * transaction. Results borrow maps only until the synchronous bridge copies them. */
+export function advanceWorldCore297(world:CampaignState,diagnostics?:import('./work-planner.ts').SearchStats,caravans?:import('./group-campaign-runtime-256.ts').GroupCampaignRuntime256):{core:number;localTickCompleted:boolean;maps:readonly AdvancedCoreMap297[]} {
+ const root=campaignAuthority(world as World);if(Number(root.schemaVersion)!==297)throw Error('Physical stepping requires297');
+ const previous=effectiveCore297(root),maps=actualCoreMaps297(root);
+ if(pendingCaravan261(root)||pendingWorldEntry263(root))return {core:previous,localTickCompleted:false,maps:[]};
+ for(const map of maps)coreState297(map); // capture the LAST completed Core before moving the real clock
+ const boundary=root.phaseCore297===9;
+ if(boundary){macro297.add(root);try{stepWorld(root,1,diagnostics,caravans);}finally{macro297.delete(root);}}
+ else {root.phaseCore297=root.phaseCore297!+1;syncWorldPawnsPhysicalCore297(root);
+  for(const map of maps){advanceCoreMap297(map);flushRegisteredMap(map);}if(!root.worldMaps&&root.secondarySite)flushSecondaryContext(root);
+ }
+ const core=effectiveCore297(root);if(core!==previous+1)throw Error('Physical step did not commit exactly one Core');
+ const results:AdvancedCoreMap297[]=[];
+ const publishedMaps=boundary?actualCoreMaps297(root):maps;
+ // Compare actual owner identities, not exposed map headers. A new/replaced,
+ // retired or reordered registered owner keeps an unconditional hard barrier.
+ const ownersChanged=boundary&&(publishedMaps.length!==maps.length||publishedMaps.some((map,index)=>map!==maps[index]));
+ for(const map of publishedMaps){let result=coreMaps297.get(map)?.result;
+  if(!result||result.core!==core){
+   if(!boundary||maps.includes(map))throw Error('Missing local physical frontier');
+   // The macro suffix genuinely created/replaced this registered local owner.
+   // Its first state is already at this frontier; it has played no earlier Core.
+   result={core,actorsChanged:[],projectileEvents:{upserted:[],removed:[]},requiresFull:true,observerEffects297:{threatsChanged:true,audioChanged:true},strikeAudio297:[],shotAudio297:[]};
+  }
+  results.push({...result,mapId:!root.worldMaps&&root.secondarySite&&map!==root?1:registeredMapId(map)??0,world:map,requiresFull:boundary||result.requiresFull,requiresHardFull297:ownersChanged||result.requiresFull});
+ }
+ // Macro suffixes may create/retire owners or alter cover. Never retain their borrowed captures.
+ if(boundary)invalidateCoreCampaign297(root,'macro');
+ return {core,localTickCompleted:boundary,maps:results};
+}

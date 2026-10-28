@@ -1,3 +1,6 @@
+import {worldPawnsPhysicalCore297} from './world-pawn-physical-clock-297.ts';
+import {heldCore297} from './core-phase-297.ts';
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {prepareLinkedCasketVanish286} from './linked-storage-casket-vanish-286.ts';
@@ -84,7 +87,8 @@ function prepareVanish277(w:World,original:ShipCasketOccupant277,occupant:ShipCa
  const p=shipCasketActor277({revision:1,heldAt:w.tick,occupant:original,items:[],packed:[]})!;
  const draft=shipCasketActor277({revision:1,heldAt:w.tick,occupant,items:[],packed:[]})!;
  const root=registeredCampaign(w),state=root.worldPawns,factions=root.worldFactions,mapId=registeredMapId(w),now=w.tick*10;
- if(!state||!factions||mapId===undefined||root.tick!==w.tick||state.atCore!==now&&state.atCore!==now-10)throw Error('Actual destroyed-holder WorldPawn frontier is unavailable');
+ const physicalCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined;
+ if(!state||!factions||mapId===undefined||root.tick!==w.tick||(physicalCore297===undefined?state.atCore!==now&&state.atCore!==now-10:state.atCore!==now||worldPawnsPhysicalCore297(state,w.schemaVersion)!==physicalCore297))throw Error('Actual destroyed-holder WorldPawn frontier is unavailable');
  const native=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,native))throw Error('Actual destroyed-holder native order is unavailable');
  const terminal=prepareShipCasketTerminal277(w,original);
  if(occupant.kind==='human'){cleanShipCasketTerminalHuman277(occupant.pawn,w.tick);if(occupant.pawn.mental?.wander)occupant.pawn.mental.wander.nextMoveOrderIsWait=true;}
@@ -92,13 +96,13 @@ function prepareVanish277(w:World,original:ShipCasketOccupant277,occupant:ShipCa
  else cleanMapRemovedMechanical259(occupant.mech,w.tick);
  if(occupant.kind!=='mechanical')unclaimDetachedActorBed256(occupant.kind==='human'?occupant.pawn:occupant.animal);delete draft.shipCryptosleepHeldAt277;
  const context={seed:w.seed,width:w.width,height:w.height,...w.climate?{climate:w.climate}:{},...w.site?{site:w.site}:{},...w.scenario?{scenario:w.scenario}:{}};
- const common={originMapId:mapId,context,clockCore:now,enteredAtAbsCore:actualCampRemovalAbsCore256(root,w),mode:'dead' as const,...draft.health?.death?{}:{destroyed:true as const},items:[],packed:[],shipCasketTerminal277:terminal.receipt};
+ const common={originMapId:mapId,context,clockCore:physicalCore297===undefined?now:state.atCore,...physicalCore297!==undefined?{physicalClockCore297:physicalCore297}:{},enteredAtAbsCore:actualCampRemovalAbsCore256(root,w),mode:'dead' as const,...draft.health?.death?{}:{destroyed:true as const},items:[],packed:[],shipCasketTerminal277:terminal.receipt};
  const row:WorldPawnOwner256=occupant.kind==='human'?{...common,kind:'human',actor:occupant.pawn,factionId:occupant.pawn.worldAffiliation259?.factionId??null}
   :occupant.kind==='animal'?{...common,kind:'animal',actor:occupant.animal,factionId:occupant.animal.domestic?factions.playerFactionId:null}
-  :{...common,kind:'mechanical',actor:occupant.mech,factionId:occupant.mech.worldFaction259?.factionId??null,mechanicalTimersAtCore259:now};
+  :{...common,kind:'mechanical',actor:occupant.mech,factionId:occupant.mech.worldFaction259?.factionId??null,mechanicalTimersAtCore259:physicalCore297??now};
  // A real local substep may precede this tick's global WorldPawn pass. Only
  // this terminal row is staged at now; other rows are neither ticked nor moved.
- const staged:WorldPawnsState256={...state,atCore:now,owners:state.owners.slice()},pass=preparePassedToWorld256(staged,row,factions,{float(){throw Error('Destroyed actor does not draw a faction choice');}},{version:w.schemaVersion,situation:'Free'});
+ const staged:WorldPawnsState256={...state,atCore:now,...physicalCore297!==undefined?{physicalClockCore297:physicalCore297}:{},owners:state.owners.slice()},pass=preparePassedToWorld256(staged,row,factions,{float(){throw Error('Destroyed actor does not draw a faction choice');}},{version:w.schemaVersion,situation:'Free'});
  if(!pass.ok)throw Error(pass.reason);pass.commit();pass.row.shipCasketTerminal277=terminal.receipt;const errors=validateWorldPawnOwners256(staged,root,new Set(),undefined,new Set(captureHumanOwners(w).people.keys()));if(errors.length)throw Error(errors[0]);
  const quantities:Partial<Record<ItemId,number>>={};for(const item of items)quantities[item.item]=(quantities[item.item]??0)+item.quantity;
  const materialLoss=new Map<ItemId,number>();let fuelTicksLost=0,fuelTicksBurned=0,batteryEnergyLost=0;
@@ -110,7 +114,7 @@ function prepareVanish277(w:World,original:ShipCasketOccupant277,occupant:ShipCa
  if(!Object.values(quantities).every(int)||![...materialLoss.values(),fuelTicksLost,fuelTicksBurned,batteryEnergyLost*2].every(int))throw Error('Destroyed holder possession counters exhausted');
  const actors=captureActorBeds256(root).actors,masters=actors.filter(a=>'species'in a&&a.startingPet?.masterId===p.id).map(a=>({actor:a as import('./wildlife-state.ts').WildAnimal,before:stamp(a),after:{...(a as import('./wildlife-state.ts').WildAnimal).startingPet!}}));for(const m of masters)delete m.after.masterId;
  const membership=state.owners.slice(),at=state.atCore,order=staged.nativeOrder;
- return {quantities,materialLoss,fuelTicksLost,fuelTicksBurned,batteryEnergyLost,current:()=>terminal.current()&&root.worldPawns===state&&state.atCore===at&&state.owners.length===membership.length&&state.owners.every((r,i)=>r===membership[i])&&nativeWorldPawnOrderCurrent256(state,native)&&masters.every(m=>stamp(m.actor)===m.before),commit(){
+ return {quantities,materialLoss,fuelTicksLost,fuelTicksBurned,batteryEnergyLost,current:()=>terminal.current()&&root.worldPawns===state&&state.atCore===at&&(physicalCore297===undefined||physicalCore297===effectiveCore297(w)&&worldPawnsPhysicalCore297(state,w.schemaVersion)===physicalCore297)&&state.owners.length===membership.length&&state.owners.every((r,i)=>r===membership[i])&&nativeWorldPawnOrderCurrent256(state,native)&&masters.every(m=>stamp(m.actor)===m.before),commit(){
   cancelWorldPawnGC256(state);adoptActor277(p,pass.row.actor);if(pass.row.kind==='human')pass.row.actor=p as Pawn;else if(pass.row.kind==='animal')pass.row.actor=p as WildAnimal;else pass.row.actor=p as Mechanoid;state.owners.push(pass.row);commitNativeWorldPawnOrder256(state,native,order);if(!terminal.commit())throw Error('Actual spatial terminal notification changed within commit');for(const m of masters)m.actor.startingPet=m.after;
  }};
 }
@@ -119,10 +123,11 @@ function prepareVanish277(w:World,original:ShipCasketOccupant277,occupant:ShipCa
  * contents, then an optional Flame wave. Destruction never calls Open. */
 export function planShipCasketRemoval277(w:World,s:Structure,mode:'deconstruct'|'kill-finalize'|'vanish',explosion?:{core:number;instigatorKey?:BombInstigatorKey},damageRng=w.rng):ShipCasketRemoval277 {
  const no=(reason:string):ShipCasketRemoval277=>({ok:false,reason});
- if(!['deconstruct','kill-finalize','vanish'].includes(mode)||!isSchema277OrLater(w.schemaVersion)||!isShipCasket277(s)||!w.structures.includes(s)||!validShipCasketBuilding277(s,w.schemaVersion,w)||s.shipCryptosleep277.heldAt>w.tick||!int(damageRng)||damageRng>0xffffffff)return no('Actual paid spatial casket required');
+ if(!['deconstruct','kill-finalize','vanish'].includes(mode)||!isSchema277OrLater(w.schemaVersion)||!isShipCasket277(s)||!w.structures.includes(s)||!validShipCasketBuilding277(s,w.schemaVersion,w,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined)||s.shipCryptosleep277.heldAt>w.tick||!int(damageRng)||damageRng>0xffffffff)return no('Actual paid spatial casket required');
  const c=s as ShipCasket277,h=c.shipCryptosleep277,occupant=h.occupant,p=shipCasketActor277(h),tick=w.tick,heldItems=h.items,heldPacks=h.packed,itemMembers=[...h.items],packMembers=[...h.packed];
+ const plannedCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined,physical297=plannedCore297===undefined?undefined:{version:297 as const,heldAtCore297:heldCore297(h,w.schemaVersion,h.heldAt),targetCore297:plannedCore297};
  const validInstigator=(key:unknown)=>bombInstigatorKey(key,w.schemaVersion)&&Number(key.slice(key.indexOf(':')+1))<w.nextId;
- if(explosion&&(mode!=='kill-finalize'||!int(explosion.core)||explosion.core<Math.max(0,(tick-1)*10)||explosion.core>tick*10||(w.bombWaves?.length??0)>=w.width*w.height||Object.hasOwn(explosion,'instigatorKey')&&!validInstigator(explosion.instigatorKey)))return no('Actual Flame owner/clock/capacity unavailable');
+ if(explosion&&(mode!=='kill-finalize'||!int(explosion.core)||(Number(w.schemaVersion)===297?explosion.core!==effectiveCore297(w):explosion.core<Math.max(0,(tick-1)*10)||explosion.core>tick*10)||(w.bombWaves?.length??0)>=w.width*w.height||Object.hasOwn(explosion,'instigatorKey')&&!validInstigator(explosion.instigatorKey)))return no('Actual Flame owner/clock/capacity unavailable');
  const jobs=w.jobs.filter(j=>j.deconstruction?.structureId===c.id||j.repair?.structureId===c.id||j.fixBreakdown?.structureId===c.id),jobIds=new Set(jobs.map(j=>j.id));
  if(mode==='deconstruct'){
   const job=jobs.find(j=>j.deconstruction?.structureId===c.id),worker=job?w.pawns.find(p=>p.id===job.reservedBy&&p.jobId===job.id):undefined;
@@ -149,8 +154,8 @@ export function planShipCasketRemoval277(w:World,s:Structure,mode:'deconstruct'|
  let actorClock:ReturnType<typeof prepareShipCasketResume277>|undefined,goodsClock:ReturnType<typeof prepareShipCasketPossessionsResume277>|undefined,draft:Pawn|WildAnimal|Mechanoid|undefined,draftOccupant:ShipCasketOccupant277|undefined,cell:Cell|null=null,vanish:ReturnType<typeof prepareVanish277>|undefined,spawn:ReturnType<typeof prepareShipCasketSpawn277>|undefined;
  try{if(p&&occupant){
   if(p.shipCryptosleepHeldAt277!==h.heldAt||p.health?.death||[...w.pawns,...w.wildlife?.animals??[],...w.mechanoids??[]].some(q=>q.id===p.id))return no('Actual original spatial-casket occupant frontier changed');
-  actorClock=prepareShipCasketResume277(occupant,h.heldAt,tick);goodsClock=prepareShipCasketPossessionsResume277(h.items,h.packed,tick-h.heldAt);
-  draftOccupant=structuredClone(occupant);const resume=prepareShipCasketResume277(draftOccupant,h.heldAt,tick);if(!resume.commit())throw Error('Private spatial casket resume changed');
+  actorClock=prepareShipCasketResume277(occupant,h.heldAt,tick,physical297);goodsClock=prepareShipCasketPossessionsResume277(h.items,h.packed,tick-h.heldAt,physical297);
+  draftOccupant=structuredClone(occupant);const resume=prepareShipCasketResume277(draftOccupant,h.heldAt,tick,physical297);if(!resume.commit())throw Error('Private spatial casket resume changed');
   draft=shipCasketActor277({revision:1,heldAt:tick,occupant:draftOccupant,items:[],packed:[]})!;delete draft.shipCryptosleepHeldAt277;
   if(mode==='kill-finalize'){
    draft.health??=draftOccupant.kind==='human'?createMedicalRecord(tick):draftOccupant.kind==='animal'?createAnimalMedicalRecord256(w,draftOccupant.animal):createMechaMedicalRecord(tick,draftOccupant.mech.mechKind);
@@ -195,7 +200,7 @@ export function planShipCasketRemoval277(w:World,s:Structure,mode:'deconstruct'|
  const linkedResult=vanish?prepareLinkedCasketVanish286(w,c,'shipCryptosleep277',heldPacks):undefined;if(linkedResult&&!linkedResult.ok)return no(linkedResult.reason);const linked=linkedResult?.ok?linkedResult.plan:undefined;
  const structures=w.structures,piles=w.piles,packed=w.packed,actualJobs=w.jobs,pawns=w.pawns,wildlife=w.wildlife,animals=wildlife?.animals,mechs=w.mechanoids,collections=[structures,piles,packed,actualJobs,pawns,...animals?[animals]:[],...mechs?[mechs]:[]],memberships=collections.map(a=>[...a]),source=stamp(c),records=[...structures,...piles,...packed,...actualJobs,...pawns,...animals??[],...mechs??[]],before=records.map(stamp),nextId=w.nextId,rng=w.rng,filth=w.filth,filthBefore=stamp(filth),destroyedBefore=stamp(w.destroyed),ledgerBefore=stamp(ledger),fog=prepareRemovedFogStructure256(w,c),tiles=w.tiles,terrainBefore=stamp([w.tiles,w.resources,w.stockpiles]),waves=w.bombWaves,wavesBefore=stamp(waves);let used=false;
  return {ok:true,commit(){
-  if(used||w.tick!==tick||w.nextId!==nextId||w.rng!==rng||w.structures!==structures||w.piles!==piles||w.packed!==packed||w.jobs!==actualJobs||w.pawns!==pawns||w.wildlife!==wildlife||w.wildlife?.animals!==animals||w.mechanoids!==mechs||collections.some((a,i)=>a.length!==memberships[i]!.length||a.some((v,n)=>v!==memberships[i]![n]))||!structures.includes(c)||c.shipCryptosleep277!==h||h.occupant!==occupant||shipCasketActor277(h)!==p||h.items!==heldItems||h.packed!==heldPacks||heldItems.length!==itemMembers.length||heldItems.some((v,i)=>v!==itemMembers[i])||heldPacks.length!==packMembers.length||heldPacks.some((v,i)=>v!==packMembers[i])||stamp(c)!==source||records.some((v,i)=>stamp(v)!==before[i])||w.filth!==filth||stamp(filth)!==filthBefore||stamp(w.destroyed)!==destroyedBefore||w.deconstructed!==ledger||stamp(ledger)!==ledgerBefore||w.tiles!==tiles||stamp([w.tiles,w.resources,w.stockpiles])!==terrainBefore||w.bombWaves!==waves||stamp(waves)!==wavesBefore||actorClock&&!actorClock.current()||goodsClock&&!goodsClock.current()||vanish&&!vanish.current()||spawn&&!spawn.current()||linked&&!linked.current())return false;
+  if(used||w.tick!==tick||plannedCore297!==undefined&&plannedCore297!==effectiveCore297(w)||w.nextId!==nextId||w.rng!==rng||w.structures!==structures||w.piles!==piles||w.packed!==packed||w.jobs!==actualJobs||w.pawns!==pawns||w.wildlife!==wildlife||w.wildlife?.animals!==animals||w.mechanoids!==mechs||collections.some((a,i)=>a.length!==memberships[i]!.length||a.some((v,n)=>v!==memberships[i]![n]))||!structures.includes(c)||c.shipCryptosleep277!==h||h.occupant!==occupant||shipCasketActor277(h)!==p||h.items!==heldItems||h.packed!==heldPacks||heldItems.length!==itemMembers.length||heldItems.some((v,i)=>v!==itemMembers[i])||heldPacks.length!==packMembers.length||heldPacks.some((v,i)=>v!==packMembers[i])||stamp(c)!==source||records.some((v,i)=>stamp(v)!==before[i])||w.filth!==filth||stamp(filth)!==filthBefore||stamp(w.destroyed)!==destroyedBefore||w.deconstructed!==ledger||stamp(ledger)!==ledgerBefore||w.tiles!==tiles||stamp([w.tiles,w.resources,w.stockpiles])!==terrainBefore||w.bombWaves!==waves||stamp(waves)!==wavesBefore||actorClock&&!actorClock.current()||goodsClock&&!goodsClock.current()||vanish&&!vanish.current()||spawn&&!spawn.current()||linked&&!linked.current())return false;
   // Adopt the staged product/downing stream before real interruption/health
   // notifiers. Any further real draw remains owned and is never overwritten.
   linked?.begin();used=true;w.rng=random.rng;for(const worker of workers)if(!releaseWork(w,worker,drops))throw Error('Casket worker cargo changed within commit');w.jobs=w.jobs.filter(j=>!jobIds.has(j.id));for(const q of w.pawns)q.orders.queue=q.orders.queue.filter(o=>typeof o!=='number'||!jobIds.has(o));
@@ -220,8 +225,8 @@ export function planShipCasketRemoval277(w:World,s:Structure,mode:'deconstruct'|
 }
 
 export function damageShipCasket277(w:World,s:Structure,amount:number,cause:StructureDamageCause,rng:number,external?:StructureDamageContext):boolean {
- if(!isSchema277OrLater(w.schemaVersion)||!isShipCasket277(s)||!w.structures.includes(s)||!validShipCasketBuilding277(s,w.schemaVersion,w)||s.shipCryptosleep277.heldAt>w.tick||!int(amount)||amount===0||!int(rng)||rng>0xffffffff)return false;
- const core=external?.core??w.tick*10;if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!int(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10||Object.hasOwn(external,'instigatorKey')&&(!bombInstigatorKey(external.instigatorKey,w.schemaVersion)||Number(external.instigatorKey.slice(external.instigatorKey.indexOf(':')+1))>=w.nextId)))return false;
+ if(!isSchema277OrLater(w.schemaVersion)||!isShipCasket277(s)||!w.structures.includes(s)||!validShipCasketBuilding277(s,w.schemaVersion,w,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined)||s.shipCryptosleep277.heldAt>w.tick||!int(amount)||amount===0||!int(rng)||rng>0xffffffff)return false;
+ const core=external?.core??(Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10);if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!int(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)||Object.hasOwn(external,'instigatorKey')&&(!bombInstigatorKey(external.instigatorKey,w.schemaVersion)||Number(external.instigatorKey.slice(external.instigatorKey.indexOf(':')+1))>=w.nextId)))return false;
  const max=SHIP_CASKET_CONTENT_277.maxHitPoints,before=s.damage??0,damage=before+amount;if(!int(damage)||!Number.isSafeInteger(core+150))return false;
  if(external?.detonate&&(!s.casketWick||s.casketWick.endCore>core))return false;
  const detonates=!!external?.detonate||(external?.rawAmount??amount)>=max-before;

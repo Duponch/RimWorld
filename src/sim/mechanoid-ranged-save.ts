@@ -1,3 +1,4 @@
+import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import {shipCasketHumanReferences277,shipCasketAnimalReferences277,shipCasketMechanicalReferences277} from './ship-casket-notifications-277.ts';
 import type {NumericMembershipLookup} from './numeric-membership.ts';
 import { isMechanoidKind,type MechanoidKind } from './mechanoid-definition.ts';
@@ -14,10 +15,11 @@ const target=(v:unknown):v is string=>typeof v==='string'&&/^(pawn|animal|mech):
 const clock=(kind:MechanoidKind,phase:'warmup'|'cooldown')=>kind==='lancer'?(phase==='warmup'?102:162):(phase==='warmup'?150:126);
 
 /** Busy clocks advance only in the combat owner; pauses cannot forge elapsed time. */
-export function validMechanoidRangedShape(value:unknown,kind:MechanoidKind,version:number,tick:number):value is MechanoidRangedState {
-  if(version<197||!isMechanoidKind(kind)||kind==='scyther'||!integer(tick)||!integer(tick*10)
+export function validMechanoidRangedShape(value:unknown,kind:MechanoidKind,version:number,tick:number,coreNow297?:number):value is MechanoidRangedState {
+ const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return false;
+  if(version<197||!isMechanoidKind(kind)||kind==='scyther'||!integer(tick)||!integer(physicalCoreNow297)
     ||!object(value)||!keys(value,['order','stance'])||value.order===null&&value.stance===null)return false;
-  const core=tick*10,o=value.order,s=value.stance;
+  const core=physicalCoreNow297,o=value.order,s=value.stance;
   if(o!==null&&(!object(o)||!keys(o,['targetKey','admittedAtCore','jobUntilCore'])||!target(o.targetKey)
     ||!integer(o.admittedAtCore,0,core)||!integer(o.jobUntilCore,core+1)||o.jobUntilCore-o.admittedAtCore<450||o.jobUntilCore-o.admittedAtCore>550))return false;
   if(s===null)return o!==null;
@@ -45,12 +47,12 @@ function historicalTarget(w:World,key:string,id:number):boolean {
 /** ids, when supplied, is the COMPLETE Thing namespace after collective owners. */
 export function validateMechanoidRanged(w:World,m:Mechanoid,version:number=w.schemaVersion,ids?:NumericMembershipLookup):string[] {
   const r=m.ranged;if(r===undefined)return [];
-  if(!validMechanoidRangedShape(r,m.mechKind,version,w.tick))return ['Invalid mechanical ranged phase.'];
-  const errors:string[]=[],o=r.order,s=r.stance,suspended=!!m.stun&&w.tick*10<m.stun.untilCore||empMechanoidActive(m,w.tick*10);
+  if(!validMechanoidRangedShape(r,m.mechKind,version,w.tick,version===297?effectiveCore297(w):undefined))return ['Invalid mechanical ranged phase.'];
+  const errors:string[]=[],o=r.order,s=r.stance,suspended=!!m.stun&&effectiveCore297(w)<m.stun.untilCore||empMechanoidActive(m,effectiveCore297(w));
   if(o||s?.phase==='warmup'){
     if(m.state==='dead'||m.state==='downed'||m.melee?.order||m.melee?.strike)errors.push('Incapacitated or melee mechanoid retains a ranged intention.');
   }
-  if(s&&(m.path.length||(m.motion?.end??0)>w.tick||m.melee?.strike))errors.push('Busy mechanoid retains a route or melee recovery.');
+  if(s&&(m.path.length||(m.motion?.end??0)>effectiveLocal297(w)||m.melee?.strike))errors.push('Busy mechanoid retains a route or melee recovery.');
   for(const [key,active] of [[o?.targetKey,true],[s?.targetKey,s?.phase==='warmup']] as const){
     if(!key)continue;
     const id=Number(key.slice(key.indexOf(':')+1));

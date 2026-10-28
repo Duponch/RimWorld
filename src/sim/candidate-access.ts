@@ -4,7 +4,7 @@ import type { Cell, World } from './types.ts';
 import type { CandidateAccess } from './navigation-types.ts';
 import { WeightedSearch } from './weighted-search.ts';
 import { navigationAllowedArea,OUTSIDE_ALLOWED_AREA_SEARCH_COST } from './allowed-area-state.ts';
-import { navigationCosts } from './furniture-travel.ts';
+import { navigationCosts,coreNavigationUnits297 } from './furniture-travel.ts';
 import type { StructureNavigationGeometry } from './structure-navigation.ts';
 
 /** With solid diagonal corners, a legal diagonal always has a cardinal detour.
@@ -39,7 +39,7 @@ export function candidateAccess(world:World,start:Cell,blocked:Uint8Array,occupi
   return {
     kind:'candidate-access',start:origin,...policy?{allowedAreaPolicy:policy}:{},get stops(){return getNavigation().stops;},
     has,
-    resolve:goals=>{const {costs,repeaters,stops,floors}=getNavigation();weighted??=new WeightedSearch(width,height,origin,unavailable,costs,repeaters,floors,getCorners(),additive);weighted.field.stops=stops;return weighted.advance(goals);},
+    resolve:goals=>{const {costs,repeaters,stops,floors,coreMoveCosts297}=getNavigation();weighted??=new WeightedSearch(width,height,origin,unavailable,costs,repeaters,floors,getCorners(),coreMoveCosts297?coreNavigationUnits297(additive):additive,coreMoveCosts297);weighted.field.stops=stops;return weighted.advance(goals);},
     costTo:index=>index===origin?0:weighted?.field.settled?.[index]?weighted.field.costs[index]!:Infinity,
     get visited(){return weighted?.field.visited??0;},
     get connectivityVisited(){return head;},unreachedGroups:0,

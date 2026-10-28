@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {validAncientCasketGroupIdsEnvelope256,validAncientCasketGroupLinks256} from './ancient-casket-group-ids-256.ts';
 import {validAncientCasketField256,isAncientCasket256,type AncientCasket256} from './ancient-casket-state-256.ts';
@@ -9,11 +10,11 @@ export const ANCIENT_CASKET_PHYSICS_256=Object.freeze({width:1,depth:2,maxHitPoi
 type Header=Pick<World,'schemaVersion'|'tick'|'width'|'height'|'nextId'>;
 const int=(v:unknown,a:number,b:number):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=a&&v<=b;
 /** Descriptor-first: fixed Def, no Stuff/quality/power/recipe state accepted. */
-export function validAncientCasketBuilding256(v:unknown,version:number,h:Pick<Header,'width'|'height'|'nextId'>,tick=Number.MAX_SAFE_INTEGER):boolean {
+export function validAncientCasketBuilding256(v:unknown,version:number,h:Pick<Header,'width'|'height'|'nextId'>,tick=Number.MAX_SAFE_INTEGER,coreNow297?:number):boolean {
  if(!v||typeof v!=='object'||Array.isArray(v))return false;
  const k=Object.getOwnPropertyDescriptor(v,'kind');if(!k||!('value'in k)||!k.enumerable)return false;
- if(k.value!=='ancient-cryptosleep-casket')return validAncientCasketField256(v,version,tick);
- if(!validAncientCasketField256(v,version,tick)||Object.getPrototypeOf(v)!==Object.prototype)return false;
+ if(k.value!=='ancient-cryptosleep-casket')return validAncientCasketField256(v,version,tick,coreNow297);
+ if(!validAncientCasketField256(v,version,tick,coreNow297)||Object.getPrototypeOf(v)!==Object.prototype)return false;
  const allowed=['id','kind','x','z','orientation','footprint','damage','factionId','casket','casketWick'];
  if(Reflect.ownKeys(v).some(k=>typeof k!=='string'||!allowed.includes(k)||!Object.getOwnPropertyDescriptor(v,k)?.enumerable||!('value'in Object.getOwnPropertyDescriptor(v,k)!)))return false;
  const s=v as AncientCasket256;
@@ -27,7 +28,7 @@ export function validateAncientCasketPhysical256(w:World):string[]{
  if(allocator&&!validAncientCasketGroupIdsEnvelope256(allocator,w.schemaVersion,w.planet?.revision))return ['Invalid actual casket group authority.'];
  const next=allocator&&Object.getOwnPropertyDescriptor(allocator,'nextAncientCasketGroupId');
  if(next&&!validAncientCasketGroupLinks256(w.structures,next.value))return ['Casket group exceeds its actual confirmed campaign allocator.'];
- for(const s of w.structures){if(!validAncientCasketBuilding256(s,w.schemaVersion,w,w.tick))return ['Invalid actual ancient casket physical definition.'];if(isAncientCasket256(s)&&ancientCasketCells256(s,s.orientation).some(c=>{const t=w.tiles[c.z*w.width+c.x];return !t||['rock','water'].includes(t.terrain)||!terrainSupportsAffordance256(t,'Medium',w);}))return ['Actual ancient casket lacks Medium support.'];}
+ for(const s of w.structures){if(!validAncientCasketBuilding256(s,w.schemaVersion,w,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined))return ['Invalid actual ancient casket physical definition.'];if(isAncientCasket256(s)&&ancientCasketCells256(s,s.orientation).some(c=>{const t=w.tiles[c.z*w.width+c.x];return !t||['rock','water'].includes(t.terrain)||!terrainSupportsAffordance256(t,'Medium',w);}))return ['Actual ancient casket lacks Medium support.'];}
  for(const p of w.packed??[])if(isAncientCasket256(p.building)||p.building&&'casket'in p.building)return ['An ancient casket is not minifiable.'];
  for(const j of w.jobs){if(isAncientCasket256(j)||j.furniture?.kind==='ancient-cryptosleep-casket')return ['Ancient casket construction/minification is not offered.'];if(j.deconstruction?.kind==='ancient-cryptosleep-casket'){const s=w.structures.find(s=>s.id===j.deconstruction!.structureId);if(j.kind!=='deconstruct'||!isAncientCasket256(s)||s.casket.humans.length||s.casket.animals.length||s.casket.items.length)return ['Actual casket deconstruction requires the completely empty original.'];}}
  return [];

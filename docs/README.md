@@ -1,5 +1,11 @@
 # Documentation d’Elsewhere
 
+**28 octobre 2026 — V492 intégrée localement, schéma 297.** Le [statut V492](development/movement-parity-v492-status.md) est la référence courante : comportement Source12 testé, huit ordres au premier plan acquis, dette de débit ×6 de 9,98–11,28 % acceptée provisoirement par l’utilisateur. ×1/×3 tiennent leurs rythmes nominaux dans les mesures ; ×4 n’est pas mesuré. La visibilité reste non acquise et la parité complète n’est pas proclamée.
+
+Voir aussi [architecture](development/architecture.md), [validation](development/validation.md), [règles de déplacement](gameplay/deplacement-et-redirection-20261027.md) et [bilan du 26 au 28 octobre](development/bilan-nuit-20261027.md). Les contrôles locaux et les réserves conservées sont consignés dans le statut V492. Cloudflare reste V491, schéma 296, jusqu’à publication distincte ; aucune publication n’est inférée de la demande de commit. L’objectif général, le heartbeat et les six ensembles restent pausés.
+
+Les notes de jalons suivantes sont historiques.
+
 **UI V485 vérifiée localement — schéma 296 inchangé :** [Fiabilité, lecture et échelle](development/native-ui-reliability-v485.md). Clics et poses, curseurs beige avec ordre actif, caméra autour des fenêtres, HUD adaptatif, tableaux lisibles et chargement direct par carte ; parcours natifs, sauvegardes entières exactes, typage et compilation acquis. Aucune équivalence FPS/HTML ou publication nouvelle revendiquée. [Entretien des données anciennes : environ 2,82 Go retirés](development/storage-maintenance-20261026.md). Reprise autonome des six ensembles au checkpoint V484.
 
 **Continuation V484 engagée :** [préparation jouée et checkpoint2010 conservé](gameplay/campaign-continuation-v484.md), 228ticks réels après UI `5de0c82b`, originaux et provisions finis. Devis de voyage à lire avant tout départ ; aucun camp/retour acquis.

@@ -17,7 +17,7 @@ const siteAt=(root:CampaignState,id:number):PeaceTalksSite293|undefined=>root.wo
 /** Pure target reader: birth-only hostility/leader gates are not reapplied. */
 export function peaceTalksArrivalReason293(input:CampaignState,groupId:number,siteId:number,tile:number):string|undefined {
  const root=registeredCampaign(input),site=siteAt(root,siteId),record=root.worldGroups?.groups.find(r=>r.state.id===groupId),g=record?.state;
- if((Number(root.schemaVersion)!==293&&(Number(root.schemaVersion)!==294&&(Number(root.schemaVersion)!==295&&Number(root.schemaVersion)!==296)))||!root.worldSites263||!root.worldGroups||!root.worldFactions)return 'Les pourparlers exigent leur vraie campagne actuelle.';
+ if((Number(root.schemaVersion)!==293&&(Number(root.schemaVersion)!==294&&(Number(root.schemaVersion)!==295&&(Number(root.schemaVersion)!==296&&Number(root.schemaVersion)!==297))))||!root.worldSites263||!root.worldGroups||!root.worldFactions)return 'Les pourparlers exigent leur vraie campagne actuelle.';
  if(!site||site.closed||site.tile!==tile||root.tick*10>=site.expiresAtCore)return 'Ce lieu de pourparlers est absent, résolu ou expiré.';
  if(!record||record.localMapId!==null||!g||!('members'in g)||!record.encounters261||record.pending261||record.pendingEntry263)return 'Choisissez une caravane hors carte disponible.';
  if(!root.worldFactions.factions.some(f=>f.id===site.factionId))return 'La faction de ce lieu est absente.';
@@ -64,14 +64,14 @@ export function preparePeaceTalksResolution293(input:CampaignState,groupId:numbe
   put(groups,'events',[...groups.events,{tick,type:'command' as const,message:`Pourparlers : ${labels[outcome]}. Relations ${relation.goodwill} → ${change.goodwillAfter} ; ${xp.credited.toLocaleString('fr-FR')} XP Social acquises.`}].slice(-80));
   const entries=sites.entries,records=groups.groups,factionRows=factions.factions,relations=factions.relations;
   const seal=sealRemovalOriginal259({record,site,faction,relation,actors,events:groups.events},writes,[]);let used=false;
-  const current=()=>!used&&(Number(root.schemaVersion)===293||(Number(root.schemaVersion)===294||(Number(root.schemaVersion)===295||Number(root.schemaVersion)===296)))&&root.tick===tick&&root.nextId===nextId&&root.rng===rng&&root.worldSites263===sites&&sites.entries===entries&&entries.includes(site)&&root.worldGroups===groups&&groups.groups===records&&records.includes(record)&&record.state===g&&root.worldFactions===factions&&factions.factions===factionRows&&factionRows.includes(faction)&&factions.relations===relations&&relations.includes(relation)&&removalWritesMutable259(writes)&&seal(0);
+  const current=()=>!used&&(Number(root.schemaVersion)===293||(Number(root.schemaVersion)===294||(Number(root.schemaVersion)===295||(Number(root.schemaVersion)===296||Number(root.schemaVersion)===297))))&&root.tick===tick&&root.nextId===nextId&&root.rng===rng&&root.worldSites263===sites&&sites.entries===entries&&entries.includes(site)&&root.worldGroups===groups&&groups.groups===records&&records.includes(record)&&record.state===g&&root.worldFactions===factions&&factions.factions===factionRows&&factionRows.includes(faction)&&factions.relations===relations&&relations.includes(relation)&&removalWritesMutable259(writes)&&seal(0);
   if(!current())return fail('Un destinataire des pourparlers n’est pas modifiable.');
   return {ok:true,outcome,current,commit(){if(!current())return {ok:false,code:'invalid-command',reason:'Les propriétaires des pourparlers ont changé.'};used=true;for(const w of writes)if(!Reflect.set(w.object,w.key,w.value))throw Error('Admitted PeaceTalks write failed');return {ok:true};}};
  }catch{return fail('La résolution ne peut pas être préparée sans modifier les originaux.');}
 }
 /** True campaign SIM only; expiry preserves terminal tag/history. */
 export function expirePeaceTalks293(input:CampaignState):void {
- const root=registeredCampaign(input);if((Number(root.schemaVersion)!==293&&(Number(root.schemaVersion)!==294&&(Number(root.schemaVersion)!==295&&Number(root.schemaVersion)!==296)))||!root.worldSites263)return;
+ const root=registeredCampaign(input);if((Number(root.schemaVersion)!==293&&(Number(root.schemaVersion)!==294&&(Number(root.schemaVersion)!==295&&(Number(root.schemaVersion)!==296&&Number(root.schemaVersion)!==297))))||!root.worldSites263)return;
  const due=root.worldSites263.entries.filter((s):s is PeaceTalksSite293=>s.kind==='peace-talks'&&!s.closed&&root.tick*10>=s.expiresAtCore),writes:MapRemovalWrite259[]=due.map(s=>({object:s,key:'closed',present:true,value:{atCore:root.tick*10,reason:'expired'}}));
  if(!removalWritesMutable259(writes))throw Error('PeaceTalks expiry recipients are not mutable');
  for(const w of writes)if(!Reflect.set(w.object,w.key,w.value))throw Error('Admitted PeaceTalks expiry failed');

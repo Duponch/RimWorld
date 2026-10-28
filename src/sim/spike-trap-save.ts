@@ -1,3 +1,4 @@
+import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import { isBlockMaterial } from './building-materials.ts';
 import { combatTargetByKey,isAnimalTarget,isPawnTarget,type LivingTargetKey } from './combat-target.ts';
 import { carrierOf } from './rescue-state.ts';
@@ -58,7 +59,7 @@ export function validateSpikeTraps(w:World,version:number):string[] {
       if(!actor||actor.state==='dead'||actor.health?.death||isPawnTarget(actor)&&carrierOf(w,actor.id)||isAnimalTarget(actor)&&animalCarrier(w,actor.id)){
         errors.push('Spike trap contact has no living uncarried map owner.');continue;
       }
-      const cell=spikeTrapPhysicalCell(actor,w.tick*10);
+      const cell=spikeTrapPhysicalCell(actor,effectiveCore297(w));
       if(cell.x!==s.x||cell.z!==s.z)errors.push('Spike trap contact is not physically present.');
     }
   }

@@ -26,7 +26,7 @@ export function initializeRecreation(world: World): void {
 function recreationNeedErrors(joy:unknown,version:number):string[] {
   const base=version>=190?RECREATION_KINDS:version>=124?RECREATION_KINDS.slice(0,4):version>=122?RECREATION_KINDS.slice(0,3):RECREATION_KINDS.slice(0,2);
   const chemical=isSchema265OrLater(version)&&record(joy)&&record(joy.tolerance)&&Object.hasOwn(joy.tolerance,'chemical');
-  const reading=(version===295||version===296)&&record(joy)&&record(joy.tolerance)&&Object.hasOwn(joy.tolerance,'reading');
+  const reading=(version===295||(version===296||version===297))&&record(joy)&&record(joy.tolerance)&&Object.hasOwn(joy.tolerance,'reading');
   const kinds:readonly string[]=[...base,...chemical?['chemical']:[],...reading?['reading']:[]];
   if(!validReadingPawnFields295({recreation:joy},version))return ['Invalid or future reading need.'];
   if(!record(joy)||!meter(joy.level)||!record(joy.tolerance)||!record(joy.bored)
@@ -68,7 +68,7 @@ export function validateRecreation(world: World, version: number): string[] {
       continue;
     }
     if(!record(task)||Object.keys(task).some(k=>!['activity','target','buildingId','seatId','patientId','phase','elapsed','partyStartedAtCore'].includes(k))
-      ||!['skygaze','horseshoes',...(version>=122?['chess']:[]),...(version>=124?['social-relax','visit-sick']:[]),...(version>=190?['watch-television']:[]),...((version===292||(version===293||version===294||(version===295||version===296)))?['party']:[])].includes(task.activity as string)||!['travel','active'].includes(task.phase as string)
+      ||!['skygaze','horseshoes',...(version>=122?['chess']:[]),...(version>=124?['social-relax','visit-sick']:[]),...(version>=190?['watch-television']:[]),...((version===292||(version===293||version===294||(version===295||(version===296||version===297))))?['party']:[])].includes(task.activity as string)||!['travel','active'].includes(task.phase as string)
       ||!Number.isInteger(task.elapsed)||(task.elapsed as number)<0||(task.elapsed as number)>=(task.activity==='party'?1502:task.activity==='visit-sick'?VISIT_SICK_DURATION:RECREATION_DURATION)
       ||!record(task.target)||!Number.isInteger(task.target.x)||!Number.isInteger(task.target.z)
       ||(task.target.x as number)<0||(task.target.z as number)<0||(task.target.x as number)>=world.width||(task.target.z as number)>=world.height) {errors.push('Invalid recreation activity.');continue;}

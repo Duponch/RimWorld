@@ -236,7 +236,7 @@ import { ITEM_DEFINITIONS, availableNutrition } from './sim/items';
 import { foodFreshnessLabel } from './ui/food-freshness';
 import { SimulationClient } from './bridge/SimulationClient';
 import type {SnapshotReader} from './bridge/SimulationClient';
-import {createNativeCloneResidentLane,type NativeCloneResidentLane} from './bridge/native-clone-resident';
+import {readNativeCorePhaseInput297,createNativeCloneResidentLane,type NativeCloneResidentLane} from './bridge/native-clone-resident';
 import {MainFrameAdmissionFIFO} from './bridge/main-frame-admission-fifo';
 import {readResidentWorkerMessage} from './bridge/resident-protocol';
 import type { AudioCue } from './bridge/audio-cues';
@@ -337,8 +337,9 @@ const client = (() => {
     protected override workerStopped(_source:Worker):void {queues.get(this)?.close();lanes.get(this)?.close();}
     admissionFIFODiagnostics475(){return queues.get(this)?.diagnostics();}
     resetAdmissionFIFODiagnostics475():void {queues.get(this)?.resetDiagnostics();}
-    protected override deliverSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
-      queues.get(this)?.recordApplied(world.tick);receiveMainSnapshot(world, cost, speed, replaced, motion);
+    protected override deliverCorePhase297(raw:unknown):void {const input=lanes.get(this)?.adoptCorePhase297(raw);if(!input)throw Error('Missing Native physical phase owner');latestCorePhaseInput297=input;renderer?.setCorePhase297(input);const projection=readNativeCorePhaseInput297(input);if(!projection)throw Error('Lost Native phase audio owner');if(projection.audioCues.length)receiveMainAudioCues(projection.audioCues);}
+    protected override deliverSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[], coreInput297?:object): void {
+      queues.get(this)?.recordApplied(world.tick);receiveMainSnapshot(world, cost, speed, replaced, motion, coreInput297);
     }
     protected override deliverCampaignOnly(summary:CampaignSummary,cost:number,speed:number,replaced:boolean):void {queues.get(this)?.recordApplied(summary.tick);receiveMainCampaignOnly(summary,cost,speed,replaced);}
     protected override deliverAudioCues(cues: readonly AudioCue[]): void { receiveMainAudioCues(cues); }
@@ -376,6 +377,7 @@ const client = (() => {
     },
     cancelCampEntry256:(...args:Parameters<SimulationClient['cancelCampEntry256']>)=>native.cancelCampEntry256(...args),
     get hasCampPreparation(){return native.hasCampPreparation;},
+    get hasPendingPresentationRequests(){return native.hasPendingPresentationRequests;},
     orderOptions: (...args: Parameters<SimulationClient['orderOptions']>) => native.orderOptions(...args),
     billWorkerOptions: (...args: Parameters<SimulationClient['billWorkerOptions']>) => native.billWorkerOptions(...args),
     setSpeed: (...args: Parameters<SimulationClient['setSpeed']>) => native.setSpeed(...args),
@@ -573,7 +575,7 @@ class MainColonyRenderer extends ColonyRenderer {
   protected override cameraOnlyInput():boolean{return nativeUi?.hasOpenGamePage(true)??false;}
   protected override createSelectionRectanglePort(){return nativeUi?(bounds:{left:number;top:number;width:number;height:number}|null)=>nativeUi!.setSelectionRectangle(bounds):undefined;}
   get admissionFrameReady():boolean {return !this.disposed&&!this.preparing&&!this.fatalError;}
-  protected override frame(now:number):void {drainMainAdmissionsBeforeFrame();try{super.frame(now);}finally{notifyMainAdmissionAvailability();}}
+  protected override frame(now:number):void {this.beginPresentationFrame297();drainMainAdmissionsBeforeFrame();try{super.frame(now);}finally{notifyMainAdmissionAvailability();}}
   protected override createApplicationContext():SceneApplicationContext{return new SceneApplicationContext();}
   protected override createEnvironmentLighting():EnvironmentLighting {const context=this.applicationContext!;return new EnvironmentLighting(new EnvironmentLightField(context.topology,world=>context.read(world)?.lighting));}
   protected override createIntentReader(){return createClosedMainMapIntentReader();}
@@ -815,6 +817,7 @@ const roomInspection = new RoomInspection();
 const orderMenu=new OrderMenu(client,notify);
 const snapshotHud=new SnapshotHud(()=>renderState());
 let latestMotion: PawnTrack[] | undefined;
+let latestCoreFullInput297:object|undefined,latestCorePhaseInput297:object|undefined;
 let menuResumeSpeed: number | undefined;
 let menuTransition: Promise<unknown> = Promise.resolve();
 const shell = document.querySelector<HTMLElement>('.game-shell')!;
@@ -2376,10 +2379,11 @@ client.onFault = () => {
   session.markSimulationStopped(); simulationStopped = true; currentSpeed = 0; menuResumeSpeed = undefined;
   frontMenu.setHasGame(false);
   audio.reset();
-  if (snapshot) renderer?.setWorld(snapshot, false, 0, latestMotion, true);
+  if (snapshot) renderer?.setWorld(snapshot, false, 0, latestMotion, true,latestCoreFullInput297);
   updateIncident(); syncStorageButtons();
 };
-function receiveMainSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[]): void {
+function receiveMainSnapshot(world: World, cost: number, speed: number, replaced: boolean, motion?: PawnTrack[], coreInput297?:object): void {
+  latestCoreFullInput297=coreInput297;latestCorePhaseInput297=undefined;
   if(replaced)firstGesturesLearning?.cancelPending();
   campaignOnly=undefined;shell.classList.remove('campaign-only');
   if(replaced){hoveredCell=null;hoverReadoutLayout?.reset();}
@@ -2412,7 +2416,8 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
   const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id)&&!world.mechanoids?.some(m=>m.id===id))||!!selectedObject&&!mapObjectExists(world,selectedObject);
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;selectedObjects=[];renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}
   else if(roleChanged||zoneAnchorChanged||objectGroupChanged){orderMenu.close();rebuildInspector();}
-  renderer?.setWorld(world,replaced,speed,motion,true);
+  const deferCalmFull297=Number(world.schemaVersion)===297&&!replaced&&!speedChanged&&speed>0&&!client.hasPendingPresentationRequests;
+  renderer?.setWorld(world,replaced,speed,motion,true,coreInput297,deferCalmFull297);
   syncAudioSources(world);
   if(changed)renderer?.setSelectedPawns(selection.ids);
   updateMapHover();
@@ -2433,7 +2438,7 @@ function renderCampaignOnly():void {
 function receiveMainCampaignOnly(summary:CampaignSummary,cost:number,speed:number,replaced:boolean):void {
  firstGesturesLearning?.cancelPending();
  const hadMap=!!snapshot;if(replaced||hadMap){nativeHudHiddenInspectorKey=undefined;campaignPresentationEpoch++;}
- if(hadMap||replaced){renderer?.dispose();renderer=undefined;audio.reset();latestMotion=undefined;hoveredCell=null;hoverReadoutLayout?.reset();selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;selectedObjects=[];orderMenu.close();startingArrivalUI.reset();}
+ if(hadMap||replaced){renderer?.dispose();renderer=undefined;audio.reset();latestMotion=undefined;latestCoreFullInput297=latestCorePhaseInput297=undefined;hoveredCell=null;hoverReadoutLayout?.reset();selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;selectedObjects=[];orderMenu.close();startingArrivalUI.reset();}
  snapshot=undefined;latestFoodReadability=undefined;campaignOnly=summary;stepMs=cost;currentSpeed=speed;if(speed>0)deferredResumeGuard.confirm(false);session.hasWorld=true;frontMenu.setHasGame(true);
  if(worldTab==='individual')worldTab='maps';if(currentPanel!=='menu'&&currentPanel!=='world'&&currentPanel!=='quests')setPanel('world');
  if(!frontMenu.isOpen())shell.hidden=false;renderCampaignOnly();syncStorageButtons();
@@ -2592,7 +2597,8 @@ async function prepareWorldView(): Promise<void> {
   }
   const activeRenderer=renderer,activeWorld=snapshot;
   if(!activeRenderer||!activeWorld||!hasAuthority()){if(campaignOnly)renderCampaignOnly();return;}
-  activeRenderer.setWorld(activeWorld, true, currentSpeed, latestMotion,true);
+  activeRenderer.setWorld(activeWorld, true, currentSpeed, latestMotion,true,latestCoreFullInput297);
+  if(latestCorePhaseInput297)activeRenderer.setCorePhase297(latestCorePhaseInput297);
   if (activeRenderer.compatibilityWarning) notify(activeRenderer.compatibilityWarning, true);
   syncAudioSources(activeWorld);
   try{await activeRenderer.preparePresentation();}

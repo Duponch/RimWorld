@@ -1,3 +1,5 @@
+import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
+import {validCapturedCoreMove297} from './core-move-save-297.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import { validateMedicalRecord } from './injury-validation.ts';
@@ -36,12 +38,12 @@ function validConsumeTravel(pawn:Pawn,world:World):boolean {
   if(!Number.isFinite(pawn.moveCooldown)||pawn.moveCooldown<0||pawn.moveCooldown>MAX_PAWN_DELAY_V226)return false;
   const m=pawn.motion;
   if(m==null)return pawn.moveCooldown===0;
-  if(!record(m)||!cell(m.from,world)||!cell(m.to,world)||!same(m.to,pawn)||stepDistance(m.from,m.to)!==1
-    ||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>world.tick)return false;
-  return validStunIntervals(m.stuns,world.schemaVersion,m.start,world.tick)&&validSlowIntervals(m.stagger,world.schemaVersion,m.start,world.tick)
+  if(!record(m)||'stop297'in m||!cell(m.from,world)||!cell(m.to,world)||!same(m.to,pawn)||stepDistance(m.from,m.to)!==1
+    ||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>effectiveLocal297(world))return false;
+  return validCapturedCoreMove297(m,world.schemaVersion)&&validStunIntervals(m.stuns,world.schemaVersion,m.start,world.tick,world.schemaVersion===297?effectiveCore297(world):undefined)&&validSlowIntervals(m.stagger,world.schemaVersion,m.start,world.tick,world.schemaVersion===297?effectiveCore297(world):undefined)
     &&(m.speedFactor===undefined||Number.isFinite(m.speedFactor)&&m.speedFactor>=MIN_PAWN_SPEED_V87&&m.speedFactor<=1)
     &&validCapturedTravelDelay(m.terrainDelay,world.schemaVersion)&&Math.abs(m.end-travelEnd(m))<=1e-7
-    &&Math.abs(pawn.moveCooldown-Math.max(0,m.end-world.tick))<=1e-7;
+    &&Math.abs(pawn.moveCooldown-Math.max(0,m.end-effectiveLocal297(world)))<=1e-7;
 }
 /** Presence, not truthiness: false/undefined/inherited markers remain future fields. */
 export function hasForcedConsumeMarker(pawn:{need?:unknown}):boolean {

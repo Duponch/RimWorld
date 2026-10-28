@@ -1,3 +1,4 @@
+import {effectiveCore297,effectiveLocal297} from './core-phase-297.ts';
 import {mechanicalDuty256,mechanicalOrder256} from './temple-mech-duty-256.ts';
 import { combatTargetByKey,combatTargetKey,combatTargetSize,isAnimalTarget,mechanoidEnemy,meleeThreatTarget,type LivingTarget,type LivingTargetKey } from './combat-target.ts';
 import { clearShotSegment,findShotLine,type ShotGrid } from './combat-space.ts';
@@ -47,7 +48,7 @@ export function mechanoidGunAvailable(w:World,m:Mechanoid,core:number,q:Mechanoi
   return !threat||Math.max(Math.abs(threat.x-m.x),Math.abs(threat.z-m.z))>1;
 }
 export function planMechanoidShot(w:World,m:Mechanoid,key:LivingTargetKey,q:MechanoidRangedQueries,
-  stage:'admission'|'warmup'|'emission',core=w.tick*10) {
+  stage:'admission'|'warmup'|'emission',core=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10) {
   const profile=mechanoidRangedProfile(m.mechKind),target=combatTargetByKey(w,key);
   if(!profile||!target||!mechanoidEnemy(w,m,target)||distanceSquared(m,target)>72**2)return {reason:'Cible mécanique absente ou invalide.'} as const;
   if(stage!=='warmup'&&!mechanoidGunAvailable(w,m,core,q))return {reason:'Canon mécanique indisponible.'} as const;
@@ -64,7 +65,7 @@ export interface MechanoidRangedPost {targetKey:LivingTargetKey;cell:Cell;path:C
  * No map capture is owned by a machine, and no incomplete scan commits RNG. */
 export function planMechanoidRangedPost(w:World,m:Mechanoid,budget:SearchBudget,batch:MechanoidCombatBatch,
   q:MechanoidRangedQueries,onAccess?:(access:CandidateAccess)=>void):MechanoidRangedPost|null|undefined {
-  if(!mechanoidGunAvailable(w,m,w.tick*10,q))return;
+  if(!mechanoidGunAvailable(w,m,Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10,q))return;
   const profile=mechanoidRangedProfile(m.mechKind)!,group=mechanicalDuty256(w,m);
   const candidates:LivingTarget[]=[];
   for(const t of batch.targets?.()??[...w.pawns,...(w.wildlife?.animals??[])]){
@@ -104,7 +105,7 @@ export function planMechanoidRangedPost(w:World,m:Mechanoid,budget:SearchBudget,
 
 /** Intent may contain a route; no aim or random result is preplayed. */
 export function admitMechanoidRangedOrder(w:World,m:Mechanoid,plan:MechanoidRangedPost,core:number,q:MechanoidRangedQueries):boolean {
-  if(core!==w.tick*10||!Number.isSafeInteger(core+550)||m.ranged||m.melee?.strike||(m.motion?.end??0)>w.tick
+  if(core!==(Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10)||!Number.isSafeInteger(core+550)||m.ranged||m.melee?.strike||(m.motion?.end??0)>(Number(w.schemaVersion)===297?effectiveLocal297(w):w.tick)
     ||m.stun&&core<m.stun.untilCore||empMechanoidActive(m,core)
     ||!mechanoidGunAvailable(w,m,core,q)||!mechanicalDuty256(w,m))return false;
   const target=combatTargetByKey(w,plan.targetKey),profile=mechanoidRangedProfile(m.mechKind)!;

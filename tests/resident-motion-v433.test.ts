@@ -7,8 +7,9 @@ import {ResidentMotionRecorder,ResidentMotionEncoder,ResidentMotionFrameOwner} f
 
 const own=(v:object,k:PropertyKey)=>Object.hasOwn(v,k);
 const edge=(start:number,end=start+3):PresentationSegment=>({from:{x:-0,z:2},to:{x:1,z:2},start,end,terrainDelay:undefined});
-function world(){return{tick:0,nextId:100,pawns:[{id:1,motion:edge(0)}],wildlife:{animals:[{id:2,motion:edge(0)}]},mechanoids:[{id:3,motion:edge(0)}]} as unknown as World;}
-function packet(w:World,revision:number,motion?:unknown,checkpoint=revision===1):SnapshotMessage<true>{const p={type:'snapshot',kind:checkpoint?'checkpoint':'delta',epoch:1,revision,...checkpoint?{}:{baseRevision:revision-1},world:{tick:w.tick,nextId:w.nextId},stepMs:0,speed:1};return(arguments.length>=3?{...p,motion}:p) as unknown as SnapshotMessage<true>;}
+// Codec-only partial fixture: explicit legacy296 preserves the original Recorder oracle.
+function world(){return{schemaVersion:296,tick:0,nextId:100,pawns:[{id:1,motion:edge(0)}],wildlife:{animals:[{id:2,motion:edge(0)}]},mechanoids:[{id:3,motion:edge(0)}]} as unknown as World;}
+function packet(w:World,revision:number,motion?:unknown,checkpoint=revision===1):SnapshotMessage<true>{const p={type:'snapshot',kind:checkpoint?'checkpoint':'delta',epoch:1,revision,...checkpoint?{}:{baseRevision:revision-1},world:{schemaVersion:w.schemaVersion,tick:w.tick,nextId:w.nextId},stepMs:0,speed:1};return(arguments.length>=3?{...p,motion}:p) as unknown as SnapshotMessage<true>;}
 function exact(actual:unknown,expected:unknown):void {expect(actual).toStrictEqual(expected);if(actual&&expected&&typeof actual==='object'&&typeof expected==='object'){expect(Reflect.ownKeys(actual)).toEqual(Reflect.ownKeys(expected));for(const key of Reflect.ownKeys(expected))if(key!=='length')exact((actual as Record<PropertyKey,unknown>)[key],(expected as Record<PropertyKey,unknown>)[key]);}}
 function harness(){const w=world(),recorder=new ResidentMotionRecorder(),oracle=new MotionRecorder(),encoder=new ResidentMotionEncoder(),owner=new ResidentMotionFrameOwner();let revision=0;
  const capture=(checkpoint=false)=>{recorder.capture(w);oracle.capture(w);const expected=structuredClone(oracle.snapshot()),full=packet(w,++revision,recorder.snapshot(),checkpoint||revision===1),encoded=encoder.capture(full);return{expected,full,encoded};};
@@ -75,7 +76,7 @@ test('producer preparation stages without consuming revision and rejects a stale
 
 test('malformed order, bounds, marker and own-data descriptors refuse without advancing',()=>{
  const h=harness();h.admit(h.capture());h.w.tick=3;h.w.pawns[0]!.motion=edge(3);const good=h.capture();
- const corruptions:((s:any,p:any)=>void)[]=[(s,p)=>p.motion=[],s=>s.tick++,s=>s.section.count++,s=>s.section.order=[1,1,3],s=>s.section.rows[0].drop=999,s=>s.section.rows[0].append[0].from.x=Infinity,s=>s.section.rows.push(s.section.rows[0]),s=>Object.defineProperty(s.section,Symbol('expando'),{value:1,enumerable:true}),s=>Object.defineProperty(s.section,'count',{value:3,enumerable:false})];
+ const corruptions:((s:any,p:any)=>void)[]=[(s,p)=>delete p.world.schemaVersion,(s,p)=>p.world.schemaVersion=298,(s,p)=>p.motion=[],s=>s.tick++,s=>s.section.count++,s=>s.section.order=[1,1,3],s=>s.section.rows[0].drop=999,s=>s.section.rows[0].append[0].from.x=Infinity,s=>s.section.rows.push(s.section.rows[0]),s=>Object.defineProperty(s.section,Symbol('expando'),{value:1,enumerable:true}),s=>Object.defineProperty(s.section,'count',{value:3,enumerable:false})];
  for(const corrupt of corruptions){const s=structuredClone(good.encoded.motion),p=structuredClone(good.encoded.publication);corrupt(s,p);expect(h.owner.prepare(p,s)).toBeUndefined();expect(()=>h.owner.read(p)).toThrow();}
  let reads=0;const s=structuredClone(good.encoded.motion);Object.defineProperty(s.section,'rows',{enumerable:true,get(){reads++;return[];}});expect(h.owner.prepare(good.encoded.publication,s)).toBeUndefined();expect(reads).toBe(0);h.admit(good);
 });

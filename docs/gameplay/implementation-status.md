@@ -1,5 +1,13 @@
 # Ce qui est jouable et ce qui manque
 
+## État courant — V492 Source12, schéma 297, intégration locale effectuée
+
+Source12 rapproche la locomotion humaine de la référence RimWorld1.6 : base nominale4,6 cases/s, coût flottant et diagonale capturés par segment, reclic conservant normalement l’arête déjà payée, première arête engageable au point sûr de la commande validée, et arrêt explicite au temps physique confirmé. Les anciens segments chargés gardent leur durée historique ; les nouvelles durées ne réécrivent pas le passé. Le lissage présente les acteurs confirmés séparément du dernier World complet. Ce périmètre ne prouve pas une identité totale de tous les comportements.
+
+Huit vrais ordres avec pause/reprise, reclics, rafale et stabilité du dernier ordre ont été acquis au premier plan. **Visibilité native non acquise**, cause inconnue. Le recul de 9,98–11,28 % à ×6 est accepté provisoirement pour cette intégration et reste à corriger ; ×1/×3 tiennent les cibles mesurées, ×4 n’est pas mesuré. Voir [statut et réserves](../development/movement-parity-v492-status.md).
+
+Le typage, la compilation et378cas ciblés passent, avec trois échecs historiques conservés ; Cloudflare reste V491/schéma 296 jusqu’au déploiement distinct. La campagne94de/T3328 est intacte ; victoire, confort global et six ensembles restent ouverts et la poursuite générale reste pausée. Les descriptions suivantes sont historiques.
+
 **V483 qualifiée localement — schéma 296, non publiée :** [Porte sur mur fini](door-over-wall-v483.md). Retrait réel, phase ouverte et porte payée, intentions séparées et propriétaires conservés. 303cas distincts par reprises, natif68,954s/16exports/9captures, type15,573s/build5,052s, présentation160,082s/44changements≤41,3ms. Coût ciblé résiduel trois plans17,439/6,457ms checkpoint/delta ; aucun gain FPS global. Production295/b969 inchangée. Reprendre le réarbitrage vers une continuation réelle des Éclaircies ; six ensembles ouverts.
 
 **V482 publiée — schéma 295, production b969b256 :** [Roman physique acheté et lu](novel-v482.md). Achat, livraison, lecture et conservation du même exemplaire acquis ; 76 nouveaux cas et 119 voisins par reprises, deux anciens rouges reproduits. Parcours natif, recharges exactes, typage et compilation acquis ; coût JS ciblé documenté sans gain FPS global. Les six ensembles restent ouverts. [Publication vérifiée](../development/publication-v482.md).

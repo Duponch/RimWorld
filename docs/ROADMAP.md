@@ -1,5 +1,13 @@
 # Plan de développement
 
+## Priorité actuelle
+
+Source12 testée est intégrée localement sous schéma 297 ; typage, contrôles ciblés et compilation sont acquis, avec trois rouges historiques conservés. L’utilisateur accepte provisoirement la perte de 9,98–11,28 % de débit à ×6 ; **PERF-V492-X6 : l’optimisation du débit et la réactivité complète restent des problèmes ouverts**, sans nouvelle série automatique présumée. Les rythmes ×1/×3 sont tenus dans les fenêtres acquises, sans gratuité CPU ; ×4 n’a pas été mesuré. [Décision et preuves](development/movement-parity-v492-status.md).
+
+Le typage, la compilation et378cas ciblés sont acquis ; les trois rouges historiques et le cas ignoré restent conservés. Cloudflare reste V491 tant qu’une publication distincte n’est pas faite. Cet accord ne reprend ni l’objectif général, ni le heartbeat, ni les six ensembles, et n’active pas les feuilles privées de victoire. La vraie campagne exclusive94de/T3328 reste conservée et séparée des QA.
+
+Les priorités et jalons plus bas décrivent les états historiques avant cet accord.
+
 **V483 qualifiée localement — schéma 296, non publiée :** [Porte sur mur fini](gameplay/door-over-wall-v483.md). Retrait réel, phase ouverte et porte payée, intentions séparées et propriétaires conservés. 303cas distincts par reprises, natif68,954s/16exports/9captures, type15,573s/build5,052s, présentation160,082s/44changements≤41,3ms. Coût ciblé résiduel trois plans17,439/6,457ms checkpoint/delta ; aucun gain FPS global. Production295/b969 inchangée. Reprendre le réarbitrage vers une continuation réelle des Éclaircies ; six ensembles ouverts.
 
 **V482 publiée — schéma 295, production b969b256 :** [Roman physique acheté et lu](gameplay/novel-v482.md). Achat, livraison, lecture et conservation du même exemplaire acquis ; 76 nouveaux cas et 119 voisins par reprises, deux anciens rouges reproduits. Parcours natif, recharges exactes, typage et compilation acquis ; coût JS ciblé documenté sans gain FPS global. Les six ensembles restent ouverts. [Publication vérifiée](development/publication-v482.md).
@@ -133,7 +141,7 @@ Schéma courant publié : 271. Migration 270 strictement validée puis numéro s
 
 [Les Aulnes V397](gameplay/aulnes-multimap-v397.md) : aller-retour, travaux et revisite du même site observés ; garde finale rouge sur trois habitants blessés à terre au foyer. Les alertes rage animale/incapacité sont corrigées V398. V399/V400 réduisent deux lectures de structures inchangées, après profil ciblé et comparaison CPU bornée. Aucun gain FPS annoncé. Le chargement/retour de bois et acier est qualifié V401. Avertissement urgent et pause configurable sur nouvelle menace qualifiés V402, quelle que soit la carte affichée. Étangs peu profonds boréaux et pont standard qualifiés V403 ; anciennes eaux/cartes conservées. Copier/renommer une politique de tenue qualifié V404, sans suppression. Demande humaine suivante : vérifier/consolider les voyages, cartes, persistance, performances et menus face au Core, selon [auditV406](development/multimap-audit-v406.md). Table3×3 V405 en attente, aucune adoption. Le multicarte reste une tranche limitée, pas un domaine terminé. Pas de succession automatique de caches par domaine. Garder la branche21483 et les Aulnes publiques V394 distinctes ; pas de nouvelle campagne gagnée exigée pour avancer.
 
-## Priorité actuelle
+## Priorités historiques avant l’accord V492
 
 1. **Trois biomes existants : départs vérifiés V375.** Six cas fixes et trois parcours UI250², trois recharges exactes acquis par reprises. Références officielles et visuelles consultées ; ni année de survie ni hiver entier certifiés. Ne pas rejouer ce contrôle sans changement concerné.
 2. **Toundra et neige V376.** Froid, surface persistée, écologie existante, choix du site et déneigement sont reliés. Sols humides/lichen et espèces absentes restent ouverts ; voir le périmètre de la note.

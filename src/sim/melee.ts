@@ -1,4 +1,5 @@
-import { combatTarget,isAnimalTarget,meleeThreatTarget,retaliationPermission,type LivingTarget } from './combat-target.ts';
+import {effectiveCore297} from './core-phase-297.ts';
+import { combatCell297,combatTarget,isAnimalTarget,meleeThreatTarget,retaliationPermission,type LivingTarget } from './combat-target.ts';
 import { violentWorkRefusal } from './colonist-backgrounds.ts';
 import { strikeLivingTarget } from './living-melee.ts';
 import { isBarrier,damageBarrier } from './barriers.ts';
@@ -77,7 +78,8 @@ export function applyMeleeCommand(world:World,command:MeleeCommand):CommandResul
 /** Fixed sentry only: counter an adjacent enemy, no implicit raid pursuit. */
 export function startSentryMelee(world:World,pawn:Pawn):boolean {
   if(isColonist(pawn)||!canFight(world,pawn))return false;
-  const nearby=world.pawns.filter(p=>hostileTo(pawn,p)&&assaultTarget(pawn,p)&&Math.abs(p.x-pawn.x)<=1&&Math.abs(p.z-pawn.z)<=1);
+  const core=Number(world.schemaVersion)===297?effectiveCore297(world):0,source=combatCell297(Number(world.schemaVersion),pawn,core);
+  const nearby=world.pawns.filter(p=>{if(!hostileTo(pawn,p)||!assaultTarget(pawn,p))return false;const cell=combatCell297(Number(world.schemaVersion),p,core);return Math.abs(cell.x-source.x)<=1&&Math.abs(cell.z-source.z)<=1;});
   if(!nearby.length)return false;
   const blocked=blockedCells(world,true);
   const target=nearby.filter(p=>hostileTo(pawn,p)&&assaultTarget(pawn,p)&&meleeContact(world,pawn,p,blocked)).sort((a,b)=>a.id-b.id)[0];
@@ -147,7 +149,7 @@ export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,bud
   const m=pawn.melee!,target=m.order?.structure?structureTarget(world,pawn):targetFor(world,pawn);if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
   if(m.order?.auto==='social'&&(!activeSocialFight(world,pawn,m.order.targetId)||!target||!canFight(world,pawn))){finishSocialFight(world,pawn);return;}
   if(!target||!canFight(world,pawn)){cancelMelee(pawn);pawn.path=[];return;}
-  if(m.strike||pawn.shooting?.stance?.phase==='cooldown'||isStunned(pawn,world.tick*10)){pawn.path=[];pawn.state='idle';return;}
+  if(m.strike||pawn.shooting?.stance?.phase==='cooldown'||isStunned(pawn,Number(world.schemaVersion)===297?effectiveCore297(world):world.tick*10)){pawn.path=[];pawn.state='idle';return;}
   if(meleeTargetContact(world,pawn,target,getBlocked())){pawn.path=[];pawn.state='idle';return;}
   if(!isColonist(pawn)&&!pawn.tactics&&!pawn.raid&&!(m.order&&prisonBreakMeleeOwned(world,pawn,m.order))||m.order?.auto==='draft'){cancelMelee(pawn);return;}
   const blocked=getBlocked(),end=pawn.path.at(-1),next=pawn.path[0];

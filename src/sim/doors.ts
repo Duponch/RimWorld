@@ -1,3 +1,4 @@
+import {effectiveLocal297} from './core-phase-297.ts';
 import {targetDoorCanOpen263,targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import { isColonist } from './affiliation.ts';
 import {rememberExplorationApproacher256,consumeExplorationApproacher256} from './exploration-door-256.ts';
@@ -16,23 +17,26 @@ import type { Cell, CommandResult, Pawn, Structure, World } from './types.ts';
 export type DoorCommand={type:'door-policy';structureId:number;setting:'holdOpen'|'forbidden';value:boolean};
 
 function openDoor(world:World,s:Structure):void {
+  const now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
   const d=s.door!;
-  if(!d.open){d.from=doorOpenness(s,world.tick);d.changedAt=world.tick;d.open=true;if(d.holdOpen)invalidateAnimalPens(world);}
-  d.closeAt=world.tick+(1-doorOpenness(s,world.tick))*doorMotionTicks(s)+DOOR_CLOSE_DELAY;
+  if(!d.open){d.from=doorOpenness(s,now);d.changedAt=now;d.open=true;if(d.holdOpen)invalidateAnimalPens(world);}
+  if(Number(world.schemaVersion)===297){const state=physicalDoorState297(world);state.open.add(s);state.changed=true;}
+  d.closeAt=now+(1-doorOpenness(s,now))*doorMotionTicks(s)+DOOR_CLOSE_DELAY;
 }
 /** Called before committing an edge. Waiting consumes no path or travel distance. */
 export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
+  const now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
   const s=doorAt(world,next);if(!s)return true;
   const d=s.door!,breaking=prisonBreakActive(pawn),permission=targetDoorCanOpen263(world,pawn,s);
-  if(permission!==undefined&&!(pawn.prisoner&&pawn.prisoner.releasedAt===undefined&&!breaking)){if(!permission)return d.open&&doorOpenness(s,world.tick)>=1-1e-9;if(d.forbidden&&isColonist(pawn)&&!breaking)return false;rememberExplorationApproacher256(world,d,pawn.id,isColonist(pawn));d.lastTouch=world.tick;if(!d.open)openDoor(world,s);if(doorOpenness(s,world.tick)<1-1e-9)return false;d.closeAt=world.tick+DOOR_CLOSE_DELAY;return true;}
+  if(permission!==undefined&&!(pawn.prisoner&&pawn.prisoner.releasedAt===undefined&&!breaking)){if(!permission)return d.open&&doorOpenness(s,now)>=1-1e-9;if(d.forbidden&&isColonist(pawn)&&!breaking)return false;rememberExplorationApproacher256(world,d,pawn.id,isColonist(pawn));d.lastTouch=now;if(!d.open)openDoor(world,s);if(doorOpenness(s,now)<1-1e-9)return false;d.closeAt=now+DOOR_CLOSE_DELAY;return true;}
   if(pawn.prisoner&&pawn.prisoner.releasedAt===undefined&&!breaking){rememberExplorationApproacher256(world,d,pawn.id,false);return prisonDoorPassable(world,s);}
-  if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined&&!breaking){rememberExplorationApproacher256(world,d,pawn.id,false);return d.open&&doorOpenness(s,world.tick)>=1-1e-9;}
+  if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined&&!breaking){rememberExplorationApproacher256(world,d,pawn.id,false);return d.open&&doorOpenness(s,now)>=1-1e-9;}
   if(d.forbidden&&!breaking)return false;
   rememberExplorationApproacher256(world,d,pawn.id,true);
-  d.lastTouch=world.tick;
+  d.lastTouch=now;
   if(!d.open)openDoor(world,s);
-  if(doorOpenness(s,world.tick)<1-1e-9)return false;
-  d.closeAt=world.tick+DOOR_CLOSE_DELAY;return true;
+  if(doorOpenness(s,now)<1-1e-9)return false;
+  d.closeAt=now+DOOR_CLOSE_DELAY;return true;
 }
 /** Real domestic hauler at the threshold. Opening uses the existing timed
  * door transaction; a false result consumes neither path nor physical edge. */
@@ -52,12 +56,13 @@ export function readyAnimalHaulDoorEntry282(world:World,a:WildAnimal,next:Cell):
  * edge. The normal threshold check remains authoritative if the path or power
  * changes before arrival. Stone autodoors still open at the threshold. */
 export function approachAutodoor(world:World,pawn:Pawn,next:Cell):void {
+  const now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
   if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined&&!prisonBreakActive(pawn)||pawn.path[0]?.x!==next.x||pawn.path[0]?.z!==next.z)return;
   const upcoming=pawn.path[1];if(!upcoming||Math.max(Math.abs(upcoming.x-next.x),Math.abs(upcoming.z-next.z))!==1)return;
   const s=doorAt(world,upcoming);if(s&&targetDoorCanOpen263(world,pawn,s)===false)return;
   if(s?.kind!=='autodoor'||!s.power?.on||s.breakdown||isBlockMaterial(s.material)||s.door?.forbidden&&!prisonBreakActive(pawn))return;
   rememberExplorationApproacher256(world,s.door!,pawn.id,true);
-  s.door!.lastTouch=world.tick;openDoor(world,s);
+  s.door!.lastTouch=now;openDoor(world,s);
 }
 /** Index bodies/edges/items once, rather than scanning every actor for each door.
  * Edge endpoints protect the physical passage until the GPU-visible body clears. */
@@ -100,4 +105,38 @@ export function applyDoorCommand(world:World,c:DoorCommand):CommandResult {
   // An accepted edge remains physical. Future edges revalidate this permission.
   for(const p of world.pawns)p.planCooldown=0;
   return {ok:true};
+}
+
+
+interface PhysicalDoors297 {open:Set<Structure>;changed:boolean}
+const physicalDoors297=new WeakMap<World,PhysicalDoors297>();
+function physicalDoorState297(w:World):PhysicalDoors297 {
+ let state=physicalDoors297.get(w);if(!state){state={open:new Set(w.structures.filter(s=>isPassageDoor(s.kind)&&s.door?.open)),changed:false};physicalDoors297.set(w,state);}return state;
+}
+export function invalidatePhysicalDoors297(w:World):void {physicalDoors297.delete(w);}
+/** Only open doors are inspected at physical cadence. Occupants/items are read
+ * once, lazily, only when an actual close deadline becomes due. */
+export function advancePhysicalDoors297(w:World):{changed:boolean;topologyChanged:boolean} {
+ const now=effectiveLocal297(w),state=physicalDoorState297(w);let changed=state.changed,topologyChanged=state.changed;state.changed=false;
+ let bodies:Set<number>|undefined,friendly:Set<number>|undefined,objects:Set<number>|undefined;
+ const capture=()=>{if(bodies)return;bodies=new Set();friendly=new Set();objects=new Set();
+  const add=(a:{x:number;z:number})=>bodies!.add(a.z*w.width+a.x);
+  for(const p of w.pawns){if(p.state==='dead'&&(p.body?.pileId!==undefined||p.body?.lostAt!==undefined))continue;add(p);if(p.motion&&p.motion.end>now)add(p.motion.from);
+   if(isColonist(p)||p.visitor||p.prisoner?.releasedAt!==undefined){friendly!.add(p.z*w.width+p.x);if(p.motion&&p.motion.end>now)friendly!.add(p.motion.from.z*w.width+p.motion.from.x);}}
+  for(const a of w.wildlife?.animals??[]){add(a);if(a.motion&&a.motion.end>now)add(a.motion.from);}
+  for(const p of w.piles)if(p.owner.type==='ground')objects!.add(p.owner.z*w.width+p.owner.x);
+  for(const p of w.packed)if(p.owner.type==='ground')objects!.add(p.owner.z*w.width+p.owner.x);
+ };
+ for(const s of state.open){const d=s.door!,i=s.z*w.width+s.x;if(!d.open){state.open.delete(s);continue;}
+  if(d.explorationApproacherId!==undefined&&doorOpenness(s,now)>=1-1e-9){
+   finishExplorationReveal256(w,consumeExplorationApproacher256(w,i,d,doorOpenness(s,now),id=>resolveActualExplorationApproacher256(w,id),()=>captureActualFogPhysical256(w)));changed=true;topologyChanged=true;
+  }
+  if(d.closeAt===null||d.closeAt>now)continue;
+  capture();changed=true;
+  if(bodies!.has(i)){if(!d.forbidden&&friendly!.has(i))d.lastTouch=now;d.closeAt=now+DOOR_CLOSE_DELAY;}
+  if(d.holdOpen)d.closeAt=null;
+  else if(bodies!.has(i)||objects!.has(i))d.closeAt=now+DOOR_CLOSE_DELAY;
+  else {d.from=doorOpenness(s,now);d.changedAt=now;d.open=false;d.closeAt=null;state.open.delete(s);topologyChanged=true;}
+ }
+ return {changed,topologyChanged};
 }

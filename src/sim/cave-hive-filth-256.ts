@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Actual generation Slime on the same existing filth owner. Draw order and
  * the real shared GenAdj permutation follow the already adopted970 operation. */
@@ -9,10 +10,10 @@ import {ensureFilth,filthCheckPeriod} from './filth-rules.ts';
 import type {WorldGenerationRandom} from './world-generation-random.ts';
 export interface HiveAdjacentRuntime256 {adjacentPermutation:number[];adjacentUses:number}
 const directions=[[0,1],[1,0],[0,-1],[-1,0],[1,-1],[1,1],[-1,1],[-1,-1]] as const;
-export function depositHiveSlime256(w:World,cell:number,random:Pick<WorldGenerationRandom,'integer'|'value'|'float'>,context:HiveAdjacentRuntime256,atCore=w.tick*10):boolean {
+export function depositHiveSlime256(w:World,cell:number,random:Pick<WorldGenerationRandom,'integer'|'value'|'float'>,context:HiveAdjacentRuntime256,atCore=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10):boolean {
  const n=w.width*w.height;
  if(!isSchema256Or257(w.schemaVersion)||w.site?.revision!==3||!Number.isSafeInteger(cell)||cell<0||cell>=n||context.adjacentPermutation.length!==8||new Set(context.adjacentPermutation).size!==8||context.adjacentPermutation.some(i=>!Number.isInteger(i)||i<0||i>7)||!Number.isSafeInteger(context.adjacentUses)||context.adjacentUses<0)throw Error('Missing actual Hive slime/GenAdj frontier');
- if(!Number.isSafeInteger(atCore)||atCore<Math.max(0,(w.tick-1)*10)||atCore>w.tick*10)throw Error('Invalid actual Hive Slime substep');
+ if(!Number.isSafeInteger(atCore)||(Number(w.schemaVersion)===297?atCore!==effectiveCore297(w):atCore<Math.max(0,(w.tick-1)*10)||atCore>w.tick*10))throw Error('Invalid actual Hive Slime substep');
  const physical=captureActualLocalDistricts256(w),now=atCore;
  const deposit=(i:number,propagate:boolean):boolean=>{
   const x=i%w.width,z=Math.floor(i/w.width),existing=w.filth?.items.find(f=>f.x===x&&f.z===z&&f.kind==='slime');

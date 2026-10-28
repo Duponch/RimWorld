@@ -1,3 +1,4 @@
+import {validationCore297} from './core-phase-297.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import type { World } from './types.ts';
 import { isColonist } from './affiliation.ts';
@@ -23,8 +24,10 @@ export function validMentalShape(value:unknown,version:number,tick:number,width:
   if(c.kind==='murderous-rage')return keys(c,[...base,'targetId','nextCheckCore'])&&integer(c.targetId,1)&&integer(c.nextCheckCore,0,tick*10+120);
   return keys(c,base);
 }
-export function validMeleeThreatShape(value:unknown,version:number,tick:number):boolean {
-  return value===undefined||version>=192&&object(value)&&keys(value,['attackerId','atCore'])&&integer(value.attackerId,1)&&integer(value.atCore,0,tick*10);
+export function validMeleeThreatShape(value:unknown,version:number,tick:number,coreNow297?:number):boolean {
+  const core=version===297?validationCore297(version,tick,coreNow297):tick*10;
+  if(version===297&&!Number.isSafeInteger(core))return false;
+  return value===undefined||version>=192&&object(value)&&keys(value,['attackerId','atCore'])&&integer(value.attackerId,1)&&integer(value.atCore,0,core);
 }
 export function validateMental(world:World,version:number):string[] {
   const errors:string[]=[];

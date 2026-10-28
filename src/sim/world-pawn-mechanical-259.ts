@@ -1,3 +1,4 @@
+import {worldPawnPhysicalCore297} from './world-pawn-physical-clock-297.ts';
 import {advanceCoveredInFirefoam290} from './firefoam-actor-state-290.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validMechanoidShape} from './mechanoid-save.ts';
@@ -25,15 +26,17 @@ export function cleanMapRemovedMechanical259(m:Mechanoid,tick:number):void {
  * Sparse mechanical health remains at its last real impact, <= that frontier. */
 export function validMechanicalWorldPawn259(row:MechanicalWorldPawn259,version:number,registry?:WorldFactionRegistry256):boolean {
  const at=row.mechanicalTimersAtCore259,a=row.actor;
- if((version!==259&&version!==260&&(version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version)))))||!Number.isSafeInteger(at)||at<0||at%10||at>row.clockCore||row.mode==='mothballed'||row.items.length||row.packed.length||Object.hasOwn(row,'heldAtCore259')||Object.hasOwn(row,'entryKind259')||!a.worldFaction259||row.factionId!==a.worldFaction259.factionId||!validMechanicalWorldFaction259(a,version,registry))return false;
- if(!validMechanoidShape(a,version,at/10)||a.path.length||a.motion||a.moveCooldown||a.planCooldown||a.melee?.order||a.ranged?.order||a.ranged?.stance?.phase==='warmup'||a.meleeThreat||a.raid?.goal||a.temple?.goal)return false;
+ if((version!==259&&version!==260&&(version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version)))))||!Number.isSafeInteger(at)||at<0||(version===297&&Object.hasOwn(row,'physicalClockCore297')?!Number.isSafeInteger(worldPawnPhysicalCore297(row,version))||at>worldPawnPhysicalCore297(row,version):at%10||at>row.clockCore)||row.mode==='mothballed'||row.items.length||row.packed.length||Object.hasOwn(row,'heldAtCore259')||Object.hasOwn(row,'entryKind259')||!a.worldFaction259||row.factionId!==a.worldFaction259.factionId||!validMechanicalWorldFaction259(a,version,registry))return false;
+ if(!validMechanoidShape(a,version,Math.floor(at/10),undefined,version===297?at:undefined)||a.path.length||a.motion||a.moveCooldown||a.planCooldown||a.melee?.order||a.ranged?.order||a.ranged?.stance?.phase==='warmup'||a.meleeThreat||a.raid?.goal||a.temple?.goal)return false;
  const status=a.health?medicalStatus(a.health):'mobile';
  return status==='mobile'?a.state==='idle':a.state===status;
 }
 /** No age/needs/organic healing/RNG exist for this sparse mechanical model.
  * The clinical engine already returns unchanged on mechanical bodies. */
-export function advanceMechanicalWorldPawn259(row:MechanicalWorldPawn259,toCore:number,advanceFirefoam=true):string|null {
- if(!Number.isSafeInteger(toCore)||toCore%10||toCore-row.clockCore!==10||row.mode!=='active'||row.items.length||row.packed.length||!Number.isSafeInteger(row.mechanicalTimersAtCore259)||row.mechanicalTimersAtCore259<0||row.mechanicalTimersAtCore259%10||row.mechanicalTimersAtCore259>row.clockCore)return 'Invalid actual mechanical WorldPawn frontier';
- if(advanceFirefoam&&row.actor.state!=='dead'&&row.actor.health&&!row.actor.health.death)advanceCoveredInFirefoam290(row.actor.health,toCore-row.clockCore);
- row.clockCore=toCore;return null;
+export function advanceMechanicalWorldPawn259(row:MechanicalWorldPawn259,toCore:number,advanceFirefoam=true,version=259):string|null {
+ const physicalFrom297=version===297?worldPawnPhysicalCore297(row,version):row.clockCore;
+ if(!Number.isSafeInteger(physicalFrom297)||physicalFrom297>toCore)return 'Invalid actual owned physical WorldPawn frontier';
+ if(!Number.isSafeInteger(toCore)||toCore%10||toCore-row.clockCore!==10||row.mode!=='active'||row.items.length||row.packed.length||!Number.isSafeInteger(row.mechanicalTimersAtCore259)||row.mechanicalTimersAtCore259<0||(version===297&&Object.hasOwn(row,'physicalClockCore297')?row.mechanicalTimersAtCore259>physicalFrom297:row.mechanicalTimersAtCore259%10||row.mechanicalTimersAtCore259>row.clockCore))return 'Invalid actual mechanical WorldPawn frontier';
+ if(advanceFirefoam&&row.actor.state!=='dead'&&row.actor.health&&!row.actor.health.death)advanceCoveredInFirefoam290(row.actor.health,toCore-physicalFrom297);
+ row.clockCore=toCore;if(version===297&&Object.hasOwn(row,'physicalClockCore297'))row.physicalClockCore297=toCore;return null;
 }

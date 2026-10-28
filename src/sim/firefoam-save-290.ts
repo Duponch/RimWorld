@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {campaignAuthority} from './secondary-site-context.ts';
 import {firefoamCellCore290,firefoamData290,firefoamDense290,firefoamInteger290,validFirefoamPopper290,validFirefoamWorldShape290} from './firefoam-state-290.ts';
 import {validFirefoamManualField290,validateFirefoamManualOwners290} from './firefoam-manual-290.ts';
@@ -11,7 +12,7 @@ import type {World} from './types.ts';
 const own=(v:object,k:PropertyKey)=>Object.hasOwn(v,k);
 const plain=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
 const field=(v:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(v,k);return d?.enumerable&&own(d,'value')?d:undefined;};
-const versionAllowed=(v:unknown):v is number=>firefoamInteger290(v,1,296);
+const versionAllowed=(v:unknown):v is number=>firefoamInteger290(v,1,297);
 type Kind='world'|'record'|'thing'|'building'|'retainedBuilding'|'job'|'actor'|'localActor'|'health'|'feet'|'trace'|'carried'|'research'|'filth';
 type Branch=readonly [string,Kind,boolean?];
 interface IdentitySinkInternal290 {add(value:number):unknown;has(value:number):boolean}
@@ -135,9 +136,9 @@ function scan(raw:unknown,version:number,contexts?:Record<string,unknown>[],iden
      if(v.kind!=='firefoam-popper'||!validFirefoamPopper290(foam.value,version)||kind==='retainedBuilding'&&own(foam.value,'wick'))return false;
     }else return false;
    }
-   if(v.kind==='firefoam-popper'&&((version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&version!==296))))))||!['building','retainedBuilding','job'].includes(kind)||kind!=='job'&&!foam||!field(v,'material')||v.material!=='steel'))return false;
+   if(v.kind==='firefoam-popper'&&((version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&version!==297)))))))||!['building','retainedBuilding','job'].includes(kind)||kind!=='job'&&!foam||!field(v,'material')||v.material!=='steel'))return false;
    if(v.kind==='firefoam'){
-    if((version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&version!==296))))))||kind!=='trace'&&kind!=='carried')return false;
+    if((version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&version!==297)))))))||kind!=='trace'&&kind!=='carried')return false;
     if(kind==='carried'){if(!firefoamData290(v,['kind','thickness'])||!firefoamInteger290(v.thickness,1,5))return false;}
     else if(!firefoamData290(v,['id','kind','x','z','thickness','grownCore','expiresAfterCore','nextCheckCore'])||!firefoamInteger290(v.id,1)
      ||!firefoamInteger290(v.thickness,1,5)||!firefoamInteger290(v.x)||!firefoamInteger290(v.z)||!firefoamInteger290(v.grownCore)||!firefoamInteger290(v.expiresAfterCore,300000,599999)||!firefoamInteger290(v.nextCheckCore,1))return false;
@@ -146,9 +147,9 @@ function scan(raw:unknown,version:number,contexts?:Record<string,unknown>[],iden
    if(own(v,'coveredInFirefoam290')&&kind!=='health'||kind==='health'&&!validCoveredInFirefoamField290(v,version))return false;
    if(kind==='research'){
     if(('project'in v)&&!field(v,'project'))return false;
-    if(v.project==='firefoam'&&((version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&version!==296))))))||!field(v,'firefoam')))return false;
+    if(v.project==='firefoam'&&((version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&version!==297)))))))||!field(v,'firefoam')))return false;
     if('firefoam'in v){const p=field(v,'firefoam')?.value;
-     if((version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&version!==296))))))||!firefoamData290(p,['points'],['completedAt'])||!firefoamInteger290(p.points,0,600000000)
+     if((version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&version!==297)))))))||!firefoamData290(p,['points'],['completedAt'])||!firefoamInteger290(p.points,0,600000000)
       ||(own(p,'completedAt')?!firefoamInteger290(p.completedAt)||p.points!==600000000||v.project==='firefoam':p.points>=600000000))return false;
     }
    }
@@ -202,13 +203,14 @@ export function validateFirefoamLocal290(w:World,ids?:{has(value:number):boolean
 function validatePrevalidatedFirefoamLocal290(w:World,ids?:{has(value:number):boolean;add(value:number):unknown}):string[] {
  const errors:string[]=[];
  try{
+  const macro=w.tick*10,physical=Number(w.schemaVersion)===297?effectiveCore297(w):macro;
   for(const s of w.structures)if(s.firefoam290?.wick){const wick=s.firefoam290.wick;
-   if(wick.startedAtCore>w.tick*10||wick.endCore<=w.tick*10||!w.firefoam290)errors.push('Invalid installed firefoam wick clock.');
+   if(wick.startedAtCore>physical||wick.endCore<=physical||!w.firefoam290)errors.push('Invalid installed firefoam wick clock.');
   }
-  if((Number(w.schemaVersion)!==290&&(Number(w.schemaVersion)!==291&&(Number(w.schemaVersion)!==292&&(Number(w.schemaVersion)!==293&&(Number(w.schemaVersion)!==294&&(Number(w.schemaVersion)!==295&&Number(w.schemaVersion)!==296)))))))return errors;
+  if((Number(w.schemaVersion)!==290&&(Number(w.schemaVersion)!==291&&(Number(w.schemaVersion)!==292&&(Number(w.schemaVersion)!==293&&(Number(w.schemaVersion)!==294&&(Number(w.schemaVersion)!==295&&(Number(w.schemaVersion)!==296&&Number(w.schemaVersion)!==297))))))))return errors;
   if(!validFirefoamResearchTransport290(w,w.schemaVersion))errors.push('Invalid firefoam research or new construction.');
   for(const trace of w.filth?.items??[])if(trace.kind==='firefoam'&&(!firefoamInteger290(trace.id,1,w.nextId-1)||!firefoamInteger290(trace.x,0,w.width-1)
-   ||!firefoamInteger290(trace.z,0,w.height-1)||!firefoamInteger290(trace.grownCore,0,w.tick*10)||!firefoamInteger290(trace.nextCheckCore,w.tick*10+1,w.tick*10+filthCheckPeriod(w))))errors.push('Invalid firefoam filth clock or cell.');
+   ||!firefoamInteger290(trace.z,0,w.height-1)||!firefoamInteger290(trace.grownCore,0,physical)||!firefoamInteger290(trace.nextCheckCore,macro+1,(Number(w.schemaVersion)===297?Math.max(macro,trace.grownCore):macro)+filthCheckPeriod(w))))errors.push('Invalid firefoam filth clock or cell.');
   if(w.firefoam290){
    const seen=new Set<number>(),sourceIds=new Set<number>();let previous=0;
    const occupied=ids??new Set([
@@ -220,13 +222,18 @@ function validatePrevalidatedFirefoamLocal290(w:World,ids?:{has(value:number):bo
     if(wave.id>=w.nextId||wave.id<=previous||seen.has(wave.id)||occupied.has(wave.id))errors.push('Duplicate or invalid firefoam wave identity.');
     previous=wave.id;seen.add(wave.id);ids?.add(wave.id);
     if(sourceIds.has(wave.sourceId)||occupied.has(wave.sourceId))errors.push('Firefoam source remains owned.');sourceIds.add(wave.sourceId);
-    if(wave.center.x>=w.width||wave.center.z>=w.height||wave.startedAtCore>w.tick*10||wave.advancedAtCore!==w.tick*10)errors.push('Invalid firefoam wave clock or center.');
+    // Firefoam remains a6Hz helpful clinical owner. A phase1..9 birth
+    // owns an unprocessed receipt until the next actual macro, never a
+    // fictitious central treatment or an advanced root-Core cursor.
+    const pendingBirth297=Number(w.schemaVersion)===297&&wave.startedAtCore>macro;
+    if(pendingBirth297&&(wave.nextCell!==0||wave.affectedActorKeys.length!==0))errors.push('Unprocessed firefoam birth has a fictitious clinical cursor.');
+    if(wave.center.x>=w.width||wave.center.z>=w.height||wave.startedAtCore>physical||wave.advancedAtCore!==(Number(w.schemaVersion)===297?Math.max(macro,wave.startedAtCore):macro))errors.push('Invalid firefoam wave clock or center.');
     if(wave.cells[0]!==wave.center.z*w.width+wave.center.x)errors.push('Missing firefoam wave center.');
     const halo=new Set(wave.damageOnlyCells);let priorDate=-1,priorIndex=-1;
     for(let n=0;n<wave.cells.length;n++){
      const i=wave.cells[n]!,date=firefoamCellCore290(w.width,wave,i),x=i%w.width,z=Math.floor(i/w.width);
      if(i>=w.width*w.height||Math.abs(x-wave.center.x)>10||Math.abs(z-wave.center.z)>10||!halo.has(i)&&Math.hypot(x-wave.center.x,z-wave.center.z)>9.9||date<priorDate||date===priorDate&&i<=priorIndex
-      ||(n<wave.nextCell)!==(date<=wave.advancedAtCore))errors.push('Invalid captured firefoam cell, order or due cursor.');
+      ||(n<wave.nextCell)!==(!pendingBirth297&&date<=wave.advancedAtCore))errors.push('Invalid captured firefoam cell, order or due cursor.');
      priorDate=date;priorIndex=i;
     }
     if(wave.damageOnlyCells.some((i,n)=>n>0&&wave.cells.indexOf(i)<=wave.cells.indexOf(wave.damageOnlyCells[n-1]!))||halo.has(wave.center.z*w.width+wave.center.x))errors.push('Invalid firefoam halo order.');

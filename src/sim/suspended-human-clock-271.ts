@@ -1,3 +1,4 @@
+import {suspensionDeltas297,type SuspensionClock297} from './core-phase-297.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import type {MedicalRecord} from './injury-types.ts';
 import type {Pawn} from './types.ts';
@@ -25,9 +26,9 @@ type Write271={object:object;key:string;before:PropertyDescriptor|undefined;afte
 export interface SuspendedHumanResume271 {current():boolean;commit():boolean}
 /** Pure plan over actual originals. No mutation, random draw or skipped tick
  * is performed while planning or while adopting the held civil gap. */
-export function prepareSuspendedHumanResume271(pawn:Pawn,heldAt:number,targetCivil:number):SuspendedHumanResume271 {
+export function prepareSuspendedHumanResume271(pawn:Pawn,heldAt:number,targetCivil:number,physical297?:SuspensionClock297):SuspendedHumanResume271 {
  if(!Number.isSafeInteger(heldAt)||heldAt<0||!Number.isSafeInteger(targetCivil)||targetCivil<heldAt||!Number.isSafeInteger(targetCivil*10))throw Error('Invalid actual human suspension interval');
- const delta=targetCivil-heldAt,h=pawn.health,age=pawn.age,body=pawn.body,bodyRot=body?.rot,mental=pawn.mental,denied=pawn.deniedJoining,catharsis=mental?.catharsis,marker=pawn.cryptosleepHeldAt271,writes:Write271[]=[],links:(()=>boolean)[]=[];
+ const deltas297=suspensionDeltas297(heldAt,targetCivil,physical297),delta=deltas297.civil,deltaCore297=deltas297.core,h=pawn.health,age=pawn.age,body=pawn.body,bodyRot=body?.rot,mental=pawn.mental,denied=pawn.deniedJoining,catharsis=mental?.catharsis,marker=pawn.cryptosleepHeldAt271,writes:Write271[]=[],links:(()=>boolean)[]=[];
  if(marker!==undefined&&marker!==heldAt)throw Error('Actual pawn suspension marker differs from holder');
  const put=(object:object,key:string,after:unknown)=>{
   const before=Object.getOwnPropertyDescriptor(object,key);
@@ -49,7 +50,11 @@ export function prepareSuspendedHumanResume271(pawn:Pawn,heldAt:number,targetCiv
  if(age&&delta)add(age,'chronologicalTicks',delta);
  const attack=pawn.lastAttack,disturbance=pawn.disturbance;
  if(attack){const at=attack.atCore,other=attack.targetId;links.push(()=>pawn.lastAttack===attack&&attack.atCore===at&&attack.targetId===other);const old=attack.suspendedTicks??0;if(delta){if(!Number.isSafeInteger(old+delta))throw Error('Suspended attack memory clock exhausted');put(attack,'suspendedTicks',old+delta);}}
- if(disturbance){links.push(()=>pawn.disturbance===disturbance);if(delta){add(disturbance,'sleepUntilCore',delta*10);add(disturbance,'lieUntilCore',delta*10);}}
+ if(disturbance){links.push(()=>pawn.disturbance===disturbance);if(deltaCore297){add(disturbance,'sleepUntilCore',deltaCore297);add(disturbance,'lieUntilCore',deltaCore297);}}
+ // Prospective271 owner only. Spatial277 shifts its own stagger separately.
+ // Marker and explicit held/target Core proof jointly bind this frozen timer;
+ // no elapsed off-map recovery and no historical <=296 retiming.
+ if(physical297!==undefined&&marker===heldAt){const stagger=pawn.stagger;links.push(()=>pawn.stagger===stagger);if(stagger&&deltaCore297)add(stagger,'untilCore',deltaCore297);}
  // These are factual event dates with an individual active-age correction.
  const dated=(list:readonly object[]|undefined,born:(memory:Record<string,unknown>)=>number)=>{
   if(!list)return;const originals=[...list];links.push(()=>list.length===originals.length&&list.every((m,i)=>m===originals[i]));

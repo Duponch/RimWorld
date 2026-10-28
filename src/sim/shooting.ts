@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import { huntingPermission } from './hunting-state.ts';
 import { violentWorkRefusal } from './colonist-backgrounds.ts';
 import { weatherShotFactor } from './weather-exposure.ts';
@@ -72,7 +73,7 @@ export function applyShootingCommand(world:World,command:ShootingCommand):Comman
     cancelMelee(pawn);const stance=pawn.shooting?.stance;
     pawn.shooting={order:{targetId:command.targetId,weaponId:plan.weapon.id,startedDowned:plan.target.state==='downed'},stance:stance?.phase==='cooldown'?stance:null};
     pawn.draft!.target=null;pawn.draft!.queue=[];pawn.draft!.lastActiveTick=world.tick;pawn.path=[];
-    if(!pawn.shooting.stance)startAim(world,pawn,world.tick*CORE_TICKS_PER_LOCAL,queries);
+    if(!pawn.shooting.stance)startAim(world,pawn,Number(world.schemaVersion)===297?effectiveCore297(world):world.tick*CORE_TICKS_PER_LOCAL,queries);
   }
   return {ok:true};
 }
@@ -152,5 +153,5 @@ export function startAutonomousShot(world:World,pawn:Pawn,target:LivingTarget,qu
   if(isColonist(pawn)||!hostileTarget(pawn,target)||isAnimalTarget(target)||isPawnTarget(target)&&!assaultTarget(pawn,target)||pawn.shooting)return false;
   const plan=shotPlan(world,pawn,target.id,queries);if('reason' in plan)return false;
   pawn.path=[];pawn.shooting={order:{targetId:target.id,weaponId:plan.weapon.id,startedDowned:false},stance:null};
-  startAim(world,pawn,world.tick*CORE_TICKS_PER_LOCAL,queries);return !!pawn.shooting;
+  startAim(world,pawn,Number(world.schemaVersion)===297?effectiveCore297(world):world.tick*CORE_TICKS_PER_LOCAL,queries);return !!pawn.shooting;
 }

@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import { distanceSquared,factionOf,factionRelation } from './affiliation.ts';
 import { prisonBreakActive } from './prison-break-state.ts';
@@ -26,7 +27,7 @@ export interface TurretQueries {
   turretTargets():TurretTargetIndex;
 }
 export interface TurretAdvance { changed:boolean;emittedId?:number;deferred?:true }
-export const turretOperational=(world:World,s:Structure,core=world.tick*10):boolean=>s.kind==='mini-turret'&&!!s.turret&&world.structures.includes(s)&&isPowerActive(s)&&!empStructureActive(s,core);
+export const turretOperational=(world:World,s:Structure,core=Number(world.schemaVersion)===297?effectiveCore297(world):world.tick*10):boolean=>s.kind==='mini-turret'&&!!s.turret&&world.structures.includes(s)&&isPowerActive(s)&&!empStructureActive(s,core);
 /** Equivalent to (Core+ID)%15 without overflowing a safe persistent ID. */
 export const turretHashDue=(s:Pick<Structure,'id'>,core:number):boolean=>(core%15+s.id%15)%15===0;
 

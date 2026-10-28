@@ -1,5 +1,11 @@
 # Elsewhere
 
+**28 octobre 2026 — V492 intégrée localement, schéma 297.** L’utilisateur accepte provisoirement le recul mesuré de **9,98 à 11,28 % de débit à ×6** pour intégrer Source12 testée et la committer, en gardant ce coût comme problème ouvert. Les cibles ×1 et ×3 sont tenues dans les fenêtres mesurées ; aucun ×4 n’a été mesuré, aucun coût nul ou délai nul n’est promis. Les déplacements humains utilisent une horloge physique nominale à 60 pas/s, avec les systèmes de travail et nature à 6 pas/s, des segments confirmés et leurs règles de reclic/interruption. [Comportement, mesures et dette acceptée](docs/development/movement-parity-v492-status.md).
+
+L’accord d’intégration ne vaut pas publication : **Cloudflare reste V491/source435f04a2, Production7c8f5074, schéma 296**, tant qu’un déploiement distinct n’est pas réalisé. Le lot local a passé le typage, la compilation et378cas ciblés ; trois échecs historiques et un cas ignoré restent explicitement conservés. Le parcours Source12 des huit ordres au premier plan est acquis ; la visibilité native reste non acquise, de cause inconnue. [Bilan depuis le 26 octobre](docs/development/bilan-nuit-20261027.md). L’objectif général, le heartbeat et les six ensembles restent en pause.
+
+Les jalons ci-dessous sont historiques ; leurs anciennes annonces de reprise autonome ou de publication en attente ne remplacent pas ce statut courant.
+
 **V491 publiée — réactivité des ordres et de la pause :** [publication vérifiée](docs/development/publication-v491.md), Production7c8f5074/source435f04a2, schéma 296. Les nouveaux chemins confirmés et la pause reçue sont présentés sans l’ancienne attente visuelle ; [mesures et limites](docs/development/action-latency-v486.md#réactivité-visuelle-des-ordres-et-de-la-pause--v491). Les 565 fichiers publics, sauvegardes et deux Workers restent identiques à V490. Le [rapport demandé sur les déplacements](docs/gameplay/deplacement-et-redirection-20261027.md) confirme la conservation ordinaire du segment courant dans les deux jeux, avec une calibration de vitesse et un lissage différents. Le [bilan de la nuit](docs/development/bilan-nuit-20261027.md) détaille les changements livrés, la campagne réelle et les essais écartés. Six ensembles, victoire et confort global restent ouverts ; la poursuite autonome reprend après livraison des rapports.
 
 

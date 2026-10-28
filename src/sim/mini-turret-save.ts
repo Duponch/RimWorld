@@ -1,3 +1,4 @@
+import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import type { MiniTurretState } from './mini-turret-state.ts';
 import type { World } from './types.ts';
 import { miniTurretExplosive } from './bomb-creation.ts';
@@ -38,7 +39,7 @@ function liveKeyHasCorrectType(w:World,key:string):boolean {
     &&!w.projectiles?.some(p=>p.id===id)&&!w.bombWaves?.some(b=>b.id===id);
 }
 export function validateMiniTurrets(w:World,errors:string[]=[]):string[] {
-  const version=w.schemaVersion,core=w.tick*10;
+  const version=w.schemaVersion,core=effectiveCore297(w);
   for(const s of w.structures){
     if(s.kind!=='mini-turret'){
       if(Object.hasOwn(s,'turret'))errors.push('Unexpected intrinsic turret owner.');

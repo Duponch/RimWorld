@@ -1,3 +1,5 @@
+import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
+import {validCapturedCoreMove297} from './core-move-save-297.ts';
 import {validCouplePawnShape285} from './couple-save-285.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
@@ -74,18 +76,20 @@ function validMealMemoryClock271(memory:Record<string,unknown>,version:number,ti
  return integer(born,0,civilTick)&&integer(memoryExpiry271(memory,Number(memory.expiresAt)),observed+1,observed+TICKS_PER_DAY);
 }
 
-export type PawnRecordContext=Pick<World,'width'|'height'|'tick'|'nextId'>&Partial<Pick<World,'worldFactions'>>;
-export function validatePawnRecordShape(item:Record<string,unknown>,world:World,version:number,validationTick=world.tick,heldPlayer271?:{casketId:number;heldAt:number}):string[] {return pawnRecordShape(item,world,version,validationTick,false,undefined,heldPlayer271);}
-/** A real removed-map holder, after actual local bed/area cleanup. Scalar
- * context only; it grants no fabricated map or local task authority. */
-export function validateRetainedPlayerCasketPawnShape271(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,heldPlayer271:{casketId:number;heldAt:number}):string[] {return pawnRecordShape(item,context,version,validationTick,true,undefined,{...heldPlayer271,retained:true});}
-/** Personal record only: detached owners cannot acquire local bed/area authorities. */
-export function validateDetachedPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick=context.tick):string[] {return pawnRecordShape(item,context,version,validationTick,true);}
-/** Away ownership has real origin IDs, never manufactured Area objects. */
-export function validateAwayPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,areaIds:ReadonlySet<number>):string[] {return pawnRecordShape(item,context,version,validationTick,true,areaIds);}
-export function validateShipCasketPawnShape277(item:Record<string,unknown>,world:World,version:number,heldAt:number,casketId:number):string[] {return pawnRecordShape(item,world,version,heldAt,false,undefined,undefined,{casketId,heldAt});}
-export function validateRetainedShipCasketPawnShape277(item:Record<string,unknown>,context:PawnRecordContext,version:number,heldAt:number,casketId:number):string[] {return pawnRecordShape(item,context,version,heldAt,true,undefined,undefined,{casketId,heldAt,retained:true});}
-function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>,heldPlayer271?:{casketId:number;heldAt:number;retained?:true},heldShip277?:{casketId:number;heldAt:number;retained?:true}):string[] {
+export type PawnRecordContext=Pick<World,'width'|'height'|'tick'|'nextId'>&Partial<Pick<World,'worldFactions'|'phaseCore297'>>&{schemaVersion?:number};
+export function validatePawnRecordShape(item:Record<string,unknown>,world:World,version:number,validationTick=world.tick,heldPlayer271?:{casketId:number;heldAt:number},coreNow297?:number):string[] {
+ const physical=version===297?(coreNow297??(arguments.length<=3?effectiveCore297(world):validationTick*10)):undefined;
+ return pawnRecordShape(item,world,version,validationTick,false,undefined,heldPlayer271,undefined,physical);
+}
+/** Explicit owner clocks below never borrow a selected-map/root phase. */
+export function validateRetainedPlayerCasketPawnShape271(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,heldPlayer271:{casketId:number;heldAt:number},coreNow297?:number):string[] {return pawnRecordShape(item,context,version,validationTick,true,undefined,{...heldPlayer271,retained:true},undefined,version===297?coreNow297??validationTick*10:undefined);}
+export function validateDetachedPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick=context.tick,coreNow297?:number):string[] {return pawnRecordShape(item,context,version,validationTick,true,undefined,undefined,undefined,version===297?coreNow297??validationTick*10:undefined);}
+export function validateAwayPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,areaIds:ReadonlySet<number>,coreNow297?:number):string[] {return pawnRecordShape(item,context,version,validationTick,true,areaIds,undefined,undefined,version===297?coreNow297??validationTick*10:undefined);}
+export function validateShipCasketPawnShape277(item:Record<string,unknown>,world:World,version:number,heldAt:number,casketId:number,coreNow297?:number):string[] {return pawnRecordShape(item,world,version,heldAt,false,undefined,undefined,{casketId,heldAt},version===297?coreNow297??heldAt*10:undefined);}
+export function validateRetainedShipCasketPawnShape277(item:Record<string,unknown>,context:PawnRecordContext,version:number,heldAt:number,casketId:number,coreNow297?:number):string[] {return pawnRecordShape(item,context,version,heldAt,true,undefined,undefined,{casketId,heldAt,retained:true},version===297?coreNow297??heldAt*10:undefined);}
+function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>,heldPlayer271?:{casketId:number;heldAt:number;retained?:true},heldShip277?:{casketId:number;heldAt:number;retained?:true},coreNow297?:number):string[] {
+  const physicalCoreNow297=validationCore297(version,validationTick,coreNow297),physicalLocalNow297=version===297?physicalCoreNow297/10:validationTick;
+  if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return ['Invalid actual physical Pawn frontier.'];
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
   const shipHeld=Object.getOwnPropertyDescriptor(item,'shipCryptosleepHeldAt277');
@@ -130,7 +134,7 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
   if(version>=86?!integer(warden,0,4):warden!==undefined)errors.push('Invalid warden work priority for schema.');
   const basic=(item.priorities as Record<string,unknown>)?.basic;
   if(version>=85?!integer(basic,0,4):basic!==undefined)errors.push('Invalid basic work priority for schema.');
-  if(!validDisturbance(item.disturbance,version,validationTick))errors.push('Invalid disturbance for schema.');
+  if(!validDisturbance(item.disturbance,version,validationTick,coreNow297))errors.push('Invalid disturbance for schema.');
   if(!validTradeShape(item,version,input as unknown as World))errors.push('Invalid trade task for schema.');
   if(item.appearance!==undefined){if(version<109)errors.push('Future pawn appearance in older save.');else errors.push(...validatePawnAppearance(item.appearance));}
   if(!validVisitorShape(item,version,input as unknown as World))errors.push('Invalid visitor for schema.');
@@ -139,12 +143,12 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
   if(!validAffiliationShape(item,version,input as unknown as World))errors.push('Invalid affiliation or flee shape for schema.');
   if(version>=46?!integer((item.priorities as Record<string,unknown>)?.doctor,0,4):(item.priorities as Record<string,unknown>)?.doctor!==undefined)errors.push('Invalid medical work priority for schema.');
   for(const key of ['patient','bedrest'])if(version>=47?!integer((item.priorities as Record<string,unknown>)?.[key],0,4):(item.priorities as Record<string,unknown>)?.[key]!==undefined)errors.push('Invalid patient priority for schema.');
-  if(!validAttackMemory(item.lastAttack,version,validationTick))errors.push('Invalid attack memory for schema.');
+  if(!validAttackMemory(item.lastAttack,version,validationTick,coreNow297))errors.push('Invalid attack memory for schema.');
   if(Object.hasOwn(item,'bombRefuge')&&!validBombRefugeShape(item.bombRefuge,version))errors.push('Invalid bomb refuge for schema.');
-  if(version<192&&Object.hasOwn(item,'meleeThreat')||!validMeleeThreatShape(item.meleeThreat,version,validationTick))errors.push('Invalid melee threat for schema.');
-  if(!validStagger(item.stagger,version,validationTick))errors.push('Invalid stagger state for schema.');
-  if(!validMeleeShape(item.melee,version,validationTick)||!validStunShape(item.stun,version,validationTick))errors.push('Invalid melee or stun shape for schema.');
-  if(!validShootingShape(item.shooting,version,validationTick)||!validShootingLeanOwner(item,world,version))errors.push('Invalid shooting state for schema.');
+  if(version<192&&Object.hasOwn(item,'meleeThreat')||!validMeleeThreatShape(item.meleeThreat,version,validationTick,coreNow297))errors.push('Invalid melee threat for schema.');
+  if(!validStagger(item.stagger,version,validationTick,coreNow297))errors.push('Invalid stagger state for schema.');
+  if(!validMeleeShape(item.melee,version,validationTick,coreNow297)||!validStunShape(item.stun,version,validationTick,45,coreNow297))errors.push('Invalid melee or stun shape for schema.');
+  if(!validShootingShape(item.shooting,version,validationTick,coreNow297)||!validShootingLeanOwner(item,world,version))errors.push('Invalid shooting state for schema.');
   if(!validDraftShape(item.draft,version,input as unknown as World))errors.push('Invalid draft state for schema.');
   if(!validEquipmentShape(item,version))errors.push('Invalid equipment state for schema.');
   if(item.feed!==undefined&&!validFeedShape(item.feed,version,input as unknown as World))errors.push('Invalid feeding task shape.');
@@ -178,8 +182,8 @@ function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,ver
   if(version>=6 && item.motion==null && item.moveCooldown!==0) errors.push('Missing travel segment for movement delay.');
   if(version>=6 && item.motion!=null) {
     const m=item.motion;
-    if(!record(m)||!record(m.from)||!record(m.to)||!coord(m.from)||!coord(m.to)||typeof m.start!=='number'||typeof m.end!=='number'||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>validationTick||m.to.x!==item.x||m.to.z!==item.z||Math.max(Math.abs((m.to.x as number)-(m.from.x as number)),Math.abs((m.to.z as number)-(m.from.z as number)))!==1) errors.push('Invalid travel segment.');
-    else if(!validStunIntervals(m.stuns,version,m.start as number,validationTick)||!validSlowIntervals(m.stagger,version,m.start as number,validationTick)||(m.speedFactor!==undefined&&(version<37||typeof m.speedFactor!=='number'||!Number.isFinite(m.speedFactor)||m.speedFactor<(version>=87?MIN_PAWN_SPEED_V87:version>=86?MIN_PAWN_SPEED_V86:version>=65?.128*((4.6-.12)/4.6)/2:version>=63?.128*((4.6-.12)/4.6):version>=45?.128:.8)||m.speedFactor>1))||!validCapturedTravelDelay(m.terrainDelay,version)||Math.abs(m.end-travelEnd(m as unknown as TravelSegment))>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-validationTick))>1e-7) errors.push('Inconsistent travel duration.');
+    if(!record(m)||'stop297'in m||!record(m.from)||!record(m.to)||!coord(m.from)||!coord(m.to)||typeof m.start!=='number'||typeof m.end!=='number'||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>physicalLocalNow297||m.to.x!==item.x||m.to.z!==item.z||Math.max(Math.abs((m.to.x as number)-(m.from.x as number)),Math.abs((m.to.z as number)-(m.from.z as number)))!==1) errors.push('Invalid travel segment.');
+    else if(!validCapturedCoreMove297(m,version)||!validStunIntervals(m.stuns,version,m.start as number,validationTick,coreNow297)||!validSlowIntervals(m.stagger,version,m.start as number,validationTick,coreNow297)||(m.speedFactor!==undefined&&(version<37||typeof m.speedFactor!=='number'||!Number.isFinite(m.speedFactor)||m.speedFactor<(version>=87?MIN_PAWN_SPEED_V87:version>=86?MIN_PAWN_SPEED_V86:version>=65?.128*((4.6-.12)/4.6)/2:version>=63?.128*((4.6-.12)/4.6):version>=45?.128:.8)||m.speedFactor>1))||!validCapturedTravelDelay(m.terrainDelay,version)||Math.abs(m.end-travelEnd(m as unknown as TravelSegment))>1e-7 || Math.abs((item.moveCooldown as number)-Math.max(0,m.end-physicalLocalNow297))>1e-7) errors.push('Inconsistent travel duration.');
   }
   const haul = item.haul;
   if(record(haul)&&record(haul.destination)&&!validCraftingFuelDestination269(haul.destination,version))errors.push('Invalid or future crafting refuel purpose.');

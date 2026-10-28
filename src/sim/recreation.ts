@@ -84,7 +84,7 @@ export function processRecreation(world: World, pawn: Pawn, context: NeedContext
       &&(activity!=='social-relax'||gathers.length)&&(activity!=='visit-sick'||patients.length))
       choices.push({activity,weight:(activity==='horseshoes'?2.5:activity==='chess'?2:activity==='social-relax'?4:activity==='visit-sick'?3:activity==='watch-television'?TELEVISION_WEIGHT:1)*Math.max(.001,(1-(joy.tolerance[kind]??0)/100)**5)});
   }
-  if((Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)&&readingAllowed295(pawn)&&readingAutoNeeds295(pawn)&&!joy.bored.reading&&world.piles.some(p=>p.kind==='book'&&readingSourceAllowed295(world,pawn,p)))
+  if((Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))&&readingAllowed295(pawn)&&readingAutoNeeds295(pawn)&&!joy.bored.reading&&world.piles.some(p=>p.kind==='book'&&readingSourceAllowed295(world,pawn,p)))
     choices.push({activity:'read',weight:3*Math.max(.001,(1-(joy.tolerance.reading??0)/100)**5)});
   if(!choices.length){pawn.needCooldown=20;return false;}
   const reserved=reservedServiceCells(world,pawn.id);

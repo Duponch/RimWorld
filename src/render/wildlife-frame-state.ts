@@ -23,6 +23,8 @@ export class WildlifeBodyScale {
 export class WildlifeFrameState {
  private readonly records=new Map<number,{kind:number;values:Primitive[]}>();
  private values:Primitive[]=[];private cursor=0;private equal=false;private length=0;
+ /** Between-frame physical adoption invalidates only this resident actor. */
+ invalidate(id:number):void {this.records.delete(id);}
  clear():void {this.records.clear();this.values=[];this.cursor=this.length=0;this.equal=false;}
  begin(id:number,kind:0|1|2):this {
   let record=this.records.get(id);

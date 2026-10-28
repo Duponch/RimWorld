@@ -1,5 +1,32 @@
 # Déplacements V492 — état vérifié au 28 octobre 2026 au soir
 
+## Accord humain postérieur au contrôle — intégration autorisée avec dette
+
+**L’utilisateur accepte provisoirement le déficit mesuré de 9,98 à 11,28 % de débit à ×6 et demande d’intégrer Source12 testée puis de committer.** Cet accord remplace la décision précédente de garder tout le code privé ; il ne transforme pas le déficit en gain ni en condition « sans recul » réussie. La dette de coût global et la réactivité complète restent ouvertes.
+
+L’intégration locale porte sur le schéma 297 et les sources authentiques Source12, en conservant les anciennes durées et sauvegardes. Le plan réel comprend282 contenus, dont24 ajouts/258 remplacements ;195 écarts de seules fins de lignes restent côté produit, et trois feuilles victoire dormantes restent hors commit. Les tests canoniques et leur isolation ont été revus ; les contrôles locaux après intégration sont consignés ci-dessous. Le commit du lot est distinct de tout déploiement.
+
+**Cloudflare reste V491/source435f04a2, Production7c8f5074, schéma 296**, jusqu’à une publication distincte. La demande courante autorise le commit, sans inférer un nouveau déploiement. ×1/×3 tiennent leurs rythmes dans les fenêtres acquises (1,021 et 3,017) ; ×4 n’est pas mesuré et aucun coût CPU nul n’est affirmé. La visibilité reste non acquise et la portée foreground des huit ordres n’est pas élargie. L’objectif général, le heartbeat et les six ensembles restent pausés.
+
+
+## Intégration locale vérifiée après accord
+
+Source12 est intégrée au projet local sous schéma 297 :282 contenus,24 ajouts/258 remplacements,195 différences de seules fins de lignes conservées et trois feuilles victoire dormantes exclues du commit. La carte source sélective après copie comprend2082 entrées, SHA-256 `d0999a15d2267f77cf0b66a212bfa9cdb2c3df8ff37fc76f84aac362fe8b9704`. Aucun essai de navigation, garde Schema1 ou copie rejetée n'est ajouté.
+
+Le typage intégré passe en16,204 s. Le premier typage a détecté trois problèmes propres aux tests canoniques, corrigés uniquement côté tests : assertion que la fixture possède sa carte, déclaration de la query de fixture Phase et type d'un objet NUM. Aucun export de test n'est ajouté dans src.
+
+Les49 suites durables donnent360 cas réussis, trois échecs historiques et un ignoré, en195,731 s. Les deux suites voisines de réception et chemin confirmé donnent18 cas réussis en20,225 s : **378 cas ciblés réussis au total**, sans annoncer une suite globale verte. Les trois échecs Drafting ont les mêmes cas, assertions et raisons que les reproductions V486 et V491 (horloge/propriétaire de détérioration, registre historique invalide) ; les différences de valeurs diagnostiques restent conservées. [Preuve de correspondance](../../tmp/movement-parity-v492/drafting-known-red-identity-console-v1/identity.md). Le test ignoré est explicitement remplacé par les contrats de progression payée ; l'ancien oracle Runtime6Hz est conservé byteexact dans `tests/responsive-controls-runtime-v488.historical.ts`, avec contrats courants297 distincts.
+
+La compilation Pages passe en5,377 s dans un nouveau dossier C, sans déploiement. Les contrôles natifs Source12 acquis auparavant restent la preuve des gestes et des mesures ; aucun benchmark n'est rejoué après l'accord. Les reçus et préimages de copie sont conservés sous `product-integration-v492-2026-10-28T21-10-36.235Z-25256` sur C. Les contrôles de copie ont prouvé l'identité des contenus sélectionnés avec la source privée mesurée. Lors de la préparation Git, deux sources et le helper de tests ont seulement perdu des espaces ou lignes vides après leur dernière accolade. Tous les octets du programme jusqu’à cette accolade restent identiques ; les préimages et empreintes sont conservées dans le reçu C v492-final-eof-formatting.
+
+## Problème ouvert PERF-V492-X6
+
+**Statut : ouvert, accepté provisoirement par l'utilisateur pour cette intégration.** En vitesse demandée ×6, le débit mesuré est4,687 contre5,207 et5,283 pour V491, soit9,98–11,28 % de moins. Il s'agit du débit de simulation, pas d'une perte de FPS de cette valeur. ×1 et×3 tiennent leurs rythmes dans les fenêtres observées ; cela ne démontre pas une consommation CPU identique ni la même marge sur une grande colonie. ×4 n'a pas été mesuré.
+
+À traiter ultérieurement : supprimer ce recul en conservant les règles de déplacement, les états réellement joués, la précision des commandes et la qualité du rendu. Les pics et la réactivité complète restent également des réserves de mesure. La résolution devra être démontrée par une comparaison adaptée ; l'accord actuel ne ferme pas le problème et n'est pas un PASS d'absence de recul. Aucun nouveau lot d'optimisation n'est lancé pour retarder ce commit.
+
+Les mesures et décisions antérieures ci-dessous sont conservées comme historique daté du contrôle, avant cet accord ; elles ne retirent pas l’autorisation nouvelle.
+
 **V492 n'est pas terminée ni livrée. Le produit reste V491.** Le comportement candidat fonctionne sur les parcours acquis, mais sa dernière comparaison confirme un débit de simulation inférieur de **9,98 à 11,28 % à ×6**. Les corrections de rendu réduisent les pointes sans fermer ce recul. Aucun fichier `src` ou test produit V492 n'a été intégré, committé ou publié.
 
 La demande de livraison porte sur les règles de déplacement de RimWorld 1.6 et sur une bonne réactivité, sans dégradation significative. Le contrôle fonctionnel et le contrôle de coût sont deux conditions distinctes. Enregistrer ce rapport ne livre pas la nouvelle mécanique.
@@ -75,7 +102,7 @@ Le lot Navigation3+Schema1 précédent était défavorable sans permettre d'attr
 
 La section est plus courte d'environ 6,4 % en temps écoulé, mais consomme 14,95 % et 4,02 % de CPU de plus que les témoins. Cette divergence, avec JIT/GC compris, ne démontre aucun gain dans le jeu. **Piste écartée, aucune Source13 créée et aucun nouvel essai Native de navigation.** Le banc complet a terminé en 267,884 s ; ce temps inclut les imports, migrations et contrôles hors de la section chronométrée. [Gel](../../tmp/movement-parity-v492/runtime-navigation-only-source12-cpu-private-v1/freeze.json).
 
-## Décision de livraison et reprise
+## Décision historique avant le nouvel accord humain
 
 La copie candidate, les sources et les preuves restent préservées. Le jeu local produit et la version Cloudflare restent V491/source435f04a2, Production7c8f5074, schéma296. Il n'y a pas de déploiement V492. Les sauvegardes personnelles, références et récents sont intacts ; la vraie campagne exclusive94de/T3328 n'a jamais servi de QA.
 

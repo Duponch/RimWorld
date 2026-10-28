@@ -17,8 +17,9 @@ import type { disturbanceEvents } from './disturbance.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import type { Cell,World } from './types.ts';
 import {actualAnimalMeleeProfile256,actualAnimalMeleeDamageFactor256} from './actual-animal-profile-256.ts';
-import { combatTarget,isAnimalTarget,isPawnTarget } from './combat-target.ts';
+import { combatCell297,combatTarget,isAnimalTarget,isPawnTarget } from './combat-target.ts';
 import { animalPredationTarget,cancelAnimalPredation,reconcileAnimalPredation } from './wildlife-predation.ts';
+import {effectiveCore297} from './core-phase-297.ts';
 import { animalManhunterTarget } from './animal-manhunter.ts';
 import { isRoomDoor } from './door-rules.ts';
 import { damageBarrier } from './barriers.ts';
@@ -34,8 +35,9 @@ export function animalMeleeTools(a:WildAnimal):MeleeTool[]{
 export function animalMeleeTarget(w:World,a:WildAnimal,core:number,grid?:ShotGrid){
   const threat=a.threat;if(!threat||core>threat.harmedAtCore+400)return;
   const p=combatTarget(w,threat.targetId);
-  if(!p||p.id===a.id||['dead','downed','sleeping'].includes(p.state)||isPawnTarget(p)&&(p.medicalSleep||carrierOf(w,p.id))||(p.x-a.x)**2+(p.z-a.z)**2>9)return;
-  return clearShotSegment(grid??captureWorldShotGrid(w),a,p)?p:undefined;
+  const cell=p&&combatCell297(Number(w.schemaVersion),p,core);
+  if(!p||!cell||p.id===a.id||['dead','downed','sleeping'].includes(p.state)||isPawnTarget(p)&&(p.medicalSleep||carrierOf(w,p.id))||(cell.x-a.x)**2+(cell.z-a.z)**2>9)return;
+  return clearShotSegment(grid??captureWorldShotGrid(w),a,cell)?p:undefined;
 }
 /** Bounded Dijkstra in the threat's 3-cell neighbourhood. It uses the same
  * physical step/cost rules, without allocating a map-sized flood per animal. */
@@ -69,7 +71,7 @@ export function moveAnimalMelee(w:World,a:WildAnimal,nav:()=>ReturnType<typeof a
   if(!target)return false;
   if(!a.retaliation||a.retaliation.untilCore<=w.tick*10){notifyDuckFlightJob256(w,a,'AttackMelee',()=>wildlifeRandom(w.wildlife!));a.retaliation={targetId:target.id,untilCore:w.tick*10+200};}
   if(meleeContact(w,a,target,blocked())){a.path=[];a.state='idle';return true;}
-  const n=nav();a.path=approach(w,a,target,n,blocked())??[];
+  const n=nav();a.path=approach(w,a,combatCell297(Number(w.schemaVersion),target,Number(w.schemaVersion)===297?effectiveCore297(w):0),n,blocked())??[];
   if(a.path.length)moveAnimal(w,a,n.step,animalBody(a).capacities.moving);else a.state='idle';
   return true;
 }

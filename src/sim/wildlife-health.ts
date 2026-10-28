@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {medicalCivilTick271,medicalElapsedTicks271} from './suspended-human-clock-271.ts';
 import {advanceAnimalScaria261,commitScariaDeath261,scariaCorpseRot261} from './animal-scaria-261.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
@@ -84,9 +85,9 @@ export function scareAnimal(w:World,a:WildAnimal,danger:Cell,core:number):void {
 }
 /** Real projectile producer. Commit localized injuries, death roll and PRNG
  * together; no global animal hit-point counter or resource creation. */
-export function damageAnimalWithBullet(w:World,a:WildAnimal,hit:UnarmoredBullet,core=w.tick*10,danger?:Cell,instigatorId?:number):void {
+export function damageAnimalWithBullet(w:World,a:WildAnimal,hit:UnarmoredBullet,core=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10,danger?:Cell,instigatorId?:number):void {
   const model=animalBodyModel(a.species,a.ageTicks,a.growthTracker?.value);validateUnarmoredBullet(hit,model);
-  if(!Number.isSafeInteger(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)throw new Error('Invalid animal impact time');
+  if(!Number.isSafeInteger(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))throw new Error('Invalid animal impact time');
   if(w.schemaVersion<77||!w.wildlife?.animals.includes(a))throw new Error('Invalid animal impact owner');
   if(a.state==='dead'||!hit.damage)return;
   requireAnimalDeathCapacity256(w,a);advanceAnimalHealth(w,a);if(a.health?.death)return;
@@ -102,7 +103,7 @@ export function damageAnimalWithBullet(w:World,a:WildAnimal,hit:UnarmoredBullet,
   delayAnimalImpact(a,core);
 }
 /** Shared violent-injury transaction; delayed blood loss never enters it. */
-export function commitAnimalImpact(w:World,a:WildAnimal,record:import('./injury-types.ts').MedicalRecord,random:{rng:number},core=w.tick*10,instigator?:import('./mini-turret-state.ts').BombInstigatorKey,collapse=false):void {
+export function commitAnimalImpact(w:World,a:WildAnimal,record:import('./injury-types.ts').MedicalRecord,random:{rng:number},core=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10,instigator?:import('./mini-turret-state.ts').BombInstigatorKey,collapse=false):void {
   const lordId=a.hive?.lordId;
   if(a.state!=='downed'&&medicalStatus(record)==='downed'&&healthRandom(random)<.5)record.death={tick:w.tick,cause:'downed'};
   const death=planAnimalDeathExplosion256(w,a,record,core);death.commit();
@@ -141,7 +142,7 @@ function advanceExplosiveAnimalHealth256(w:World,a:WildAnimal,privateActor=false
  if(record)advanceMedical(record,medicalElapsedTicks271(record,w.tick),{phase:a.id%60,toxicOwner:{id:a.id,spawned:!animalCarrier(w,a.id),awake:a.state!=='sleeping'&&!a.stun},...(fallout?{toxicFallout294:fallout}:{}),cryptosleepSicknessSpawned:!animalCarrier(w,a.id),posture:lying?'ground':'standing',starving:a.food<=0,malnutritionRate:malnutritionRate(a.id),hunger:a.food/animalNutritionMax(a)*100,rest:a.rest*100,restingBonus:lying&&a.state==='sleeping',infectionSeed:(w.seed^Math.imul(a.id,0x9e3779b1))>>>0},()=>healthRandom(random),conditionFrontier);
  if(thermal)record=applyAnimalThermal466(w,a,record,thermal);
  if(!record){if(staged&&!privateActor)expire();return;}
- const death=planAnimalDeathExplosion256(w,a,record,w.tick*10,thermal!==undefined);
+ const death=planAnimalDeathExplosion256(w,a,record,Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10,thermal!==undefined);
  if(staged&&(w.tick!==actualTick||w.rng!==actualRng||w.wildlife?.animals!==actualActors||!actualActors?.includes(a)||a.health!==originalHealth||JSON.stringify(a)!==actorBefore))throw Error('Stale actual toxic animal outcome');
  commitToxicDeath256(record,()=>healthRandom(random));death.commit();
  if(privateActor){outcome.health=record;for(const key of Object.keys(a))if(!Object.hasOwn(outcome,key))delete (a as unknown as Record<string,unknown>)[key];Object.assign(a,outcome);}else a.health=record;

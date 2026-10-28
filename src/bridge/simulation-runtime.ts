@@ -1,3 +1,9 @@
+import {advanceWorldCore297} from '../sim/engine';
+import {effectiveCore297} from '../sim/core-phase-297';
+import {FixedCoreClock297} from './fixed-core-clock-297';
+import {CorePhasePublisher297} from './core-phase-publisher-297';
+import {coreMapId297,physicalVisibleCoreMap297} from './core-phase-data-297';
+import type {CorePhaseEnvelope297} from './core-phase-projection-297';
 /// <reference lib="webworker" />
 import {pendingWorldEntry263} from '../sim/world-target-access-263';
 import {prepareWorldTargetEntry263} from '../sim/world-target-entry-263';
@@ -52,7 +58,7 @@ import { AudioCueRecorder } from './audio-cues';
 /** Both fixed entrypoints execute this identical authoritative engine. The
  * closed entry supplies its concrete transport encoder; public default stays
  * complete. Request ordering, clocks, ACK and SAVE never select that boundary. */
-export function startSimulationWorker(scope:DedicatedWorkerGlobalScope,send:(message:Response)=>void,snapshots:SnapshotEncoder<true>=new SnapshotEncoder({structureDelta:true,minimumStructures:1000}),publishLocal?:(world:World,publication:SnapshotMessage<true>,originalPacket:SnapshotMessage<true>)=>void,createMotionRecorder:()=>MotionRecorder=()=>new MotionRecorder()):void {
+export function startSimulationWorker(scope:DedicatedWorkerGlobalScope,send:(message:Response)=>void,snapshots:SnapshotEncoder<true>=new SnapshotEncoder({structureDelta:true,minimumStructures:1000}),publishLocal?:(world:World,publication:SnapshotMessage<true>,originalPacket:SnapshotMessage<true>)=>void,createMotionRecorder:()=>MotionRecorder=()=>new MotionRecorder(),publishPhaseLocal?:(world:World,phase:CorePhaseEnvelope297)=>void):void {
 let world: CampaignState | undefined;
 let caravans:GroupCampaignRuntime256|undefined;
 /** Build on the validated replacement BEFORE changing the active owner. The
@@ -67,14 +73,18 @@ let speed = 1;
 let threatPauseMode: ThreatPauseMode = 'major';
 const urgentThreats = new UrgentThreatObserver();
 const clock=new FixedClock();clock.reset(performance.now());
+const coreClock297=new FixedCoreClock297();coreClock297.reset(performance.now());
+const phasePublisher297=new CorePhasePublisher297();
+type CoreBatch297={owner:CampaignState;remaining:number;completed:number;simulationMs:number};
+let coreBatch297:CoreBatch297|undefined;
 type LogicalTickBatch={owner:CampaignState;remaining:number;completed:number;simulationMs:number};
 let logicalBatch:LogicalTickBatch|undefined,wakeDue=false;
 const regularTasks=new WorkerTaskScheduler(runRegularTask);
 function resetSimulationClock(now:number):void {
- logicalBatch=undefined;wakeDue=false;regularTasks.invalidate();clock.reset(now);
+ logicalBatch=undefined;coreBatch297=undefined;wakeDue=false;regularTasks.invalidate();clock.reset(now);coreClock297.reset(now);
 }
 function cancelUnplayedSimulation(now:number):void {
- logicalBatch=undefined;wakeDue=false;regularTasks.invalidate();clock.cancelUnplayed(now);
+ logicalBatch=undefined;coreBatch297=undefined;wakeDue=false;regularTasks.invalidate();clock.cancelUnplayed(now);coreClock297.cancelUnplayed(now);
 }
 // Core forcePause is a modal overlay, not an explicit player Pause. This
 // bridge-only intent is never a saved World field or a permission to advance.
@@ -99,7 +109,7 @@ let observedWorld:World|undefined;
 function visibleWorld():World|undefined {
   if(world?.worldMaps&&!selectedRegisteredMap(world)){observedWorld=undefined;return;}
   const current=campaignPresentation(world! as World);
-  if(current!==observedWorld){motion.reset();audioCues.reset();presentationChanges=new PresentationChanges();observedWorld=current;}
+  if(current!==observedWorld){motion.reset();phasePublisher297.reset();audioCues.reset();presentationChanges=new PresentationChanges();observedWorld=current;}
   return current;
 }
 const audioCues=new AudioCueRecorder();
@@ -107,13 +117,17 @@ const audioCues=new AudioCueRecorder();
 const publishCapturedTick = (checkpoint = false) => {
   let published: { epoch: number; revision: number } | undefined;
   if (world) {
-    const cues=audioCues.drain();
-    const visible=visibleWorld();if(!visible){const header=snapshots.campaignHeader(checkpoint);send({type:'campaign-only',...header,stepMs,speed,...(()=>{const transport=snapshots.encodeCampaignSummary(campaignOnlySummary(world),checkpoint);return {summary:transport.state,...transport.geography?{geography:transport.geography}:{}};})(),urgentThreats:urgentThreats.snapshot()});lastPublishedTick=world.tick;for(const notice of takeCaravanTradeArrivals261(world))send({type:'caravan-trade-arrival',...notice,checkpoint:header});return header;}
+    const visible=visibleWorld();if(!visible){const header=snapshots.campaignHeader(checkpoint);send({type:'campaign-only',...header,stepMs,speed,...(()=>{const transport=snapshots.encodeCampaignSummary(campaignOnlySummary(world),checkpoint);return {summary:transport.state,...transport.geography?{geography:transport.geography}:{}};})(),urgentThreats:urgentThreats.snapshot()});audioCues.reset();lastPublishedTick=world.tick;for(const notice of takeCaravanTradeArrivals261(world))send({type:'caravan-trade-arrival',...notice,checkpoint:header});return header;}
+    const audioPublication297=audioCues.preparePublication297(),cues=audioPublication297.cues;
     const packet = snapshots.encode(visible, stepMs, speed, checkpoint);
-    const publication={...packet, urgentThreats: urgentThreats.snapshot(), motion:motion.snapshot(),...cues.length?{audioCues:cues}:{}};
+    const recordedMotion=motion.snapshot();
+    const physicalFull297=Number(visible.schemaVersion)===297?phasePublisher297.prepareFull(visible,packet.epoch,packet.revision,recordedMotion,coreMapId297(physicalVisibleWorld297()!),'frontier'):undefined;
+    const publication={...packet,urgentThreats:urgentThreats.snapshot(),motion:recordedMotion,...physicalFull297?{corePhase297:physicalFull297.metadata}:{},...cues.length?{audioCues:cues}:{}};
     // The fixed resident entry observes this exact confirmed World synchronously.
     // Commands, ACK, public snapshots and SAVE retain their existing path.
     if(publishLocal)publishLocal(visible,publication,packet);else send(publication);
+    if(physicalFull297)phasePublisher297.commitFull(physicalFull297,performance.now());
+    audioCues.commitPublication297(audioPublication297);
     published = { epoch: packet.epoch, revision: packet.revision };
   }
   lastPublishedTick=world?.tick??-1;
@@ -319,7 +333,7 @@ async function handleWorldDraft256(request:DraftRequest256):Promise<void> {
   // Sole authoritative replacement boundary. No old colony, clock or RNG was
   // touched before the complete local World and every owner passed validation.
   const createdCaravans=prepareCaravans(created);
-  snapshots.authorizeDraftPreview(owner,d.geographyId);world=created;caravans=createdCaravans;neutralResume261=undefined;committed=true;maxSettlements=request.maxSettlements;threatPauseMode=request.threatPauseMode;speed=0;urgentThreats.bootstrap(world);motion.reset();audioCues.reset();fault=undefined;resetSimulationClock(performance.now());
+  snapshots.authorizeDraftPreview(owner,d.geographyId);world=created;caravans=createdCaravans;neutralResume261=undefined;committed=true;maxSettlements=request.maxSettlements;threatPauseMode=request.threatPauseMode;speed=0;urgentThreats.bootstrap(world);motion.reset();phasePublisher297.reset();audioCues.reset();fault=undefined;resetSimulationClock(performance.now());
   const checkpoint=publish(true);if(!checkpoint)throw Error('Le checkpoint initial n’a pas été publié.');heldWorldDraft=undefined;
   send({type:'reply',id:request.id,ok:true,checkpoint});
  }catch(error){
@@ -366,7 +380,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       urgentThreats.bootstrap(world);
       fault = undefined;
       speed=request.paused?0:1;
-      motion.reset();
+      motion.reset();phasePublisher297.reset();
       audioCues.reset();
       resetSimulationClock(performance.now());
     } else if (request.type === 'load') {
@@ -377,7 +391,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       let restored: CampaignState;
       try { restored = deserializeCampaign(request.data); }
       catch { throw new Error('Cette sauvegarde est illisible ou incompatible avec cette version. La colonie actuelle et vos sauvegardes sont conservées.'); }
-      const restoredCaravans=prepareCaravans(restored);maxSettlements=request.maxSettlements??maxSettlements;configureSettlementLimit(restored,maxSettlements);world = restored;caravans=restoredCaravans; adoptedReplacement = true;neutralResume261=undefined; speed = 0; motion.reset();
+      const restoredCaravans=prepareCaravans(restored);maxSettlements=request.maxSettlements??maxSettlements;configureSettlementLimit(restored,maxSettlements);world = restored;caravans=restoredCaravans; adoptedReplacement = true;neutralResume261=undefined; speed = 0; motion.reset();phasePublisher297.reset();
       threatPauseMode = request.threatPauseMode ?? threatPauseMode;
       urgentThreats.bootstrap(world);
       fault = undefined;
@@ -451,6 +465,84 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
 
 // Wall time funds a logical batch once. Each task commits at most one real
 // tick, keeping observers/publication atomic without monopolizing the port.
+function physicalVisibleWorld297():World|undefined {
+ return world?physicalVisibleCoreMap297(world as World):undefined;
+}
+function publishActualFull297():void {
+ // Observers were already captured at the actual Core boundary. Calling
+ // publish() here would scan Audio again even for silent terrain changes.
+ const previous=observedWorld,current=visibleWorld();
+ if(current&&current!==previous){presentationChanges.capture(current);motion.capture(current);audioCues.capture(current);}
+ publishCapturedTick();
+}
+function publishDuePhysical297(force=false,batchTail=false):void {
+ if(!world)return;const visible=physicalVisibleWorld297();if(!visible)return;
+ if(!force&&!phasePublisher297.hasPending)return;
+ const now=performance.now();if(!force&&!phasePublisher297.due(now))return;
+ if(phasePublisher297.allocatorNeedsFull(visible)||phasePublisher297.terrainNeedsFull297(visible))phasePublisher297.requestFull();
+ if(force||phasePublisher297.needsFull){
+  const quiet=phasePublisher297.canDeferFull;
+  // Explicit frontier policy: calm Full coalesces to the TRUE logical tail
+  // (or zero-credit wake). The same 20ms TOTAL budget still governs all sends.
+  // A default/legacy anchor retains its old same-civil/20ms hold policy.
+  if(force||!quiet||batchTail||!phasePublisher297.frontierMode297&&phasePublisher297.quietBudgetExpired(now)){publishActualFull297();return;}
+  if(!phasePublisher297.frontierMode297)return;
+ }
+ if(!phasePublisher297.canPublishActors297)return;
+ const audioPublication297=audioCues.preparePublication297();
+ if(!phasePublisher297.audioFitsPhase297(visible,audioPublication297.cues)){
+  phasePublisher297.requestFull();publishActualFull297();return;
+ }
+ const prepared=phasePublisher297.preparePhase(visible,motion.snapshot(),speed as 0|1|3|6,audioPublication297.cues);
+ if(publishPhaseLocal)publishPhaseLocal(visible,prepared.packet);else send(prepared.packet);
+ phasePublisher297.commitPhase(prepared,performance.now());
+ audioCues.commitPublication297(audioPublication297);
+}
+function runCoreTask297(now:number):void {
+ if(!world||Number(world.schemaVersion)!==297)throw Error('Core driver lost its current schema owner');
+ if(coreBatch297&&coreBatch297.owner!==world){resetSimulationClock(now);return;}
+ if(!coreBatch297){wakeDue=false;const budget=coreClock297.reserve(now,speed);if(budget===0){publishDuePhysical297(false,true);return;}coreBatch297={owner:world,remaining:budget,completed:0,simulationMs:0};}
+ const batch=coreBatch297;if((effectiveCore297(world)+1)%10===0)urgentThreats.prepareMaps(world);
+ if(!coreClock297.consume())throw Error('Missing reserved Core transaction');
+ const started=performance.now(),result=advanceWorldCore297(world,undefined,caravans);
+ if(result.core!==effectiveCore297(world))throw Error('Engine returned an uncommitted Core watermark');
+ batch.simulationMs+=performance.now()-started;batch.completed++;batch.remaining--;stepMs=batch.simulationMs/batch.completed*10;
+ for(const row of result.maps){const effects=row.observerEffects297;if(!effects||typeof effects.threatsChanged!=='boolean'||typeof effects.audioChanged!=='boolean'||typeof row.requiresHardFull297!=='boolean'||!Array.isArray(row.strikeAudio297)||!Array.isArray(row.shotAudio297))throw Error('Missing causal Core observer receipt');}
+ const threatsChanged=result.localTickCompleted||result.maps.some(row=>row.observerEffects297.threatsChanged);
+ const encounter=pendingCaravan261(world),entry=pendingWorldEntry263(world),threatPaused=threatsChanged&&urgentThreats.capture(world,threatPauseMode),paused=!!encounter||!!entry||threatPaused;
+ if(threatPaused){speed=0;resetSimulationClock(now);}if(encounter)holdEncounterPause261(now);if(entry)holdWorldEntry263(now);
+ const visible=physicalVisibleWorld297();
+ if(visible){
+  const mapId=coreMapId297(visible),row=result.maps.find(item=>item.mapId===mapId);
+  if(!row)throw Error('Committed Core result lost the selected actual map');
+  const hard=result.maps.some(item=>item.requiresHardFull297);
+  // Observe the SAME selected projection as the legacy discrete observer,
+  // including cross-map incidents. No Natural/geography encoder runs here.
+  if(result.localTickCompleted||hard||paused){
+   const current=visibleWorld();if(!current)throw Error('Selected publication owner disappeared during committed Core observation');
+   if(presentationChanges.capture(current))phasePublisher297.requestFull();
+  }
+  // visibleWorld may revoke an old map's Recorder/Audio/Publisher ownership.
+  // Capture this Core only after that synchronous owner check.
+  motion.capture(visible);
+  phasePublisher297.observe({core:result.core,actorsChanged:row.actorsChanged,projectileEvents:row.projectileEvents,requiresFull:hard},result.localTickCompleted,performance.now());
+  if(result.localTickCompleted)phasePublisher297.observeMacroActors297(visible);
+  // Preserve causal FX/strike/shot barriers. Audio-only work cues can use the
+  // exact guarded actor envelope without forcing a complete World capture.
+  const event=result.maps.some(item=>item.strikeAudio297.length>0||item.shotAudio297.length>0||item.projectileEvents.upserted.length>0||item.projectileEvents.removed.length>0);
+  if(phasePublisher297.canDeferFull&&(event||phasePublisher297.hasPendingProjectileEvents))phasePublisher297.requestFull();
+  const captureAudio=result.localTickCompleted||row.observerEffects297.audioChanged||row.strikeAudio297.length>0||row.shotAudio297.length>0||paused;
+  if(captureAudio){
+   audioCues.capturePhysical297(visible,result.core,row.strikeAudio297,row.shotAudio297);
+   // Only prepare/commit around an actual send consumes the owned cue prefix.
+   // publishDuePhysical297 checks the shared strict phase audio validator and
+   // falls back to a genuine Full for a cue outside that guarded domain.
+  }
+  publishDuePhysical297(paused,batch.remaining===0);
+ }else if(result.localTickCompleted||paused)publishCapturedTick();
+ if(paused){if(encounter)startEncounter261();if(entry)startWorldEntry263();return;}
+ if(batch.remaining===0){coreBatch297=undefined;if(wakeDue)regularTasks.request();}else regularTasks.request();
+}
 function runRegularTask():void {
   const now=performance.now();
   if(fault){resetSimulationClock(now);return;}
@@ -458,6 +550,7 @@ function runRegularTask():void {
   if(world&&pendingWorldEntry263(world)){holdWorldEntry263(now);startWorldEntry263();return;}
   if(!world||activeEncounter261||activeWorldEntry263||activeCamp256||creatingDraftColony||preparingWorldDraft){resetSimulationClock(now);return;}
   try {
+    if(Number(world.schemaVersion)===297){runCoreTask297(now);return;}
     if(logicalBatch&&logicalBatch.owner!==world){resetSimulationClock(now);return;}
     if(!logicalBatch){
       wakeDue=false;
@@ -489,7 +582,7 @@ function runRegularTask():void {
   }
 }
 function regularWake():void {
-  if(logicalBatch||regularTasks.scheduled){wakeDue=true;return;}
+  if(logicalBatch||coreBatch297||regularTasks.scheduled){wakeDue=true;return;}
   runRegularTask();
 }
 setInterval(regularWake,20);

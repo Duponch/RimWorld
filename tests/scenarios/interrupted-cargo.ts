@@ -1,10 +1,11 @@
+import {initializeDeclaredFixtureTick297} from './initial-core-clock-v492';
 import { applyCommand,createWorld } from '../../src/sim/engine.ts';
 import { addMaterial,refreshStock } from '../../src/sim/materials.ts';
 import type { World } from '../../src/sim/types.ts';
 
 /** Crowded camp, valid reserved steel delivery, queued harvest. No free ground slot. */
 export function exhaustedCarrier():World {
-  const w=createWorld(42,16,16);w.tick=3000;w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.structures=[];w.piles=[];w.pawns=w.pawns.slice(0,1);w.stockpiles=[];
+  const w=createWorld(42,16,16);initializeDeclaredFixtureTick297(w,3000);w.tiles=w.tiles.map(()=>({terrain:'grass'}));w.resources=[];w.structures=[];w.piles=[];w.pawns=w.pawns.slice(0,1);w.stockpiles=[];
   const p=w.pawns[0]!;p.x=2;p.z=2;p.hunger=80;p.rest=50;p.recreation.level=100;p.schedule.fill('work');
   const zone={id:w.nextId++,x:10,z:2,filters:{wood:false,food:false,steel:true},priority:2,capacity:75};w.stockpiles.push(zone);
   addMaterial(w,'steel',10,{type:'pawn',pawnId:p.id},'steel');const held=w.piles.at(-1)!;

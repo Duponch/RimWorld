@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {isPlayerCasket271} from './cryptosleep-state-271.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {actualDestroyedSettlement263,prepareDestroyedSettlement263,settleInventoryOwner263,settleInventoryOrigin263,planDestroyedPackedDrop263} from './world-destroyed-settlement-263.ts';
@@ -167,7 +168,7 @@ function commitRegisteredMapRemoval260(root:CampaignState,map:World,record:impor
  registry.groups=registry.groups.filter(g=>g.localMapId!==id);if(registry.selectedGroupId!==null&&!registry.groups.some(g=>g.state.id===registry.selectedGroupId))registry.selectedGroupId=null;
  const maps=root.worldMaps!,wasSelected=maps.selectedMapId===id,wasRoot=maps.rootMapId===id;
  if(wasRoot){const other=maps.sites.filter(s=>s.id!==id).sort((a,b)=>a.id-b.id)[0];if(other)promoteRootMap(root,other.id);else clearRootMap(root);}
- maps.sites=maps.sites.filter(s=>s.id!==id);maps.retired.push({id:record.id,tile:record.tile!,kind:record.kind,createdAt:record.createdAt,...record.settledAt!==undefined?{settledAt:record.settledAt}:{},removedAt:root.tick,reason:record.kind==='battlefield'?'battlefield-empty':record.target263?'abandon':automatic?'camp-empty':'abandon',...record.kind==='camp'?{markerUntilCore:root.tick*10+1800000}:{}});if(wasSelected)maps.selectedMapId=maps.sites.slice().sort((a,b)=>a.id-b.id)[0]?.id??null;
+ maps.sites=maps.sites.filter(s=>s.id!==id);maps.retired.push({id:record.id,tile:record.tile!,kind:record.kind,createdAt:record.createdAt,...record.settledAt!==undefined?{settledAt:record.settledAt}:{},removedAt:root.tick,...Number(root.schemaVersion)===297?{removedAtCore297:effectiveCore297(root)}:{},reason:record.kind==='battlefield'?'battlefield-empty':record.target263?'abandon':automatic?'camp-empty':'abandon',...record.kind==='camp'?{markerUntilCore:root.tick*10+1800000}:{}});if(wasSelected)maps.selectedMapId=maps.sites.slice().sort((a,b)=>a.id-b.id)[0]?.id??null;
  campaignLog(root,automatic?'Le camp vide est retiré. Les biens laissés ne sont pas récupérés.':'La carte est abandonnée. Les personnes restantes sont perdues au monde, leurs biens ne reviennent pas au stock.');return {ok:true};
 }/** Pure preflight of the actual Camp after the selected originals leave; no fake map. */
 export function prepareCampReformRetirement260(root:CampaignState,map:World,id:number,departure:ReformDeparture260):{ok:false;reason:string}|{ok:true;current():boolean;begin():void;commit():void} {

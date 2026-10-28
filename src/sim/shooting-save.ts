@@ -1,3 +1,4 @@
+import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import type {NumericMembershipLookup} from './numeric-membership.ts';
 import { huntingPermission } from './hunting-state.ts';
 import { combatTarget } from './combat-target.ts';
@@ -12,13 +13,14 @@ import type { Cell,World } from './types.ts';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const keys=(v:Record<string,unknown>,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
-export function validShootingShape(value:unknown,version:number,tick:number):boolean {
+export function validShootingShape(value:unknown,version:number,tick:number,coreNow297?:number):boolean {
+ const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return false;
   if(value===undefined)return true;
   if(version<56||!record(value)||!keys(value,['order','stance'])||value.order===null&&value.stance===null)return false;
   if(value.order!==null&&(!record(value.order)||!keys(value.order,['targetId','weaponId','startedDowned',...(version>=60?['auto']:[]),...(version>=79?['hunt']:[])])||!integer(value.order.targetId,1)||!integer(value.order.weaponId,1)||typeof value.order.startedDowned!=='boolean'||!validAutomaticAttack(value.order.auto,version,tick)||value.order.hunt!==undefined&&(value.order.hunt!==true||value.order.auto!==undefined||value.order.startedDowned!==false)))return false;
   const s=value.stance;if(s===null)return value.order!==null;
   if(record(s)&&'lean' in s&&(!Object.hasOwn(s,'lean')||version<238||s.phase!=='aim'||!validLeanOffset(s.lean)))return false;
-  if(!record(s)||version<198&&Object.hasOwn(s,'clock')||!keys(s,['phase','startedAtCore','endsAtCore',...(s.phase==='aim'?['targetStartedDowned']:[]),...(version>=88?['weaponItem']:[]),...(version>=198?['clock']:[]),...(version>=238&&s.phase==='aim'?['lean']:[])])||s.weaponItem!==undefined&&s.weaponItem!=='bolt-action-rifle'&&!(version>=208&&s.weaponItem==='emp-launcher')||!integer(s.startedAtCore,0,tick*10)||!integer(s.endsAtCore,tick*10+1))return false;
+  if(!record(s)||version<198&&Object.hasOwn(s,'clock')||!keys(s,['phase','startedAtCore','endsAtCore',...(s.phase==='aim'?['targetStartedDowned']:[]),...(version>=88?['weaponItem']:[]),...(version>=198?['clock']:[]),...(version>=238&&s.phase==='aim'?['lean']:[])])||s.weaponItem!==undefined&&s.weaponItem!=='bolt-action-rifle'&&!(version>=208&&s.weaponItem==='emp-launcher')||!integer(s.startedAtCore,0,physicalCoreNow297)||!integer(s.endsAtCore,physicalCoreNow297+1))return false;
   if(s.phase!=='aim'&&s.phase!=='cooldown'||s.phase==='aim'&&(value.order===null||typeof s.targetStartedDowned!=='boolean'))return false;
   if(record(value.order)&&value.order.hunt&&s.weaponItem==='emp-launcher')return false;
   const emp=s.weaponItem==='emp-launcher'?rangedWeaponProfile('emp-launcher','normal'):undefined;
@@ -27,7 +29,7 @@ export function validShootingShape(value:unknown,version:number,tick:number):boo
   if(version<198||!Object.hasOwn(s,'clock')&&s.clock===undefined)return s.endsAtCore-s.startedAtCore===duration;
   const c=s.clock;
   if(!Object.hasOwn(s,'clock')||!record(c)||Reflect.ownKeys(c).length!==2||!Object.hasOwn(c,'lastAdvancedAtCore')||!Object.hasOwn(c,'pausedCore')
-    ||!integer(tick*10,0)||c.lastAdvancedAtCore!==tick*10||!integer(c.lastAdvancedAtCore,s.startedAtCore)
+    ||!integer(physicalCoreNow297,0)||c.lastAdvancedAtCore!==physicalCoreNow297||!integer(c.lastAdvancedAtCore,s.startedAtCore)
     ||!integer(c.pausedCore,0,c.lastAdvancedAtCore-s.startedAtCore))return false;
   return Number.isSafeInteger(s.startedAtCore+duration+c.pausedCore)&&s.endsAtCore-s.startedAtCore-c.pausedCore===duration;
 }
@@ -62,9 +64,9 @@ function historicalTargetKind(w:World,id:number):'pawn'|'animal'|'mech'|undefine
 export function validateShooting(world:World,version:number=world.schemaVersion,registeredIds?:NumericMembershipLookup):string[] {
   const errors:string[]=[];
   for(const p of world.pawns)if(p.shooting!==undefined) {
-    if(!validShootingShape(p.shooting,version,world.tick)||!validShootingLeanOwner(p,world,version)||!validStunShape(p.stun,version,world.tick)){errors.push('Invalid shooting state for schema.');continue;}
+    if(!validShootingShape(p.shooting,version,world.tick,version===297?effectiveCore297(world):undefined)||!validShootingLeanOwner(p,world,version)||!validStunShape(p.stun,version,world.tick,45,version===297?effectiveCore297(world):undefined)){errors.push('Invalid shooting state for schema.');continue;}
     const {order,stance}=p.shooting;
-    const suspended=version>=198&&stance?.phase==='aim'&&!!p.stun&&world.tick*10<p.stun.untilCore;
+    const suspended=version>=198&&stance?.phase==='aim'&&!!p.stun&&effectiveCore297(world)<p.stun.untilCore;
     if(order){const weapon=equippedWeapon(world,p);if(!weapon||!isRangedWeaponItem(weapon.item)||order.hunt&&weapon.item==='emp-launcher'||stance?.phase==='aim'&&(stance.weaponItem??'revolver')!==weapon.item)errors.push('Invalid ranged weapon/aim profile.');}
     if(order?.auto&&(order.startedDowned||stance?.phase==='aim'&&stance.targetStartedDowned||order.auto.kind==='draft'&&p.draft?.holdFire||order.auto.kind==='response'&&order.auto.remaining===0&&stance?.phase!=='cooldown'))errors.push('Invalid automatic shooting phase.');
     if(p.state==='dead'||p.state==='downed'||p.jobId!==null||p.haul||p.cooking||p.equipmentTask||p.tend||p.ward||p.feed||p.rescue||p.need||p.recreation.task||p.orders.active!==null||(p.priorityWork||p.orders.queue.length)&&!(version>=79&&(!order||order.hunt)))errors.push('Shooting conflicts with another activity.');
@@ -82,8 +84,8 @@ export function validateShooting(world:World,version:number=world.schemaVersion,
         }
       }
     }
-    if(stance&&(p.motion?.end??0)>world.tick)errors.push('Shooting stance during a captured edge.');
-    if(!stance&&!p.melee?.strike&&!p.stun&&(!order||!p.motion||(p.motion.end<=world.tick)))errors.push('Shooting wait without active travel.');
+    if(stance&&(p.motion?.end??0)>(version===297?effectiveLocal297(world):world.tick))errors.push('Shooting stance during a captured edge.');
+    if(!stance&&!p.melee?.strike&&!p.stun&&(!order||!p.motion||(p.motion.end<=(version===297?effectiveLocal297(world):world.tick))))errors.push('Shooting wait without active travel.');
   }
   return errors;
 }

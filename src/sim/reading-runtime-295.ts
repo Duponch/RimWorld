@@ -28,7 +28,7 @@ export {readingBook295} from './reading-space-295.ts';
 /** Pure inspection uses the same admission as the command, with no search,
  * reservation write, random draw or policy/task adoption. */
 export function readingRefusal295(world:World,pawn:Pawn,book:MaterialPile,manual=true):string|null {
- if((Number(world.schemaVersion)!==295&&Number(world.schemaVersion)!==296)||!world.pawns.includes(pawn)||!isColonist(pawn)||pawn.prisoner||pawn.visitor)return 'Lecteur indisponible.';
+ if((Number(world.schemaVersion)!==295&&(Number(world.schemaVersion)!==296&&Number(world.schemaVersion)!==297))||!world.pawns.includes(pawn)||!isColonist(pawn)||pawn.prisoner||pawn.visitor)return 'Lecteur indisponible.';
  if(carrierOf(world,pawn.id))return 'Ce colon est encore porté.';
  // Do not reveal a hidden, away or foreign item's content through a refusal.
  if(readingPile295(world,book.id)!==book||book.owner.type==='ground'&&!knownCell256(world,cellIndex(world,book.owner.x,book.owner.z))
@@ -65,7 +65,7 @@ const awaiting=(pawn:Pawn,task:ReadingTask295,stage:'seat'|'return'):void=>{
 };
 /** Shared weighted joy decision has already selected an actual reachable book. */
 export function beginReading295(world:World,pawn:Pawn,bookId:number,manual=false):string|null {
- if((Number(world.schemaVersion)!==295&&Number(world.schemaVersion)!==296)||!world.pawns.includes(pawn)||carrierOf(world,pawn.id)||!readingAllowed295(pawn,manual)||!manual&&!readingAutoNeeds295(pawn))return 'Lecture indisponible.';
+ if((Number(world.schemaVersion)!==295&&(Number(world.schemaVersion)!==296&&Number(world.schemaVersion)!==297))||!world.pawns.includes(pawn)||carrierOf(world,pawn.id)||!readingAllowed295(pawn,manual)||!manual&&!readingAutoNeeds295(pawn))return 'Lecture indisponible.';
  const pile=readingPile295(world,bookId);if(!pile||!readingSourceAllowed295(world,pawn,pile,manual))return 'Livre indisponible.';
  const candidates=readingPickupCandidates295(world,pawn,bookId);if(!candidates.length)return 'Livre inaccessible.';
  const chosen=candidates[0]!;if(!manual)delete chosen.manual;
@@ -84,7 +84,7 @@ export function applyReadBook295(world:World,pawnId:number,bookId:number):Comman
 }
 export function applyReadingPolicy295(world:World,pawnId:number,policyId:1|2):CommandResult {
  const pawn=world.pawns.find(p=>p.id===pawnId);
- if((Number(world.schemaVersion)!==295&&Number(world.schemaVersion)!==296)||!pawn||!isColonist(pawn)||pawn.prisoner||pawn.visitor||(policyId!==1&&policyId!==2))return {ok:false,reason:'Politique de lecture indisponible.'};
+ if((Number(world.schemaVersion)!==295&&(Number(world.schemaVersion)!==296&&Number(world.schemaVersion)!==297))||!pawn||!isColonist(pawn)||pawn.prisoner||pawn.visitor||(policyId!==1&&policyId!==2))return {ok:false,reason:'Politique de lecture indisponible.'};
  pawn.readingPolicy295=policyId;
  if(policyId===2&&pawn.recreation.task?.activity==='read'&&!pawn.recreation.task.manual)interruptWork(world,pawn,true);
  return {ok:true};
@@ -94,7 +94,7 @@ export function applyReadingPolicy295(world:World,pawnId:number,policyId:1|2):Co
 export function processReading295(world:World,pawn:Pawn,context:NeedContext):boolean {
  const task=pawn.recreation.task;if(task?.activity!=='read')return false;
  const manual=task.manual===true;
- if((Number(world.schemaVersion)!==295&&Number(world.schemaVersion)!==296)||carrierOf(world,pawn.id)||!readingAllowed295(pawn,manual)||urgentMedicalTask(pawn)||!manual&&(assignmentAt(world,pawn)==='work'||!readingAutoNeeds295(pawn))||!allowedAreaRecreationAllowed(world,pawn,task))return stop(world,pawn);
+ if((Number(world.schemaVersion)!==295&&(Number(world.schemaVersion)!==296&&Number(world.schemaVersion)!==297))||carrierOf(world,pawn.id)||!readingAllowed295(pawn,manual)||urgentMedicalTask(pawn)||!manual&&(assignmentAt(world,pawn)==='work'||!readingAutoNeeds295(pawn))||!allowedAreaRecreationAllowed(world,pawn,task))return stop(world,pawn);
  const book=readingBook295(world,pawn,task);if(!book)return stop(world,pawn);
  // Logical arrival is ahead of the captured rendered edge. A held book cannot
  // be picked up, enjoyed or dropped at that future position during this edge.
@@ -143,7 +143,7 @@ export function processReading295(world:World,pawn:Pawn,context:NeedContext):boo
 
 /** The same shared search budget used by every ordinary recreation activity. */
 export function selectAutomaticReading295(world:World,pawn:Pawn,context:NeedContext):boolean|'unavailable' {
- if((Number(world.schemaVersion)!==295&&Number(world.schemaVersion)!==296)||carrierOf(world,pawn.id)||!readingAllowed295(pawn)||!readingAutoNeeds295(pawn))return 'unavailable';
+ if((Number(world.schemaVersion)!==295&&(Number(world.schemaVersion)!==296&&Number(world.schemaVersion)!==297))||carrierOf(world,pawn.id)||!readingAllowed295(pawn)||!readingAutoNeeds295(pawn))return 'unavailable';
  const candidates=readingPickupCandidates295(world,pawn);if(!candidates.length)return 'unavailable';
  const reach=context.search(new Set(candidates.map(c=>cellIndex(world,c.target.x,c.target.z))));if(!reach)return true;
  const reachable=candidates.flatMap(task=>{const path=routeToCell(world,task.target,reach);return path?[{task,path}]:[];});

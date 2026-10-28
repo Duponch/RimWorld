@@ -102,7 +102,7 @@ test('door waiting, diagonal distance and furniture crossing use the shared phys
   until(w,()=>p.x===7&&p.z===5&&p.moveCooldown===0);stepWorld(w);expect(p.x).toBe(7);expect(doorOpenness(door,w.tick)).toBeLessThan(1);replay(w);
   until(w,()=>p.x===8&&p.moveCooldown>0);expect(door.door.open).toBe(true);const edge=structuredClone(p.motion);
   move(w,{x:6,z:6});expect(p.motion).toEqual(edge);replay(w);until(w,()=>p.x===6&&p.z===6&&p.moveCooldown===0);
-  move(w,{x:7,z:7});until(w,()=>p.x===7&&p.z===7&&p.moveCooldown>0);expect(p.motion!.end-p.motion!.start).toBeCloseTo(3*Math.SQRT2/(p.motion!.speedFactor??1),8);replay(w);
+  move(w,{x:7,z:7});until(w,()=>p.x===7&&p.z===7&&p.moveCooldown>0);expect(p.motion!.coreMove297).toBe(true);expect(p.motion!.speedFactor??1).toBe(1);expect(p.motion!.terrainDelay).toBe(.2);expect(p.motion!.end-p.motion!.start).toBeCloseTo((60/4.6*1.41421+2)/10,8);replay(w);
 });
 
 test('meal, medicine and whole furniture keep distinct identity and content during a full-floor tactical interruption',()=>{

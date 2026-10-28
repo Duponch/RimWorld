@@ -70,6 +70,9 @@ function sceneHarness(closed=false){
  const queue=new PresentationQueue(undefined,()=>({capture:()=>false} as unknown as PresentationChanges));
  const core=Object.assign(Object.create(SceneRenderCore.prototype),{
   disposed:false,fatalError:undefined,received:undefined,world:undefined as World|undefined,hasTracks:false,immutableSnapshot:false,immutableWorlds:new WeakSet<World>(),
+  // Object.create bypasses the real constructor: initialize its new queue only.
+  // These empty fields grant no Native input or World authority.
+  coreFullInputs297:new WeakMap(),pendingCore297:[],latestCoreInput297:undefined,appliedCoreAnchor297:undefined,appliedCore297:-Infinity,
   timeline,presentation:queue,applicationContext:closed?{}:undefined,confirmedIntentReader:undefined,confirmedIntents:undefined,
   confirmedJobMarkers:{clear(){}},hostPort:{now:()=>now,hidden:()=>hidden},projectiles:{adopt(world:World){projectileReads.push(world);}},
   invalidatePausedShadow(){},applyWorld(world:World,reset=false){applied.push({world,reset});this.world=world;},reportFailure(message:string){failures.push(message);},

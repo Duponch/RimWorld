@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {activeHiveInsect256} from './cave-hive-lord-256.ts';
 import { hostileTo,activeThreat } from './affiliation.ts';
 import { clearShotSegment,type ShotGrid } from './combat-space.ts';
@@ -5,13 +6,21 @@ import { captureWorldShotGrid } from './combat-world.ts';
 import { carrierOf } from './rescue-state.ts';
 import { violentWorkRefusal } from './colonist-backgrounds.ts';
 import { isColonist,distanceSquared } from './affiliation.ts';
-import type { Pawn,World } from './types.ts';
+import type { Cell,Pawn,World } from './types.ts';
 import type { WildAnimal } from './wildlife-state.ts';
 import {sleepingTempleMech256} from './temple-mech-duty-256.ts';
 import type { Mechanoid } from './mechanoid-state.ts';
 
 export type LivingTarget=Pawn|WildAnimal|Mechanoid;
 export type LivingTargetKey=`pawn:${number}`|`animal:${number}`|`mech:${number}`;
+/** Internal geometry only. Original humans occupy the unpaid edge's source;
+ * plain proposed Cells, animals and machines keep their existing semantics.
+ * Borrow a Cell: no Pawn/World clone, lookup, interpolation or mutable cache. */
+export function combatCell297(version:number,actor:Cell,atCore:number):Cell {
+  if(version!==297||!('skills' in actor)||!('orders' in actor))return actor;
+  const motion=(actor as Pawn).motion;
+  return motion&&atCore<motion.end*10?motion.from:actor;
+}
 export const isAnimalTarget=(p:LivingTarget):p is WildAnimal=>'species' in p;
 export const isMechanoidTarget=(p:LivingTarget):p is Mechanoid=>'mechKind' in p;
 export const isPawnTarget=(p:LivingTarget):p is Pawn=>!isAnimalTarget(p)&&!isMechanoidTarget(p);
@@ -43,9 +52,9 @@ export const retaliationPermission=(p:Pawn):boolean=>isColonist(p)&&!p.prisoner&
   &&!p.orbitalTrade&&!p.trade&&!p.cleaning?.forced&&!p.firefighting?.forced;
 /** A real attempt establishes this short-lived threat even between allies.
  * It is distinct from faction hostility and cannot turn Flee/Ignore into Attack. */
-export function meleeThreatTarget(w:World,p:Pawn|Mechanoid,core=w.tick*10,grid?:ShotGrid,readGrid?:()=>ShotGrid):LivingTarget|undefined {
+export function meleeThreatTarget(w:World,p:Pawn|Mechanoid,core=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10,grid?:ShotGrid,readGrid?:()=>ShotGrid):LivingTarget|undefined {
   const threat=p.meleeThreat;if(!threat||core<threat.atCore||core-threat.atCore>400)return;
   const attacker=combatTarget(w,threat.attackerId);
-  if(!attacker||attacker===p||['dead','downed','sleeping'].includes(attacker.state)||distanceSquared(p,attacker)>9||isPawnTarget(attacker)&&carrierOf(w,attacker.id))return;
-  return clearShotSegment(grid??(readGrid?readGrid():captureWorldShotGrid(w)),p,attacker)?attacker:undefined;
+  if(!attacker||attacker===p||['dead','downed','sleeping'].includes(attacker.state)||distanceSquared(combatCell297(Number(w.schemaVersion),p,core),combatCell297(Number(w.schemaVersion),attacker,core))>9||isPawnTarget(attacker)&&carrierOf(w,attacker.id))return;
+  return clearShotSegment(grid??(readGrid?readGrid():captureWorldShotGrid(w)),combatCell297(Number(w.schemaVersion),p,core),combatCell297(Number(w.schemaVersion),attacker,core))?attacker:undefined;
 }

@@ -1,3 +1,4 @@
+import {validCorePathBudget297} from './core-path-budget-297.ts';
 import {geographicLongitudeOffsetCore256} from './site-climate.ts';
 import {planetTile,planetTileCount} from './planet-geography-256.ts';
 import {planetTileCoordinates} from './planet-navigation.ts';
@@ -33,6 +34,7 @@ export function validSecondarySiteShape(raw:unknown,version:number):boolean {
   const tile=raw.planet.tiles[s.tile];
   if(!object(tile)||!isBiomeId(tile.biome)||tile.hilliness==='mountainous'||s.tile===raw.planet.homeTile||s.tile===raw.planet.civilianTile)return false;
   const map=s.map;
+  if(!validCorePathBudget297(map,version,Number(raw.tick),version===297?Number(Object.getOwnPropertyDescriptor(raw,'phaseCore297')?.value):0))return false;
   if(['secondarySite',...CAMPAIGN_FIELDS].some(k=>Object.hasOwn(map,k))||map.scenario!==undefined||map.width!==raw.width||map.height!==raw.height
     ||!validExpeditionOrigin(map.expeditionSite,w,version)||!object(map.expeditionSite)||map.expeditionSite.tile!==s.tile||map.expeditionSite.createdAt!==s.createdAt)return false;
   if(!object(map.climate)||map.climate.revision!==3)return false;
@@ -42,7 +44,7 @@ export function validSecondarySiteShape(raw:unknown,version:number):boolean {
   if((!w.climate||w.climate.adoptedAt<=s.createdAt)&&map.climate.calendarOrigin!==calendarTick(w,s.createdAt)+Number(map.expeditionSite.calendarOffset))return false;
   // The local validator owns all remaining state and exact Thing references.
   // Reject hidden/custom fields here; map record must be ordinary plain data.
-  if(Object.getPrototypeOf(map)!==Object.prototype||Reflect.ownKeys(map).some(k=>typeof k!=='string'||!LOCAL_FIELDS.has(k)||k==='party292'&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&version!==296))))
+  if(Object.getPrototypeOf(map)!==Object.prototype||Reflect.ownKeys(map).some(k=>typeof k!=='string'||!LOCAL_FIELDS.has(k)||k==='party292'&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&version!==297)))))
     ||!Object.hasOwn(Object.getOwnPropertyDescriptor(map,k)!,'value')))return false;
   const size=Number(raw.width)*Number(raw.height);
   if(!['tiles','pawns','resources','structures','jobs','piles','stockpiles','growingZones','packed'].every(k=>dense(map[k],k==='piles'?32768:size*3))
@@ -66,6 +68,7 @@ export function validExpeditionOrigin(value:unknown,w:Pick<World,'tick'|'planet'
 // Explicit map namespace: adding another World domain requires a conscious
 // partition decision. A future field is not accepted because World ignores it.
 export const LOCAL_FIELDS=new Set([
+  'corePathBudget297',
   'party292',
   'firefoam290',
   'shipReactorThreats275',

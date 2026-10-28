@@ -4,7 +4,7 @@ import type {MiniTurretBombWave} from './bomb-state.ts';
 import type {World} from './types.ts';
 export type ExplosiveAnimal256='boomalope'|'boomrat';
 export const isExplosiveAnimal256=(species:unknown):species is ExplosiveAnimal256=>species==='boomalope'||species==='boomrat';
-export interface AnimalDeathExplosion256 {species:ExplosiveAnimal256;lifeStage:'baby'|'juvenile'|'adult';deathTick:number}
+export interface AnimalDeathExplosion256 {species:ExplosiveAnimal256;lifeStage:'baby'|'juvenile'|'adult';deathTick:number;deathAtCore297?:number}
 export const animalDeathExplosionRadius256=(proof:AnimalDeathExplosion256):number=>proof.species==='boomrat'||proof.lifeStage==='baby'?1.9:proof.lifeStage==='juvenile'?2.9:4.9;
 /** Historical source can retire, but cannot become an unrelated current
  * identity. A retained body/pile must attest the exact clinical death. */

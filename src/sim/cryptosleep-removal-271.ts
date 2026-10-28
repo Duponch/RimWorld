@@ -1,3 +1,6 @@
+import {worldPawnsPhysicalCore297} from './world-pawn-physical-clock-297.ts';
+import {heldCore297} from './core-phase-297.ts';
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {prepareLinkedCasketVanish286} from './linked-storage-casket-vanish-286.ts';
@@ -94,15 +97,16 @@ export function cryptosleepDamageUntilDowned271(record:MedicalRecord,random:()=>
  * destroying gear. It does not manufacture clinical death or a corpse. */
 function prepareVanish271(w:World,p:Pawn,draft:Pawn,items:readonly MaterialPile[],packs:World['packed']) {
  const root=registeredCampaign(w),state=root.worldPawns,factions=root.worldFactions,mapId=registeredMapId(w),now=w.tick*10;
- if(!state||!factions||mapId===undefined||root.tick!==w.tick||state.atCore!==now&&state.atCore!==now-10)throw Error('Actual destroyed-holder WorldPawn frontier is unavailable');
+ const physicalCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined;
+ if(!state||!factions||mapId===undefined||root.tick!==w.tick||(physicalCore297===undefined?state.atCore!==now&&state.atCore!==now-10:state.atCore!==now||worldPawnsPhysicalCore297(state,w.schemaVersion)!==physicalCore297))throw Error('Actual destroyed-holder WorldPawn frontier is unavailable');
  const native=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,native))throw Error('Actual destroyed-holder native order is unavailable');
  cleanMapRemovedHumanRecord259(draft,w.tick);unclaimDetachedActorBed256(draft);delete draft.cryptosleepHeldAt271;delete draft.equipmentDropPending;delete draft.droppedWeaponId;delete draft.surgeryRequest;
  if(draft.mental?.wander)draft.mental.wander.nextMoveOrderIsWait=true;
  const context={seed:w.seed,width:w.width,height:w.height,...w.climate?{climate:w.climate}:{},...w.site?{site:w.site}:{},...w.scenario?{scenario:w.scenario}:{}};
- const row:WorldPawnOwner256={kind:'human',actor:draft,factionId:factions.playerFactionId,originMapId:mapId,context,clockCore:now,enteredAtAbsCore:actualCampRemovalAbsCore256(root,w),mode:'dead',destroyed:true,items:[],packed:[]};
+ const row:WorldPawnOwner256={kind:'human',actor:draft,factionId:factions.playerFactionId,originMapId:mapId,context,clockCore:physicalCore297===undefined?now:state.atCore,...physicalCore297!==undefined?{physicalClockCore297:physicalCore297}:{},enteredAtAbsCore:actualCampRemovalAbsCore256(root,w),mode:'dead',destroyed:true,items:[],packed:[]};
  // A real local substep may precede this tick's global WorldPawn pass. Only
  // this terminal row is staged at now; other rows are neither ticked nor moved.
- const staged:WorldPawnsState256={...state,atCore:now,owners:state.owners.slice()},pass=preparePassedToWorld256(staged,row,factions,{float(){throw Error('Destroyed human does not draw a faction choice');}},{version:w.schemaVersion});
+ const staged:WorldPawnsState256={...state,atCore:now,...physicalCore297!==undefined?{physicalClockCore297:physicalCore297}:{},owners:state.owners.slice()},pass=preparePassedToWorld256(staged,row,factions,{float(){throw Error('Destroyed human does not draw a faction choice');}},{version:w.schemaVersion});
  if(!pass.ok)throw Error(pass.reason);pass.commit();const errors=validateWorldPawnOwners256(staged,root,new Set(),undefined,new Set(captureHumanOwners(w).people.keys()));if(errors.length)throw Error(errors[0]);
  const quantities:Partial<Record<ItemId,number>>={};for(const item of items)quantities[item.item]=(quantities[item.item]??0)+item.quantity;
  const materialLoss=new Map<ItemId,number>();let fuelTicksLost=0,fuelTicksBurned=0,batteryEnergyLost=0;
@@ -114,7 +118,7 @@ function prepareVanish271(w:World,p:Pawn,draft:Pawn,items:readonly MaterialPile[
  if(!Object.values(quantities).every(int)||![...materialLoss.values(),fuelTicksLost,fuelTicksBurned,batteryEnergyLost*2].every(int))throw Error('Destroyed holder possession counters exhausted');
  const actors=captureActorBeds256(root).actors,masters=actors.filter(a=>'species'in a&&a.startingPet?.masterId===p.id).map(a=>({actor:a as import('./wildlife-state.ts').WildAnimal,before:stamp(a),after:{...(a as import('./wildlife-state.ts').WildAnimal).startingPet!}}));for(const m of masters)delete m.after.masterId;
  const membership=state.owners.slice(),at=state.atCore,order=staged.nativeOrder;
- return {quantities,materialLoss,fuelTicksLost,fuelTicksBurned,batteryEnergyLost,current:()=>root.worldPawns===state&&state.atCore===at&&state.owners.length===membership.length&&state.owners.every((r,i)=>r===membership[i])&&nativeWorldPawnOrderCurrent256(state,native)&&masters.every(m=>stamp(m.actor)===m.before),commit(){
+ return {quantities,materialLoss,fuelTicksLost,fuelTicksBurned,batteryEnergyLost,current:()=>root.worldPawns===state&&state.atCore===at&&(physicalCore297===undefined||physicalCore297===effectiveCore297(w)&&worldPawnsPhysicalCore297(state,w.schemaVersion)===physicalCore297)&&state.owners.length===membership.length&&state.owners.every((r,i)=>r===membership[i])&&nativeWorldPawnOrderCurrent256(state,native)&&masters.every(m=>stamp(m.actor)===m.before),commit(){
   cancelWorldPawnGC256(state);adopt(p,pass.row.actor as Pawn);pass.row.actor=p;state.owners.push(pass.row);commitNativeWorldPawnOrder256(state,native,order);for(const m of masters)m.actor.startingPet=m.after;
  }};
 }
@@ -123,9 +127,10 @@ function prepareVanish271(w:World,p:Pawn,draft:Pawn,items:readonly MaterialPile[
  * contents, then an optional Flame wave. Destruction never calls Open. */
 export function planCryptosleepRemoval271(w:World,s:Structure,mode:'deconstruct'|'kill-finalize'|'vanish',explosion?:{core:number;instigatorKey?:BombInstigatorKey},damageRng=w.rng):CryptosleepRemoval271 {
  const no=(reason:string):CryptosleepRemoval271=>({ok:false,reason});
- if(!isSchema271OrLater(w.schemaVersion)||!isPlayerCasket271(s)||!w.structures.includes(s)||!validCryptosleepBuilding271(s,w.schemaVersion,w)||s.cryptosleep.heldAt>w.tick||!int(damageRng)||damageRng>0xffffffff)return no('Actual paid player casket required');
+ if(!isSchema271OrLater(w.schemaVersion)||!isPlayerCasket271(s)||!w.structures.includes(s)||!validCryptosleepBuilding271(s,w.schemaVersion,w,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined)||s.cryptosleep.heldAt>w.tick||!int(damageRng)||damageRng>0xffffffff)return no('Actual paid player casket required');
  const c=s as PlayerCasket271,h=c.cryptosleep,p=h.human,tick=w.tick,heldItems=h.items,heldPacks=h.packed,itemMembers=[...h.items],packMembers=[...h.packed];
- if(explosion&&(mode!=='kill-finalize'||!int(explosion.core)||explosion.core<Math.max(0,(tick-1)*10)||explosion.core>tick*10||(w.bombWaves?.length??0)>=w.width*w.height))return no('Actual Flame owner/clock/capacity unavailable');
+ const plannedCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined,physical297=plannedCore297===undefined?undefined:{version:297 as const,heldAtCore297:heldCore297(h,w.schemaVersion,h.heldAt),targetCore297:plannedCore297};
+ if(explosion&&(mode!=='kill-finalize'||!int(explosion.core)||(Number(w.schemaVersion)===297?explosion.core!==effectiveCore297(w):explosion.core<Math.max(0,(tick-1)*10)||explosion.core>tick*10)||(w.bombWaves?.length??0)>=w.width*w.height))return no('Actual Flame owner/clock/capacity unavailable');
  const jobs=w.jobs.filter(j=>j.deconstruction?.structureId===c.id||j.repair?.structureId===c.id||j.fixBreakdown?.structureId===c.id),jobIds=new Set(jobs.map(j=>j.id));
  if(mode==='deconstruct'){
   const job=jobs.find(j=>j.deconstruction?.structureId===c.id),worker=job?w.pawns.find(p=>p.id===job.reservedBy&&p.jobId===job.id):undefined;
@@ -152,7 +157,7 @@ export function planCryptosleepRemoval271(w:World,s:Structure,mode:'deconstruct'
  let humanClock:ReturnType<typeof prepareSuspendedHumanResume271>|undefined,goodsClock:ReturnType<typeof prepareCryptosleepPossessionsResume271>|undefined,draft:Pawn|undefined,cell:Cell|null=null,vanish:ReturnType<typeof prepareVanish271>|undefined;
  try{if(p){
   if(p.cryptosleepHeldAt271!==h.heldAt||p.health&&medicalCivilTick271(p.health)!==h.heldAt||w.pawns.some(q=>q.id===p.id))return no('Actual original player-casket occupant frontier changed');
-  humanClock=prepareSuspendedHumanResume271(p,h.heldAt,tick);goodsClock=prepareCryptosleepPossessionsResume271(h.items,h.packed,tick-h.heldAt);draft=structuredClone(p);const resume=prepareSuspendedHumanResume271(draft,h.heldAt,tick);if(!resume.commit())throw Error('Private clinical casket resume changed');delete draft.cryptosleepHeldAt271;
+  humanClock=prepareSuspendedHumanResume271(p,h.heldAt,tick,physical297);goodsClock=prepareCryptosleepPossessionsResume271(h.items,h.packed,tick-h.heldAt,physical297);draft=structuredClone(p);const resume=prepareSuspendedHumanResume271(draft,h.heldAt,tick,physical297);if(!resume.commit())throw Error('Private clinical casket resume changed');delete draft.cryptosleepHeldAt271;
   if(mode==='kill-finalize'){draft.health??=createMedicalRecord(tick);draft.health=cryptosleepDamageUntilDowned271(draft.health,draw).record;draft.state=medicalStatus(draft.health)==='downed'?'downed':'idle';}
   if(mode!=='vanish'&&w.pawns.length<w.width*w.height&&w.piles.length+h.items.length+products.length<=32768&&w.packed.length+h.packed.length<=32768){
    const ground=new Map<number,MaterialPile[]>();for(const i of view.piles)if(i.owner.type==='ground'){const key=i.owner.z*w.width+i.owner.x,list=ground.get(key)??[];list.push(i);ground.set(key,list);}
@@ -185,7 +190,7 @@ export function planCryptosleepRemoval271(w:World,s:Structure,mode:'deconstruct'
  const linkedResult=vanish?prepareLinkedCasketVanish286(w,c,'cryptosleep',heldPacks):undefined;if(linkedResult&&!linkedResult.ok)return no(linkedResult.reason);const linked=linkedResult?.ok?linkedResult.plan:undefined;
  const structures=w.structures,piles=w.piles,packed=w.packed,actualJobs=w.jobs,pawns=w.pawns,collections=[structures,piles,packed,actualJobs,pawns],memberships=collections.map(a=>[...a]),source=stamp(c),records=[...structures,...piles,...packed,...actualJobs,...pawns],before=records.map(stamp),nextId=w.nextId,rng=w.rng,filth=w.filth,filthBefore=stamp(filth),destroyedBefore=stamp(w.destroyed),ledgerBefore=stamp(ledger),fog=prepareRemovedFogStructure256(w,c),tiles=w.tiles,terrainBefore=stamp([w.tiles,w.resources,w.stockpiles]),waves=w.bombWaves,wavesBefore=stamp(waves);let used=false;
  return {ok:true,commit(){
-  if(used||w.tick!==tick||w.nextId!==nextId||w.rng!==rng||w.structures!==structures||w.piles!==piles||w.packed!==packed||w.jobs!==actualJobs||w.pawns!==pawns||collections.some((a,i)=>a.length!==memberships[i]!.length||a.some((v,n)=>v!==memberships[i]![n]))||!structures.includes(c)||c.cryptosleep!==h||h.human!==p||h.items!==heldItems||h.packed!==heldPacks||heldItems.length!==itemMembers.length||heldItems.some((v,i)=>v!==itemMembers[i])||heldPacks.length!==packMembers.length||heldPacks.some((v,i)=>v!==packMembers[i])||stamp(c)!==source||records.some((v,i)=>stamp(v)!==before[i])||w.filth!==filth||stamp(filth)!==filthBefore||stamp(w.destroyed)!==destroyedBefore||w.deconstructed!==ledger||stamp(ledger)!==ledgerBefore||w.tiles!==tiles||stamp([w.tiles,w.resources,w.stockpiles])!==terrainBefore||w.bombWaves!==waves||stamp(waves)!==wavesBefore||humanClock&&!humanClock.current()||goodsClock&&!goodsClock.current()||vanish&&!vanish.current()||linked&&!linked.current())return false;
+  if(used||w.tick!==tick||plannedCore297!==undefined&&plannedCore297!==effectiveCore297(w)||w.nextId!==nextId||w.rng!==rng||w.structures!==structures||w.piles!==piles||w.packed!==packed||w.jobs!==actualJobs||w.pawns!==pawns||collections.some((a,i)=>a.length!==memberships[i]!.length||a.some((v,n)=>v!==memberships[i]![n]))||!structures.includes(c)||c.cryptosleep!==h||h.human!==p||h.items!==heldItems||h.packed!==heldPacks||heldItems.length!==itemMembers.length||heldItems.some((v,i)=>v!==itemMembers[i])||heldPacks.length!==packMembers.length||heldPacks.some((v,i)=>v!==packMembers[i])||stamp(c)!==source||records.some((v,i)=>stamp(v)!==before[i])||w.filth!==filth||stamp(filth)!==filthBefore||stamp(w.destroyed)!==destroyedBefore||w.deconstructed!==ledger||stamp(ledger)!==ledgerBefore||w.tiles!==tiles||stamp([w.tiles,w.resources,w.stockpiles])!==terrainBefore||w.bombWaves!==waves||stamp(waves)!==wavesBefore||humanClock&&!humanClock.current()||goodsClock&&!goodsClock.current()||vanish&&!vanish.current()||linked&&!linked.current())return false;
   // Adopt the staged product/downing stream before real interruption/health
   // notifiers. Any further real draw remains owned and is never overwritten.
   linked?.begin();used=true;w.rng=random.rng;for(const worker of workers)if(!releaseWork(w,worker,drops))throw Error('Casket worker cargo changed within commit');w.jobs=w.jobs.filter(j=>!jobIds.has(j.id));for(const q of w.pawns)q.orders.queue=q.orders.queue.filter(o=>typeof o!=='number'||!jobIds.has(o));
@@ -202,8 +207,8 @@ export function planCryptosleepRemoval271(w:World,s:Structure,mode:'deconstruct'
 }
 
 export function damagePlayerCryptosleep271(w:World,s:Structure,amount:number,cause:StructureDamageCause,rng:number,external?:StructureDamageContext):boolean {
- if(!isSchema271OrLater(w.schemaVersion)||!isPlayerCasket271(s)||!w.structures.includes(s)||!validCryptosleepBuilding271(s,w.schemaVersion,w)||s.cryptosleep.heldAt>w.tick||!int(amount)||amount===0||!int(rng)||rng>0xffffffff)return false;
- const core=external?.core??w.tick*10;if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!int(core)||core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))return false;
+ if(!isSchema271OrLater(w.schemaVersion)||!isPlayerCasket271(s)||!w.structures.includes(s)||!validCryptosleepBuilding271(s,w.schemaVersion,w,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined)||s.cryptosleep.heldAt>w.tick||!int(amount)||amount===0||!int(rng)||rng>0xffffffff)return false;
+ const core=external?.core??(Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10);if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!int(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)))return false;
  const before=s.damage??0,damage=before+amount;if(!int(damage)||!Number.isSafeInteger(core+150))return false;
  if(external?.detonate&&(!s.casketWick||s.casketWick.endCore>core))return false;
  const detonates=!!external?.detonate||(external?.rawAmount??amount)>=250-before;

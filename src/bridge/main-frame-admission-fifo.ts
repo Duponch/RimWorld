@@ -1,5 +1,9 @@
+import {isNativeCorePhaseAdmissionTicket297,isNativeCoreFullAdmissionTicket297} from './native-clone-resident';
 /** MAIN-only transport scheduling. This helper grants no native provenance. */
 export const MAIN_FRAME_ADMISSION_CAPACITY=256;
+export const MAIN_FRAME_PHASE_ADMISSION_LIMIT297=8;
+export const MAIN_FRAME_HEAVY_ADMISSION_LIMIT297=2;
+export const MAIN_FRAME_SECOND_HEAVY_BEFORE_MS297=2;
 export interface MainFrameAdmissionHost {
  now():number;
  post(task:()=>void):void;
@@ -7,7 +11,7 @@ export interface MainFrameAdmissionHost {
  close():void;
 }
 export interface MainFrameAdmissionInfo {readonly arrivalAt?:number;readonly epoch?:number;readonly tick?:number}
-interface Entry {readonly run:()=>void;readonly arrivalAt:number;readonly epoch:number|undefined;readonly tick:number|undefined}
+interface Entry {readonly run:()=>void;readonly arrivalAt:number;readonly epoch:number|undefined;readonly tick:number|undefined;readonly phaseTicket297:MainFrameAdmissionInfo|undefined;readonly fullTicket297:MainFrameAdmissionInfo|undefined}
 function createHost():MainFrameAdmissionHost {
  const channel=new MessageChannel();let pending:(()=>void)|undefined,closed=false;
  channel.port1.onmessage=()=>{const task=pending;pending=undefined;if(!closed)task?.();};
@@ -25,7 +29,7 @@ export class MainFrameAdmissionFIFO {
  constructor(private readonly canFrame:()=>boolean,private readonly onOverflow:()=>void,host?:MainFrameAdmissionHost){this.#host=host??createHost();}
  enqueue(run:()=>void,info:MainFrameAdmissionInfo={}):boolean {
   if(this.#closed)return false;
-  const entry:Entry={run,arrivalAt:info.arrivalAt??this.#host.now(),epoch:info.epoch,tick:info.tick};this.#received++;
+  const entry:Entry={run,arrivalAt:info.arrivalAt??this.#host.now(),epoch:info.epoch,tick:info.tick,phaseTicket297:isNativeCorePhaseAdmissionTicket297(info,run)?info:undefined,fullTicket297:isNativeCoreFullAdmissionTicket297(info,run)?info:undefined};this.#received++;
   if(info.epoch!==undefined&&info.tick!==undefined){this.#latestEpoch=info.epoch;this.#latestTick=info.tick;this.#updateLag();}
   // Startup has no renderer to wake an ACK/checkpoint. Preserve immediate path.
   if(!this.#running&&!this.#entries.length&&!this.canFrame()){this.#run(entry);return true;}
@@ -35,7 +39,22 @@ export class MainFrameAdmissionFIFO {
  drainFrame():void {
   if(this.#closed||this.#running)return;
   if(!this.canFrame()){this.notifyAvailability();return;}
-  const entry=this.#entries.shift();if(entry)this.#run(entry);
+  const started=this.#host.now();let phases=0,ordinary=0,heavy=0,modernFull=false;
+  while(!this.#closed&&this.#entries.length&&this.canFrame()){
+   const entry=this.#entries[0]!,phase=entry.phaseTicket297!==undefined&&isNativeCorePhaseAdmissionTicket297(entry.phaseTicket297,entry.run);
+   // Never skip a blocked head or move an ACK ahead of its publication. A
+   // revoked/mismatched ticket falls back to the historical ordinary budget.
+   if(phase){if(phases>=MAIN_FRAME_PHASE_ADMISSION_LIMIT297)break;phases++;}
+   else {
+    const full=entry.fullTicket297!==undefined&&isNativeCoreFullAdmissionTicket297(entry.fullTicket297,entry.run);
+    if(heavy>=MAIN_FRAME_HEAVY_ADMISSION_LIMIT297||!full&&ordinary>=1)break;
+    // Only a real current297 Full may fund one extra heavy admission. Slow
+    // first work (including preceding phases) keeps the old one-heavy limit.
+    if(heavy&&(!(modernFull||full)||!(this.#host.now()-started<MAIN_FRAME_SECOND_HEAVY_BEFORE_MS297)))break;
+    heavy++;if(full)modernFull=true;else ordinary++;
+   }
+   this.#entries.shift();this.#run(entry);
+  }
   this.notifyAvailability();
  }
  notifyAvailability():void {

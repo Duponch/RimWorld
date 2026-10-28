@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
 import { Fn,attribute,mix,positionLocal,uniform,vec3 } from 'three/tsl';
+import type {CorePhaseTypedProjection297} from '../bridge/core-phase-projection-297';
 import type { World } from '../sim/types';
 import type { AnimationDetail } from './AnimationDetail';
 import { FxAnimationCache,fxClamp } from './FxAnimationCache';
@@ -14,6 +15,7 @@ export class ProjectileLayer {
   private capacity=32;
   private readonly traces=new Map<number,Trace>();
   private signature='';
+  private nextExpiry297=Infinity;
   private origin=0;
   private readonly cache:FxAnimationCache;
   private drawn:number[]=[];
@@ -58,6 +60,22 @@ export class ProjectileLayer {
       }
     }
     if(!changed)return;
+    this.rebuild297();
+  }
+  /** Input is derived by Scene only after a private Native receipt. Physical
+   * removal never retracts confirmed visual history before its TTL. */
+  adoptPhase297(input:CorePhaseTypedProjection297,reset=false):void {
+    if(reset){this.traces.clear();this.signature='';this.nextExpiry297=Infinity;}
+    let changed=reset;const at=input.core/10,origin=Math.floor(at/1024)*1024;
+    if(origin!==this.origin){this.origin=origin;changed=true;}
+    if(at>this.nextExpiry297){this.nextExpiry297=Infinity;for(const[id,t]of this.traces){if(t.end<at-64){this.traces.delete(id);changed=true;}else this.nextExpiry297=Math.min(this.nextExpiry297,t.end+64);}}
+    for(const p of input.projectiles.upserted){const old=this.traces.get(p.id),start=p.emittedAtCore/10,end=p.endCore/10,delay=p.delayCore/10,duration=p.durationCore/10;
+      if(old&&old.start===start&&old.end===end&&old.delay===delay&&old.duration===duration&&old.from.x===p.from.x&&old.from.z===p.from.z&&old.to.x===p.to.x&&old.to.z===p.to.z&&old.emp===p.emp)continue;
+      this.traces.set(p.id,{start,end,delay,duration,from:p.from,to:p.to,emp:p.emp});this.nextExpiry297=Math.min(this.nextExpiry297,end+64);changed=true;
+    }
+    if(changed)this.rebuild297();
+  }
+  private rebuild297():void {
     this.cache.reset();this.drawn=[];
     if(this.traces.size>this.capacity){while(this.capacity<this.traces.size)this.capacity*=2;this.allocate();}
     const g=this.mesh.geometry,a=g.getAttribute('bulletFrom') as THREE.InstancedBufferAttribute,b=g.getAttribute('bulletTo') as THREE.InstancedBufferAttribute,t=g.getAttribute('bulletTime') as THREE.InstancedBufferAttribute;

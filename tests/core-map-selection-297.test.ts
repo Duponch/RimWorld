@@ -1,0 +1,14 @@
+import {expect,test} from 'vitest';
+import type {World} from '../src/sim/types';
+import {secondaryContext,secondaryValidationContext,campaignAuthority} from '../src/sim/secondary-site-context';
+import {coreMapId297,physicalVisibleCoreMap297} from '../src/bridge/core-phase-data-297';
+// Context representation contracts only: no simulation step, validWorld claim,
+// Native receipt, campaign continuation, scene or fabricated movement is used.
+function local(seed:number){return {seed,width:2,height:2,tiles:[],pawns:[],structures:[],resources:[],jobs:[],piles:[],packed:[]};}
+function root(){return {...local(7),schemaVersion:297,tick:30,phaseCore297:2,nextId:100,rng:17} as unknown as World;}
+function legacy(){const w=root();w.secondarySite={revision:1,tile:5,createdAt:0,selected:false,map:local(8) as unknown as NonNullable<World['secondarySite']>['map'],visit:null};return w;}
+test('an unregistered loaded monomap is its genuine map0',()=>{const w=root();expect(physicalVisibleCoreMap297(w)).toBe(w);expect(coreMapId297(w)).toBe(0);});
+test('mapless forms do not invent a local map or fallback1',()=>{const w=root();Reflect.deleteProperty(w,'tiles');expect(physicalVisibleCoreMap297(w)).toBeUndefined();expect(()=>coreMapId297(w)).toThrow();const modern={...w,worldMaps:{revision:1,rootMapId:null,selectedMapId:null,sites:[]}} as unknown as World;expect(physicalVisibleCoreMap297(modern)).toBeUndefined();expect(()=>coreMapId297(modern)).toThrow();});
+test('legacy selection returns the actual weak secondary and its1 identity',()=>{const w=legacy(),secondary=secondaryContext(w)!;expect(campaignAuthority(secondary)).toBe(w);expect(physicalVisibleCoreMap297(w)).toBe(w);expect(coreMapId297(w)).toBe(0);w.secondarySite!.selected=true;expect(physicalVisibleCoreMap297(w)).toBe(secondary);expect(physicalVisibleCoreMap297(secondary)).toBe(secondary);expect(coreMapId297(secondary)).toBe(1);expect(secondary.tick).toBe(w.tick);expect(secondary.phaseCore297).toBe(w.phaseCore297);w.secondarySite!.selected=false;expect(physicalVisibleCoreMap297(w)).toBe(w);expect(secondaryContext(w)).toBe(secondary);});
+test('a plain copy or validation projection never claims the actual secondary identity',()=>{const w=legacy(),secondary=secondaryContext(w)!,copy={...secondary},validation=secondaryValidationContext(w)!;expect(coreMapId297(copy)).not.toBe(1);expect(()=>coreMapId297(validation)).toThrow();expect(()=>coreMapId297({...copy,campaignMap:{revision:2,activeMapId:1}} as World)).toThrow();});
+test('replacing the local record revokes the old context as a stepped secondary',()=>{const w=legacy(),old=secondaryContext(w)!;w.secondarySite!.map=local(9) as unknown as NonNullable<World['secondarySite']>['map'];const current=secondaryContext(w)!;expect(current).not.toBe(old);expect(coreMapId297(current)).toBe(1);expect(()=>coreMapId297(old)).toThrow();});

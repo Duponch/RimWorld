@@ -1,3 +1,5 @@
+import {readNativeCorePhaseInput297} from '../bridge/native-clone-resident';
+import type {CorePhaseTypedProjection297,CorePhaseAnchor297,CoreActorScene297} from '../bridge/core-phase-projection-297';
 import {OwnedOpaqueRevisions435} from './OwnedOpaqueRevisions435';
 import {ownActorPlaybackWorld435,isActorPlaybackWorld435} from './ActorPlayback435';
 import {StaticSceneCompiler435} from './StaticSceneCompiler435';
@@ -183,7 +185,64 @@ export class SceneRenderCore {
   private readonly confirmedJobMarkers=new ConfirmedJobMarkers();
   protected readonly presentation = this.createPresentationQueue();
   protected createPresentationQueue():PresentationQueue { return new PresentationQueue(); }
-  protected received:{world:World;speed:number;tracks?:PawnTrack[];immutableSnapshot:boolean}|undefined;
+  protected received:{world:World;speed:number;tracks?:PawnTrack[];immutableSnapshot:boolean;coreInput297?:object}|undefined;
+  private readonly coreFullInputs297=new WeakMap<World,CorePhaseTypedProjection297>();
+  private readonly pendingCore297:CorePhaseTypedProjection297[]=[];
+  private presentationFrame297=0;
+  private calmFullFrame297:{frame:number;anchor:CorePhaseAnchor297}|undefined;
+  private hasCalmFrameGates297=false;
+  /** Called by the actual Main RAF entry before its Native FIFO drain. */
+  protected beginPresentationFrame297():void {
+    if(this.disposed||this.fatalError)return;
+    if(!Number.isSafeInteger(this.presentationFrame297+1))throw Error('Presentation frame marker exhausted');
+    this.presentationFrame297++;
+  }
+  private releaseCalmFullFrame297():void {
+    this.calmFullFrame297=undefined;
+    if(this.hasCalmFrameGates297){this.presentation.releaseFrameGates();this.hasCalmFrameGates297=false;}
+  }
+  private latestCoreInput297:object|undefined;
+  private appliedCoreAnchor297:CorePhaseAnchor297|undefined;
+  private appliedCore297=-Infinity;
+  /** The authentic Full and confirmed physical records have distinct data frontiers. */
+  private actorScene297:CoreActorScene297|undefined;
+  /** Only the private native-lane receipt can enter this confirmed channel. */
+  setCorePhase297(nativeInput:object):void {
+    if(this.disposed||this.fatalError)return;
+    const input=readNativeCorePhaseInput297(nativeInput),full=this.received?.world,base=full&&this.coreFullInputs297.get(full);
+    if(!input||input.kind!=='phase'||!base||input.anchor!==base.anchor||input.world!==full||input.speed!==this.received!.speed)throw Error('Unowned or displaced actor phase');
+    const previous=this.pendingCore297.at(-1);if(previous&&input.core<previous.core||input.core<this.appliedCore297)throw Error('Actor phase would rewind presentation');
+    this.latestCoreInput297=nativeInput;
+    this.projectiles.adoptPhase297(input);
+    if(this.hostPort.hidden())return;
+    this.timeline.adopt(input.core/10,input.speed,input.tracks,this.hostPort.now(),false,!!this.applicationContext,true);this.hasTracks=true;
+    this.pendingCore297.push(input);if(this.pendingCore297.length>64)throw Error('Actor phase presentation history overflow');
+    if(input.speed===0)this.presentCorePhases297();
+  }
+  private presentCorePhases297():void {
+    const anchor=this.appliedCoreAnchor297;if(!anchor)return;
+    const received=this.received&&this.coreFullInputs297.get(this.received.world),applicable:CorePhaseTypedProjection297[]=[],retained:CorePhaseTypedProjection297[]=[];
+    for(const input of this.pendingCore297){
+      if(input.anchor===anchor){
+        if(input.core<this.appliedCore297)continue; // This exact anchor already presented it.
+        (input.core/10<=this.timeline.tick+1e-10?applicable:retained).push(input);continue;
+      }
+      const sameOwner=input.anchor.epoch===anchor.epoch&&input.anchor.mapId===anchor.mapId;
+      if(sameOwner&&input.anchor.revision>anchor.revision){retained.push(input);continue;}
+      // Snapshot epoch/revision are already committed Native order, not a Core-time guess.
+      if(input.anchor.epoch<anchor.epoch||input.anchor.epoch===anchor.epoch&&input.anchor.revision<anchor.revision)continue;
+      if(input.anchor===received?.anchor){retained.push(input);continue;}
+      throw Error('Unordered actor phase presentation anchor');
+    }
+    this.pendingCore297.splice(0,this.pendingCore297.length,...retained);
+    if(!applicable.length)return;
+    const last=applicable.at(-1)!,human=new Set<number>(),animal=new Set<number>(),mechanical=new Set<number>(),changedIds=new Set<number>();
+    for(const p of applicable)for(const row of p.actors){changedIds.add(row.id);(row.kind==='human'?human:row.kind==='animal'?animal:mechanical).add(row.index);}
+    const world=this.world;if(!world||last.world!==world)throw Error('Actor frontier lost its presented authentic Full');
+    const actors=last.actorScene;
+    this.pawns.adoptPhase297(world,[...human],actors,changedIds);this.wildlife.adoptPhase297(world,[...animal],actors,changedIds);this.mechanoids.adoptPhase297(world,[...mechanical],actors);
+    this.actorScene297=actors;this.appliedCore297=last.core;this.confirmedPathDirty=true;
+  }
   protected immutableSnapshot=false;
   protected readonly immutableWorlds=new WeakSet<World>();
   protected hasTracks = false;
@@ -486,13 +545,22 @@ export class SceneRenderCore {
     },this.surfaceTint,this.environmentLighting.configureGrounded,this.animationDetail);
   }
 
-  setWorld(world: World, resetPresentation = false, speed = 1, tracks?: PawnTrack[], immutableSnapshot = false): void {
+  setWorld(world: World, resetPresentation = false, speed = 1, tracks?: PawnTrack[], immutableSnapshot = false, coreInput297?:object, deferCalmFull297 = false): void {
     if(this.disposed || this.fatalError)return;
     try {
+    const coreInput=readNativeCorePhaseInput297(coreInput297);
+    if(coreInput297&&(!coreInput||coreInput.kind!=='full'||coreInput.world!==world))throw Error('Invalid Native Full phase owner');
+    if(Number(world.schemaVersion)===297&&!coreInput)throw Error('Current297 renderer requires its Native Full owner');
+    if(coreInput)this.coreFullInputs297.set(world,coreInput);
+    const at=coreInput?coreInput.core/10:world.tick;
     const previous=this.received?.world;
     const reset=resetPresentation||!previous||world.tick<previous.tick||world.seed!==previous.seed||world.width!==previous.width||world.height!==previous.height;
+    const previousCore=previous&&this.coreFullInputs297.get(previous),ownerChanged=!!coreInput&&!!previousCore&&(coreInput.anchor.epoch!==previousCore.anchor.epoch||coreInput.anchor.mapId!==previousCore.anchor.mapId);
+    const calm=deferCalmFull297===true&&!!coreInput&&!reset&&!ownerChanged&&speed>0&&!!tracks;
+    if(!calm)this.releaseCalmFullFrame297();
     this.invalidatePausedShadow(reset);
     if(reset){
+      this.pendingCore297.length=0;this.latestCoreInput297=undefined;this.appliedCoreAnchor297=undefined;this.appliedCore297=-Infinity;this.actorScene297=undefined;
       this.presentation.clear();this.confirmedJobMarkers.clear();this.confirmedJobsSource=undefined;
       this.presentedIntentFields=undefined;this.confirmedSurfaceDirty=true;this.confirmedPathDirty=true;
     }
@@ -500,24 +568,29 @@ export class SceneRenderCore {
       const intents=this.confirmedIntentReader.admit(world);
       if(intents!==this.confirmedIntents||reset){this.confirmedIntents=intents;this.confirmedIntentsDirty=true;}
     }
-    this.received={world,speed,tracks,immutableSnapshot};
+    this.received={world,speed,tracks,immutableSnapshot,coreInput297};
     this.immutableSnapshot=immutableSnapshot;
     if(immutableSnapshot)this.immutableWorlds.add(world);else this.immutableWorlds.delete(world);
-    this.projectiles.adopt(world,reset);
+    if(coreInput)this.projectiles.adoptPhase297(coreInput,reset);else this.projectiles.adopt(world,reset);
     if(this.hostPort.hidden())return;
-    if(tracks){this.timeline.adopt(world.tick,speed,tracks,this.hostPort.now(),reset||!this.hasTracks,!!this.applicationContext&&immutableSnapshot);this.hasTracks=true;}
+    if(tracks){this.timeline.adopt(at,speed,tracks,this.hostPort.now(),reset||!this.hasTracks,!!this.applicationContext&&immutableSnapshot,!!coreInput);this.hasTracks=true;}
     if(speed===0){
       // This World has already been received/admitted. Pause presents this
       // confirmed state now, bypassing only the scene's old playout/5Hz queue.
-      if(!tracks&&this.hasTracks)this.timeline.adopt(world.tick,0,[],this.hostPort.now(),reset,!!this.applicationContext&&immutableSnapshot);
-      this.presentation.clear();this.applyWorld(world,reset);return;
+      if(!tracks&&this.hasTracks)this.timeline.adopt(at,0,[],this.hostPort.now(),reset,!!this.applicationContext&&immutableSnapshot,!!coreInput);
+      this.presentation.clear();this.applyWorld(world,reset);this.presentCorePhases297();return;
     }
     if(reset||!tracks){if(!reset)this.presentation.clear();this.applyWorld(world,reset);return;}
-    this.presentation.push(world);
+    if(calm){
+      if(!this.calmFullFrame297)this.calmFullFrame297={frame:this.presentationFrame297+1,anchor:coreInput!.anchor};
+      this.hasCalmFrameGates297=true;
+    }
+    this.presentation.push(world,at,calm?this.calmFullFrame297!.frame:undefined);
     // A background/stalled page must not retain an unlimited snapshot history.
     // Recovery replaces the whole presentation, never only one actor's path.
-    if(this.presentation.size>64||world.tick-this.timeline.tick>MOTION_HISTORY_TICKS){this.presentation.clear();this.timeline.adopt(world.tick,speed,tracks,this.hostPort.now(),true,!!this.applicationContext&&immutableSnapshot);this.applyWorld(world,true);return;}
-    const due=this.presentation.take(this.timeline.tick,this.hostPort.now());if(due)this.applyWorld(due);
+    if(this.presentation.size>64||at-this.timeline.tick>MOTION_HISTORY_TICKS){this.releaseCalmFullFrame297();this.presentation.clear();this.timeline.adopt(at,speed,tracks,this.hostPort.now(),true,!!this.applicationContext&&immutableSnapshot,!!coreInput);this.applyWorld(world,true);return;}
+    if(calm)return;
+    const due=this.presentation.take(this.timeline.tick,coreInput?undefined:this.hostPort.now());if(due)this.applyWorld(due);
     } catch (error) {
       this.reportFailure(`Adoption de l’affichage interrompue : ${error instanceof Error ? error.message : String(error)}`);
       throw error;
@@ -525,6 +598,8 @@ export class SceneRenderCore {
   }
 
   protected applyWorld(world: World, resetPresentation = false): void {
+    const phase=this.coreFullInputs297.get(world);this.appliedCoreAnchor297=phase?.anchor;this.appliedCore297=phase?.core??-Infinity;this.actorScene297=phase?.actorScene;
+    const calm=this.calmFullFrame297;if(calm&&phase?.anchor.epoch===calm.anchor.epoch&&phase.anchor.mapId===calm.anchor.mapId&&phase.anchor.revision>=calm.anchor.revision)this.calmFullFrame297=undefined;
     this.ownedOpaqueRevisions435?.setEnabled(!!this.applicationContext&&this.immutableWorlds.has(world));this.ownedOpaqueRevisions435?.invalidateResources();
     if(!this.immutableWorlds.has(world))this.applicationContext?.clear();
     ownActorPlaybackWorld435(world,!!this.applicationContext&&this.immutableWorlds.has(world));
@@ -1086,11 +1161,12 @@ export class SceneRenderCore {
     const offset=this.camera.position.clone().sub(this.controls.target);this.controls.target.set(cell.x,0,cell.z);this.camera.position.copy(this.controls.target).add(offset);this.controls.update();
   }
   focusPawn(id: number): void {
-    const pawn = this.world?.pawns.find((item) => item.id === id)??this.world?.wildlife?.animals.find(a=>a.id===id)??this.world?.mechanoids?.find(m=>m.id===id);
+    const pawn = this.actorScene297?.byId[id]?.actor??this.world?.pawns.find((item) => item.id === id)??this.world?.wildlife?.animals.find(a=>a.id===id)??this.world?.mechanoids?.find(m=>m.id===id);
     if (!pawn) return;
     this.invalidatePausedShadow();
     const offset = this.camera.position.clone().sub(this.controls.target);
-    const physical='body' in pawn&&this.world?pawnBodyLocation(this.world,pawn):pawn;if(!physical)return;
+    const rendered=this.pawns.presentedPose(id)??this.wildlife.presentedPose(id)??(()=>{let pose:{x:number;y:number;z:number}|undefined;this.mechanoids.forEachPose((actorId,x,y,z)=>{if(actorId===id)pose={x,y,z};});return pose;})();
+    const physical=rendered??('body' in pawn&&this.world?pawnBodyLocation(this.world,pawn):pawn);if(!physical)return;
     this.controls.target.set(physical.x, 0, physical.z);
     this.camera.position.copy(this.controls.target).add(offset);
     this.controls.update();
@@ -1212,7 +1288,7 @@ export class SceneRenderCore {
     // The carried body uses the carrier's GPU pose and edge times. Its own
     // final walking segment is historical and must not drive its hit proxy.
     const bodyCarriers=new Map((this.world?.piles??[]).flatMap(p=>p.humanCorpse&&p.owner.type==='pawn'?[[p.humanCorpse.pawnId,p.owner.pawnId] as const]:[]));
-    const actors=new Map(this.world?.pawns.map(p=>[p.id,p]));
+    const actors=new Map((this.actorScene297?.humans??this.world?.pawns)?.map(p=>[p.id,p]));
     for(const [id,visual] of this.pawns.visuals) {
       if(visual.to.y< -100||!this.world||!knownPosition256(this.world,{x:Math.floor(visual.to.x+.5),z:Math.floor(visual.to.z+.5)}))continue;
       const segment=this.hasTracks?this.timeline.segment(bodyCarriers.get(id)??id):undefined;
@@ -1228,7 +1304,7 @@ export class SceneRenderCore {
       result.push({id,x:rect.left+(center.x+1)*rect.width/2,y:rect.top+(1-center.y)*rect.height/2,
         radius:Math.max(5,Math.abs(head.y-center.y)*rect.height/2),depth:center.z,group:actors.get(id)?.state==='dead'?'corpse:human':`human:${actors.get(id)?.faction??'colony'}:${!!actors.get(id)?.prisoner}`,category:actors.get(id)?.state==='dead'?3:(actors.get(id)?.faction??'colony')==='colony'&&!actors.get(id)?.prisoner?0:1});
     }
-    const animals=new Map(this.world?.wildlife?.animals.map(a=>[a.id,a]));
+    const animals=new Map((this.actorScene297?.animals??this.world?.wildlife?.animals)?.map(a=>[a.id,a]));
     const center=new THREE.Vector3(),edge=new THREE.Vector3(),side=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0);
     this.wildlife.forEachPose((id,species,x,y,z,height,radius)=>{
       if(!this.world||!knownPosition256(this.world,{x:Math.floor(x+.5),z:Math.floor(z+.5)}))return;
@@ -1331,7 +1407,7 @@ export class SceneRenderCore {
     if(first||surface||this.confirmedDesignationsDirty||previous.jobs!==intents.jobs||previous.roofBuild!==intents.roofBuild||previous.roofRemove!==intents.roofRemove)
       this.designations.update(world,intents);
     if(this.pawns.feedbackSource&&(first||this.confirmedPathDirty||previous.routes!==intents.routes))
-      this.actionFeedback.updateConfirmedPath(intents.routes,world,this.selectedPawns,this.pawns.feedbackSource);
+      this.actionFeedback.updateConfirmedPath(intents.routes,world,this.selectedPawns,this.pawns.feedbackSource,this.actorScene297?.humans);
     this.presentedIntentFields=intents;
     this.confirmedIntentsDirty=this.confirmedSurfaceDirty=this.confirmedPathDirty=this.confirmedDesignationsDirty=false;
     if(zonesChanged){this.zonesTintDirty=true;this.refreshZonesTint();}
@@ -1415,18 +1491,23 @@ export class SceneRenderCore {
 
   visibilityChanged():void {
     this.frames.reset();this.lastFrame=0;this.animationDetail.reset();
-    if(!this.hostPort.hidden()&&this.received){const r=this.received;this.setWorld(r.world,true,r.speed,r.tracks,r.immutableSnapshot);}
+    if(!this.hostPort.hidden()&&this.received){const r=this.received,latest=this.latestCoreInput297;this.setWorld(r.world,true,r.speed,r.tracks,r.immutableSnapshot,r.coreInput297);if(latest){const phase=readNativeCorePhaseInput297(latest),full=this.coreFullInputs297.get(r.world);
+      // A newer Full supersedes an older phase even in the same Native epoch.
+      // Replay only the still-live phase belonging to this exact authentic Full.
+      if(phase?.kind==='phase'&&full?.kind==='full'&&phase.anchor===full.anchor&&phase.world===r.world&&phase.speed===r.speed&&phase.core>=full.core)this.setCorePhase297(latest);
+    }}
   }
 
   protected frame(now: number): void {
     if (this.disposed || this.fatalError || this.preparing) return;
-    if(this.hasTracks){this.timeline.advance(now);const due=this.presentation.take(this.timeline.tick,now);if(due)this.applyWorld(due);}
+    if(this.hasTracks){this.timeline.advance(now);const due=this.presentation.take(this.timeline.tick,this.received?.coreInput297?undefined:now,this.presentationFrame297);if(due)this.applyWorld(due);this.presentCorePhases297();}
     this.presentConfirmedIntents();
-    const dt = this.lastFrame ? Math.min((now - this.lastFrame) / 1000, 0.05) : 0;
+    const dtTweener297=this.lastFrame?Math.max(0,(now-this.lastFrame)/1000):0;
+    const dt = Math.min(dtTweener297,.05);
     this.lastFrame = now;
     this.pawns.blend.value = this.snapshotDuration > 0 ? Math.min(1, Math.max(0, (this.hostPort.now() - this.snapshotAt) / this.snapshotDuration)) : 1;
     this.pawns.time.value = THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value);
-    if(this.hasTracks && this.world) {this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline);}
+    if(this.hasTracks && this.world) {this.pawns.time.value=(this.timeline.tick/TICKS_PER_SECOND)%(2*Math.PI);this.pawns.updateTravel(this.world,this.timeline,dtTweener297,this.received?.speed??0,this.actorScene297);}
     if (!this.hostPort.selectionActive()) {
       if (!this.areaDrag) this.moveCamera(dt);
       this.controls.update();
@@ -1439,15 +1520,18 @@ export class SceneRenderCore {
       this.controls.target.x = x; this.controls.target.z = z;
     }
     this.rig.constrainRoom?.();
-    const skyTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
+    const confirmedPresentationTick = this.hasTracks ? this.timeline.tick : THREE.MathUtils.lerp(this.timeFrom, this.timeTo, this.pawns.blend.value) * TICKS_PER_SECOND;
+    // Cosmetic clocks may follow confirmed Core; environment DATA remains the authentic Full.
+    // This parameter never rewrites World.tick or grants a new simulation/UI state.
+    const skyTick=confirmedPresentationTick;
     this.animationDetail.beginFrame(now,this.camera,this.viewportHeight,skyTick);
     if(this.turretTops.present(dt,this.received?.speed===0))this.invalidatePausedShadow(false);
     if(this.world&&this.pawns.presentCargo(skyTick,this.world)){
       this.invalidatePausedShadow(false);this.updatePiles(this.world,false);
     }
     if(this.pawns.feedbackSource)this.actionFeedback.syncTravel(this.pawns.feedbackSource);
-    if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
-    if(this.world)this.mechanoids.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns);
+    if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns,this.actorScene297);
+    if(this.world)this.mechanoids.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns,this.actorScene297);
     this.pawns.presentAnimations();this.wildlife.presentAnimations(this.pawns);this.mechanoids.presentAnimations(this.pawns);
     if(this.animalCargo.present(this.wildlife))this.invalidatePausedShadow(false);
     this.ropes.present(this.hasTracks?this.timeline:undefined,this.pawns,this.wildlife);
@@ -1763,6 +1847,7 @@ export class SceneRenderCore {
   }
   dispose(): void {
     if (this.disposed) return;
+    this.releaseCalmFullFrame297();this.presentation.clear();this.pendingCore297.length=0;this.latestCoreInput297=undefined;
     this.confirmedIntentReader?.clear();this.confirmedIntents=this.presentedIntentFields=undefined;
     this.confirmedJobMarkers.clear();this.confirmedJobsSource=undefined;
     this.armedRoom = null;

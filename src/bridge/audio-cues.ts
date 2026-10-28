@@ -1,3 +1,4 @@
+import {effectiveCore297} from '../sim/core-phase-297';
 import type { World } from '../sim/types.ts';
 import { isConstruction } from '../sim/construction-rules.ts';
 import { isTailoring, stationAccepts, taskRecipe } from '../sim/production-recipes.ts';
@@ -25,6 +26,11 @@ export type AudioCueKind = 'mining.hit' | 'woodcutting.hit' | 'construction.hit'
   | `animal.hurt.${AnimalVoiceSpecies}` | `animal.death.${AnimalDeathVoiceSpecies}`
   | 'ui.threat' | 'ui.colonist-death'
   | 'ui.click' | 'ui.reject' | 'ui.panel';
+/** Causal source facts, copied before later owners can clear an action. These
+ * are Worker-internal observations, never a public/native grant. */
+export interface CoreStrikeAudio297 {readonly actorId:number;readonly atCore:number;readonly x:number;readonly z:number;readonly kind:'human'|'animal'|'mechanical'}
+export interface CoreShotAudio297 {readonly projectileId:number;readonly pawnId?:number;readonly atCore:number;readonly x:number;readonly z:number}
+export interface PreparedAudioCuePublication297 {readonly cues:AudioCue[]}
 export interface AudioCue {
   id: string;
   tick: number;
@@ -64,6 +70,9 @@ function workCueInterval(pawnId: number, key: string, cueCount: number, interval
 
 /** Presentation-only observer. Its state is neither simulation input nor saved. */
 export class AudioCueRecorder {
+  private coreCapture297:number|undefined;
+  private publicationGeneration297=0;
+  private readonly preparedPublications297=new WeakMap<object,{generation:number;prefix:readonly AudioCue[]}>();
   private initialized = false;
   private tick = -1;
   private tickCount = 0;
@@ -88,6 +97,7 @@ export class AudioCueRecorder {
   private lightningCount = 0;
 
   reset(): void {
+    this.publicationGeneration297++;
     this.initialized = false;
     this.tick = -1;
     this.tickCount = 0;
@@ -112,6 +122,27 @@ export class AudioCueRecorder {
     this.lightningCount = 0;
   }
 
+  /** Only a committed physical boundary calls this. Work/doors/health retain
+   * the existing observer; causal receipts preserve intra-Core transients. */
+  capturePhysical297(world:World,core:number,strikes:readonly CoreStrikeAudio297[],shots:readonly CoreShotAudio297[]):void {
+    if(Number(world.schemaVersion)!==297||core!==effectiveCore297(world)||!Number.isSafeInteger(core)||strikes.length>512||shots.length>512||this.coreCapture297!==undefined)throw Error('Invalid physical audio boundary');
+    this.coreCapture297=core;
+    try{
+      if(world.tick!==this.tick){this.tick=world.tick;this.tickCount=0;}
+      for(const event of strikes){
+        if(event.atCore!==core||!Number.isSafeInteger(event.actorId)||event.actorId<1||event.actorId>=world.nextId||!Number.isFinite(event.x)||!Number.isFinite(event.z)||!['human','animal','mechanical'].includes(event.kind))throw Error('Invalid causal strike audio');
+        if(this.initialized&&this.melee.get(event.actorId)!==event.atCore){const id=event.kind==='mechanical'?`melee:${event.actorId}:${event.atCore}`:`melee:${event.atCore}:${event.actorId}`;this.add({id,tick:world.tick,kind:'weapon.melee',x:event.x,z:event.z});}
+        this.melee.set(event.actorId,event.atCore);
+      }
+      for(const event of shots){
+        if(event.atCore!==core||!Number.isSafeInteger(event.projectileId)||event.projectileId<1||event.projectileId>=world.nextId||!Number.isFinite(event.x)||!Number.isFinite(event.z)||event.pawnId!==undefined&&(!Number.isSafeInteger(event.pawnId)||event.pawnId<1||event.pawnId>=world.nextId))throw Error('Invalid causal shot audio');
+        const fresh=!this.projectiles.has(event.projectileId),freshPawn=event.pawnId===undefined||this.shooting.get(event.pawnId)!==event.atCore;
+        if(this.initialized&&fresh&&freshPawn)this.add({id:event.pawnId===undefined?`shot:${event.projectileId}`:`shot:${event.pawnId}:${event.atCore}`,tick:world.tick,kind:'weapon.gunshot',x:event.x,z:event.z});
+        this.projectiles.add(event.projectileId);if(event.pawnId!==undefined)this.shooting.set(event.pawnId,event.atCore);
+      }
+      this.capture(world);
+    }finally{this.coreCapture297=undefined;}
+  }
   capture(world: World): void {
     if (world.tick !== this.tick) { this.tick = world.tick; this.tickCount = 0; }
     const previousWork = this.work;
@@ -423,23 +454,39 @@ export class AudioCueRecorder {
     this.initialized = true;
   }
 
+  /** Owned copied peek: failed preparation/send leaves the live queue intact.
+   * A publication token is local to this recorder, never Native provenance. */
+  preparePublication297():PreparedAudioCuePublication297 {
+    if(this.pending.length>MAX_PENDING_CUES)throw Error('Audio queue exceeded its existing bound');
+    const prefix=this.pending.slice(),cues=Object.freeze(prefix.map(cue=>Object.freeze({...cue}))) as unknown as AudioCue[];
+    const prepared=Object.freeze({cues});this.preparedPublications297.set(prepared,{generation:this.publicationGeneration297,prefix});return prepared;
+  }
+  /** Only after the synchronous real send and its publication commit. Appends
+   * after capture survive; reset/drain/displacement revoke the old prefix. */
+  commitPublication297(prepared:PreparedAudioCuePublication297):void {
+    const held=this.preparedPublications297.get(prepared);
+    if(!held||held.generation!==this.publicationGeneration297||held.prefix.length>this.pending.length||held.prefix.some((cue,i)=>this.pending[i]!==cue))throw Error('Stale audio publication');
+    this.preparedPublications297.delete(prepared);this.pending.splice(0,held.prefix.length);this.publicationGeneration297++;
+  }
+
   drain(): AudioCue[] {
     const cues = this.pending.slice();
-    this.pending.length = 0;
+    this.pending.length = 0;this.publicationGeneration297++;
     return cues;
   }
 
   private add(cue: AudioCue): void {
+    if(this.coreCapture297!==undefined)cue={...cue,tick:this.coreCapture297/10};
     if (this.tickCount >= MAX_CUES_PER_TICK || this.pending.length >= MAX_PENDING_CUES) {
       // Keep severe interface alerts even if many local contacts occur on the
       // same tick. Presentation may discard one background cue, never a command.
       if (cue.kind !== 'ui.threat' && cue.kind !== 'ui.colonist-death') return;
       const sameTickFull = this.tickCount >= MAX_CUES_PER_TICK;
       const displaced = this.pending.findIndex(candidate =>
-        (!sameTickFull || candidate.tick === this.tick)
+        (!sameTickFull || Math.floor(candidate.tick) === this.tick)
         && candidate.kind !== 'ui.threat' && candidate.kind !== 'ui.colonist-death');
       if (displaced < 0) return;
-      if (this.pending[displaced]!.tick === this.tick) this.tickCount--;
+      if (Math.floor(this.pending[displaced]!.tick) === this.tick) this.tickCount--;
       this.pending.splice(displaced, 1);
     }
     this.pending.push(cue);

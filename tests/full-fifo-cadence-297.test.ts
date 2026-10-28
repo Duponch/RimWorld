@@ -1,0 +1,29 @@
+import {expect,test,vi} from 'vitest';
+import {MainFrameAdmissionFIFO,type MainFrameAdmissionHost} from '../src/bridge/main-frame-admission-fifo';
+// Explicit NUM scheduling custody mock. NO Native/World/Event/browser/GPU proof.
+const custody=vi.hoisted(()=>({known:new WeakMap<object,{kind:'phase'|'full';run:()=>void;alive:boolean}>()}));
+vi.mock('../src/bridge/native-clone-resident',()=>({
+ isNativeCorePhaseAdmissionTicket297(info:unknown,run:unknown){if(!info||typeof info!=='object')return false;const h=custody.known.get(info);return !!h&&h.kind==='phase'&&h.run===run&&h.alive;},
+ isNativeCoreFullAdmissionTicket297(info:unknown,run:unknown){if(!info||typeof info!=='object')return false;const h=custody.known.get(info);return !!h&&h.kind==='full'&&h.run===run&&h.alive;},
+}));
+class Host implements MainFrameAdmissionHost {time=0;errors:unknown[]=[];now(){return this.time;}post(_task:()=>void){throw Error('Visible NUM stream must not schedule hidden turns');}report(e:unknown){this.errors.push(e);}close(){}}
+function harness(){
+ const host=new Host(),seen:string[]=[],times=new Map<string,number>(),q=new MainFrameAdmissionFIFO(()=>true,()=>{throw Error('overflow');},host);
+ function ticket(name:string,kind:'phase'|'full'|'ordinary',cost=0){const held={kind:kind==='phase'?'phase' as const:'full' as const,run:()=>{},alive:true};const run=()=>{if(!held.alive)return;held.alive=false;seen.push(name);times.set(name,host.time);host.time+=cost;};held.run=run;const info=Object.freeze({arrivalAt:host.time,run});if(kind!=='ordinary')custody.known.set(info,held);return{run,info,held};}
+ function add(name:string,kind:'phase'|'full'|'ordinary',cost=0){const t=ticket(name,kind,cost);q.enqueue(t.run,t.info);return t;}
+ return{host,seen,times,q,ticket,add};
+}
+function traffic(){const h=harness(),expected:string[]=[];let next=1,fulls=0,phases=0;
+ for(let frame=1;frame<=60;frame++){const at=frame*1000/30;while(next<=100&&next*20<=at+1e-8){h.host.time=next*20;const full=Math.floor(next*36/50)>Math.floor((next-1)*36/50),name=(full?'F':'P')+next;full?fulls++:phases++;expected.push(name);h.add(name,full?'full':'phase',full?.25:0);next++;}h.host.time=at;h.q.drainFrame();}
+ return{...h,expected,fulls,phases};}
+test('36Full plus14phase per second stay ordered and unqueued at30RAF when heavy adoptions are cheap',()=>{const h=traffic();try{expect(h.fulls).toBe(72);expect(h.phases).toBe(28);expect(h.q.diagnostics().depth).toBe(0);expect(h.seen).toEqual(h.expected);expect(h.q.diagnostics().maxDepth).toBeLessThanOrEqual(3);expect(h.host.errors).toEqual([]);}finally{h.q.close();}});
+test('Pause then ACK remain FIFO and reach the next two frames after the36Full/s cheap stream',()=>{const h=traffic();try{h.host.time=2001;h.add('pause','ordinary');h.add('ack','ordinary');for(let f=1;f<=2;f++){h.host.time=2000+f*1000/30;h.q.drainFrame();}expect(h.times.get('pause')??Infinity).toBeLessThanOrEqual(2000+1000/30);expect(h.times.get('ack')??Infinity).toBeLessThanOrEqual(2000+2*1000/30);expect(h.seen).toEqual([...h.expected,'pause','ack']);expect(h.q.diagnostics().depth).toBe(0);}finally{h.q.close();}});
+test('two cheap modern Fulls are the total heavy cap even with phase work around them',()=>{const h=harness();try{h.add('P1','phase');h.add('F1','full',.25);for(let i=2;i<=8;i++)h.add('P'+i,'phase');h.add('F2','full',.25);h.add('F3','full',.25);h.add('tail','ordinary');h.q.drainFrame();expect(h.seen).toEqual(['P1','F1','P2','P3','P4','P5','P6','P7','P8','F2']);expect(h.q.diagnostics().depth).toBe(2);h.q.drainFrame();expect(h.seen.slice(-2)).toEqual(['F3','tail']);}finally{h.q.close();}});
+test.each([['ordinary','full'],['full','ordinary']] as const)('one %s plus one %s can share a cheap frame without permitting two legacy ordinary entries',(a,b)=>{const h=harness();try{h.add('A',a,.1);h.add('B',b,.1);h.add('C','ordinary');h.q.drainFrame();expect(h.seen).toEqual(['A','B']);expect(h.q.diagnostics().depth).toBe(1);}finally{h.q.close();}});
+test('two legacy heads block a later modern Full; no peek-ahead skip and no second ordinary',()=>{const h=harness();try{h.add('A','ordinary');h.add('B','ordinary');h.add('F','full');h.q.drainFrame();expect(h.seen).toEqual(['A']);h.q.drainFrame();expect(h.seen).toEqual(['A','B','F']);}finally{h.q.close();}});
+test.each([2,3])('a first Full costing%ims retains one-heavy historical service; no false guarantee of zero backlog',cost=>{const h=harness();try{h.add('A','full',cost);h.add('B','full');h.add('C','ordinary');h.q.drainFrame();expect(h.seen).toEqual(['A']);expect(h.q.diagnostics().depth).toBe(2);h.q.drainFrame();expect(h.seen).toEqual(['A','B','C']);}finally{h.q.close();}});
+test('elapsed time includes preceding phase work; strict less-than2ms boundary gates the second heavy',()=>{const h=harness();try{h.add('P','phase',1.5);h.add('A','full',.5);h.add('B','full');h.q.drainFrame();expect(h.seen).toEqual(['P','A']);h.q.drainFrame();expect(h.seen).toEqual(['P','A','B']);}finally{h.q.close();}});
+test('a1.999ms first Full can admit one more heavy and the heavy cap still stops the third',()=>{const h=harness();try{h.add('A','full',1.999);h.add('B','full');h.add('C','full');h.q.drainFrame();expect(h.seen).toEqual(['A','B']);}finally{h.q.close();}});
+test('copies, changed run identity, public-looking metadata and revoked source custody grant no modern Full service',()=>{
+ for(const mode of ['copy','run','public','revoked'] as const){const h=harness();try{h.add('A','ordinary');const t=h.ticket('B','full');if(mode==='copy')h.q.enqueue(t.run,{...t.info});else if(mode==='run')h.q.enqueue(()=>t.run(),t.info);else if(mode==='public')h.q.enqueue(t.run,{arrivalAt:0,type:'snapshot',schemaVersion:297,corePhase297:{core:0}} as {arrivalAt:number});else {h.q.enqueue(t.run,t.info);t.held.alive=false;}h.q.drainFrame();expect(h.seen).toEqual(['A']);expect(h.q.diagnostics().depth).toBe(1);}finally{h.q.close();}}
+});

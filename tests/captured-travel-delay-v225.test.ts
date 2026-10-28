@@ -1,3 +1,4 @@
+import {declareUnplayedFixture296} from './scenarios/initial-core-clock-v492';
 import { expect, test } from 'vitest';
 import { validCapturedTravelDelay } from '../src/sim/captured-travel-delay.ts';
 import { startTravel } from '../src/sim/movement.ts';
@@ -13,8 +14,9 @@ import { cleanlinessCamp } from './scenarios/cleanliness.ts';
 const durationError = 'Inconsistent travel duration.';
 const cases = [{ source: 'fence', delay: 2, introduced: 119 },
   { source: 'burned-wood', delay: .1, introduced: 89 }] as const;
-function physicalEdge(source: typeof cases[number]['source']) {
+function physicalEdge(source: typeof cases[number]['source'], historical=false) {
   const world = cleanlinessCamp(), pawn = world.pawns[0]!, target = { x: pawn.x + 1, z: pawn.z + 1 };
+  if(historical)declareUnplayedFixture296(world);
   // A controlled quiet fixture exposes the edge rather than selecting other work.
   for (const key of Object.keys(pawn.priorities) as (keyof Pawn['priorities'])[]) pawn.priorities[key] = 0;
   if (source === 'fence') world.structures.push({ id: world.nextId++, kind: 'fence', ...target,
@@ -26,13 +28,19 @@ function physicalEdge(source: typeof cases[number]['source']) {
     expect(world.fires!.ledger.items.wood).toBe(3);
     expect(terrainTravelDelay(world, target.z * world.width + target.x)).toBe(.1);
   }
-  expect(validateWorld(world)).toEqual([]);
+  if(historical)expect(pawnShape(world,296)).toEqual([]);else expect(validateWorld(world)).toEqual([]);
   expect(applyCommand(world, { type: 'draft', pawnIds: [pawn.id], enabled: true }).ok).toBe(true);
+  const before={tick:world.tick,rng:world.rng,from:{x:pawn.x,z:pawn.z}};
   expect(applyCommand(world, { type: 'draft-move', pawnIds: [pawn.id], target, queue: false }).ok).toBe(true);
   expect(pawn.draft!.target).toEqual(target);
-  expect(pawn.path).toEqual([target]);
-  expect(startTravel(world, pawn, target)).toBe(true);
-  pawn.path.shift(); // Consume exactly the admitted edge, as processDraft does.
+  if(historical){
+    expect(pawn.path).toEqual([target]);expect(startTravel(world,pawn,target)).toBe(true);pawn.path.shift();
+    expect(pawn.motion!.coreMove297).toBeUndefined();
+  }else{
+    // The genuine297 command arms and consumes its first edge at the played Core.
+    expect(pawn.path).toEqual([]);expect(pawn.motion).toMatchObject({from:before.from,to:target,coreMove297:true});
+    expect(world.tick).toBe(before.tick);expect(world.rng).toBe(before.rng);
+  }
   return { world, pawn, target };
 }
 function pawnShape(world: World, version: number): string[] {
@@ -74,7 +82,7 @@ test.each(cases)('$source cost remains captured when its source disappears durin
 });
 
 test.each(cases)('$source delay is admitted at schema $introduced and refused in its predecessor', ({ source, delay, introduced }) => {
-  const { world } = physicalEdge(source);
+  const { world } = physicalEdge(source,true);
   expect(validCapturedTravelDelay(delay, introduced)).toBe(true);
   expect(validCapturedTravelDelay(delay, introduced - 1)).toBe(false);
   // Other modern fields may be future to that old schema; inspect the duration

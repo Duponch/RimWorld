@@ -1,3 +1,4 @@
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validateEquipmentOwners259} from './equipment-save.ts';
 import {validateApparelOwners259} from './apparel-save.ts';
@@ -16,14 +17,14 @@ import {isAncientCasket256,validAncientCasketState256,validAncientCasketField256
 import type {World} from './types.ts';
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
-export type AncientCasketRecordContext256=Pick<World,'tick'|'nextId'|'width'|'height'>&{schemaVersion:number}&Partial<Pick<World,'worldFactions'>>;
+export type AncientCasketRecordContext256=Pick<World,'tick'|'nextId'|'width'|'height'>&{schemaVersion:number}&Partial<Pick<World,'phaseCore297'|'worldFactions'>>;
 /** Shared original record validation. Spatial support belongs to the live map
  * only; this scalar header also validates a real retired holder, never a World. */
 export function validateAncientCasketRecord256(c:AncientCasket256,w:AncientCasketRecordContext256):string[]{
  const errors:string[]=[],ids=new Set<number>();
  const add=(id:number)=>{if(!integer(id,1,w.nextId-1)||ids.has(id))errors.push('Duplicate/invalid original casket Thing identity.');ids.add(id);};
 
-  if(!validAncientCasketField256(c,w.schemaVersion,w.tick))return ['Invalid/future casket state.'];
+  if(!validAncientCasketField256(c,w.schemaVersion,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined))return ['Invalid/future casket state.'];
   const s=c.casket;add(c.id);
   const humans=new Set(s.humans.map(p=>p.id)),animals=new Set(s.animals.map(a=>a.id));
   for(const p of s.humans){

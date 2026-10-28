@@ -1,3 +1,4 @@
+import {worldPawnsPhysicalCore297,worldPawnPhysicalCore297} from './world-pawn-physical-clock-297.ts';
 import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {isColonist} from './affiliation.ts';
@@ -29,6 +30,8 @@ export type PassedWorldPreparation256={ok:true;row:WorldPawnOwner256;commit():vo
  * never a projection taken from an already frozen historical archive. The
  * caller's outer removal transaction owns detachment and its staged RNG. */
 export function preparePassedToWorld256(state:WorldPawnsState256,input:WorldPawnOwner256,registry:WorldFactionRegistry256,random:WorldPawnPassRandom256,options:WorldPawnEntryOptions256={}):PassedWorldPreparation256 {
+ const version297=options.version??256,physicalState297=worldPawnsPhysicalCore297(state,version297),physicalRow297=worldPawnPhysicalCore297(input,version297);
+ if(!Number.isSafeInteger(physicalState297)||!Number.isSafeInteger(physicalRow297)||physicalRow297>physicalState297||input.mode==='active'&&physicalRow297!==physicalState297)return {ok:false,reason:'Invalid actual owned physical PassedToWorld frontier'};
  const nativeBefore=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,nativeBefore))return {ok:false,reason:'Actual native WorldPawn order is not mutable/admitted'};
  if(!plainWorldPawnData256(input))return {ok:false,reason:'PassedToWorld requires admitted original data'};
  if(input.kind==='human'&&(input.actor.visitor||input.actor.podRescue||input.actor.raid||input.actor.prisoner&&!((options.version===259||options.version===260||(options.version===261||(Number(options.version)===262||isSchema263OrLater(Number(options.version)))))&&input.actor.worldAffiliation259?.guestStatus==='Prisoner')))return {ok:false,reason:'Actual guest HostFaction history must remain with its existing owner'};
@@ -38,13 +41,13 @@ export function preparePassedToWorld256(state:WorldPawnsState256,input:WorldPawn
  if(!Object.isExtensible(state.owners)||!Object.getOwnPropertyDescriptor(state.owners,'length')?.writable)return {ok:false,reason:'PassedToWorld requires its mutable actual registry'};
  if(state.owners.some(r=>r.actor===input.actor||r.actor.id===input.actor.id))return {ok:false,reason:'Actual Pawn already has a WorldPawn owner'};
  if(input.clockCore>state.atCore||input.mode==='active'&&input.clockCore!==state.atCore||input.mode!=='active'&&input.mode!=='dead'||input.startingPawnLeftBehind&&(input.kind!=='human'||input.keepForever!==true))return {ok:false,reason:'Invalid true PassedToWorld frontier'};
- const effects=prepareWorldPawnEntryEffects256(input,state.atCore,registry,random,options);if(!effects.ok)return effects;const row=effects.row;
+ const effects=prepareWorldPawnEntryEffects256(input,version297===297?physicalRow297:state.atCore,registry,random,options);if(!effects.ok)return effects;const row=effects.row;
  // Actual present colonist at this true PassToWorld only, before SetFaction.
  // This supplies no past history to a load/migration or an already foreign row.
  if((options.version===259||options.version===260||(options.version===261||(Number(options.version)===262||isSchema263OrLater(Number(options.version)))))&&input.kind==='human'&&row.kind==='human'&&!terminalWorldPawn256(input)&&isColonist(input.actor)&&!input.actor.prisoner&&!input.actor.visitor&&!input.actor.podRescue&&!input.actor.raid&&input.actor.worldAffiliation259?.factionId===registry.playerFactionId&&input.actor.worldAffiliation259.hostFactionId===null&&input.actor.worldAffiliation259.guestStatus==='Guest')row.everColonist=true;
  const nativeAfter=nativeBefore?passNativeWorldPawnOrder256(nativeBefore,input.actor.id,terminalWorldPawn256(input)):undefined;
  const atBefore=state.atCore,originals=state.owners.slice(),before=JSON.stringify(input),prepared=JSON.stringify(row);let used=false;
- return {ok:true,row,commit(){if(used||!nativeWorldPawnOrderCurrent256(state,nativeBefore)||state.atCore!==atBefore||JSON.stringify(input)!==before||JSON.stringify(row)!==prepared||state.owners.length!==originals.length||state.owners.some((r,i)=>r!==originals[i]))throw Error('Stale PassedToWorld transaction');used=true;cancelWorldPawnGC256(state);
+ return {ok:true,row,commit(){if(used||!nativeWorldPawnOrderCurrent256(state,nativeBefore)||state.atCore!==atBefore||worldPawnsPhysicalCore297(state,version297)!==physicalState297||JSON.stringify(input)!==before||JSON.stringify(row)!==prepared||state.owners.length!==originals.length||state.owners.some((r,i)=>r!==originals[i]))throw Error('Stale PassedToWorld transaction');used=true;cancelWorldPawnGC256(state);
   const original=input.actor,history=input.kind==='human'?input.actor.prisonerHistory259:undefined;for(const k of Object.keys(original))delete (original as unknown as Record<string,unknown>)[k];Object.assign(original,row.actor);if(history&&row.kind==='human')row.actor.prisonerHistory259=history;row.actor=original;if(history&&row.kind==='human')row.actor.prisonerHistory259=history;row.items=input.items;row.packed=input.packed;state.owners.push(row);commitNativeWorldPawnOrder256(state,nativeBefore,nativeAfter);
  }};
 }

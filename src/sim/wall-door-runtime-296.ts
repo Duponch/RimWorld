@@ -7,7 +7,7 @@ import type { Cell, Job, Structure, World } from './types.ts';
 
 /** Only the built, standard single-cell Wall is admitted by this vertical. */
 export function wallDoorTarget296(world:World,kind:string,cell:Cell):Structure|undefined {
-  if(Number(world.schemaVersion)!==296||kind!=='door'&&kind!=='autodoor')return;
+  if((Number(world.schemaVersion)!==296&&Number(world.schemaVersion)!==297)||kind!=='door'&&kind!=='autodoor')return;
   return world.structures.find(s=>s.kind==='wall'&&s.x===cell.x&&s.z===cell.z
     &&s.footprint==='standard'&&footprintCells(s).length===1);
 }

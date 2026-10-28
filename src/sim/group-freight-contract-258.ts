@@ -18,7 +18,7 @@ export function regularGroupFreight258(pile:MaterialPile,version:number):boolean
  return regularGroupFreightItem258(pile.item,version);
 }
 export function regularGroupFreightItem258(item:ItemId,version:number):boolean {
- if(item==='novel')return (version===295||version===296);
+ if(item==='novel')return (version===295||(version===296||version===297));
  if(isProstheticItem273(item))return isSchema273OrLater(version)&&groupCaravanUnitMass256(item,true,version)!==undefined;
  if(item==='hops'||item==='wort'||item==='beer')return version>=265&&groupCaravanUnitMass256(item,true,version)!==undefined;
  return version>=258&&['medicine','component','advanced-component','weapon','apparel','blocks','gold','plasteel','uranium','jade','chemfuel','neutroamine','textile','wood','steel','chunk'].includes(ITEM_DEFINITIONS[item].kind)&&groupCaravanUnitMass256(item,true,version)!==undefined;

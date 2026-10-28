@@ -1,3 +1,5 @@
+import {validCorePathBudget297} from '../sim/core-path-budget-297';
+import {effectiveCore297,validPhaseCore297} from '../sim/core-phase-297';
 import {validWallDoorHistoricalTransport296,validWallDoorWorld296,registerWallDoorPlanIds296} from '../sim/wall-door-save-296.ts';
 import {validNovelPile295,validNovelHistoricalTransport295} from '../sim/book-save-295.ts';
 import {validReadingWorld295} from '../sim/book-transport-295.ts';
@@ -587,17 +589,18 @@ type StructurelessDynamicWorld = Omit<DynamicWorld, 'structures'> & { readonly s
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
 interface PileChanges { removed: number[]; upserted: MaterialPile[]; order?: number[] }
 export interface StructureChanges { removed: number[]; upserted: Structure[]; order?: number[] }
-interface SnapshotHeader { explorationApproachers?:import('../sim/exploration-door-256.ts').ExplorationApproacher256[]; geography?:PlanetGeographyTransport256; urgentThreats?:import('./urgent-threats').UrgentThreatSnapshot; motion?:import('../bridge/motion-tracks.ts').PawnTrack[]; audioCues?:import('../bridge/audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
+interface SnapshotHeader { corePhase297?:import('./core-phase-projection-297').CoreFullPhaseMetadata297; explorationApproachers?:import('../sim/exploration-door-256.ts').ExplorationApproacher256[]; geography?:PlanetGeographyTransport256; urgentThreats?:import('./urgent-threats').UrgentThreatSnapshot; motion?:import('../bridge/motion-tracks.ts').PawnTrack[]; audioCues?:import('../bridge/audio-cues.ts').AudioCue[]; type: 'snapshot'; epoch: number; revision: number; stepMs: number; speed: number }
 function validMiningTransport(pawn:Pawn,version:number):boolean {
   return !(version<186&&pawn.skills&&Object.hasOwn(pawn.skills,'mining'))&&validMiningSkill(pawn.skills?.mining,version);
 }
 /** Private crisis/retaliation ownership follows the same shape contract as a
  * save. Target relations are checked after the complete delta is reconstructed. */
-function validMentalTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'|'width'|'height'>):boolean {
+function validMentalTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'|'width'|'height'|'phaseCore297'>):boolean {
+  const coreNow297=Number(world.schemaVersion)===297?effectiveCore297(world):undefined;
   return !(world.schemaVersion<192&&Object.hasOwn(pawn,'meleeThreat'))
     &&validMentalShape(pawn.mental,world.schemaVersion,world.tick,world.width,world.height)
-    &&validMeleeThreatShape(pawn.meleeThreat,world.schemaVersion,world.tick)
-    &&validMeleeShape(pawn.melee,world.schemaVersion,world.tick);
+    &&validMeleeThreatShape(pawn.meleeThreat,world.schemaVersion,world.tick,coreNow297)
+    &&validMeleeShape(pawn.melee,world.schemaVersion,world.tick,coreNow297);
 }
 /** Sparse historical offers keep both fields absent. Active owners use the
  * same age/profile rules on and off the map; archives are not rewritten. */
@@ -697,9 +700,9 @@ function denseArray(value:unknown):value is unknown[] {
 function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'|'tick'>):value is Structure {
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   if(!validCaveHiveBuilding256(value,world.schemaVersion,world)||!validAncientCasketField256(value,world.schemaVersion)||!validLocalRoadPropStructure256(value,world.schemaVersion,world)||!validHumanSleepingSpotStructureEntry(value,world.schemaVersion,world)||!validBedrollStructureEntry256(value,world.schemaVersion,world)||!validAncientMonumentBuilding256(value,world.schemaVersion))return false;
-  if(!validShipCasketBuilding277(value,world.schemaVersion,world,world.tick))return false;
-  if(!validShipReactorBuilding275(value,world.schemaVersion,world,world.tick*10)||!validShipHullBuilding276(value,world.schemaVersion,world))return false;
-  if(!validAncientCasketBuilding256(value,world.schemaVersion,world)||!validCryptosleepBuilding271(value,world.schemaVersion,world,world.tick))return false;
+  if(!validShipCasketBuilding277(value,world.schemaVersion,world,world.tick,Number(world.schemaVersion)===297?effectiveCore297(world):undefined))return false;
+  if(!validShipReactorBuilding275(value,world.schemaVersion,world,effectiveCore297(world))||!validShipHullBuilding276(value,world.schemaVersion,world))return false;
+  if(!validAncientCasketBuilding256(value,world.schemaVersion,world,Number(world.schemaVersion)===297?world.tick:undefined,Number(world.schemaVersion)===297?effectiveCore297(world):undefined)||!validCryptosleepBuilding271(value,world.schemaVersion,world,world.tick,Number(world.schemaVersion)===297?effectiveCore297(world):undefined))return false;
   const s=value as Structure;
   return Number.isSafeInteger(s.id)&&s.id>=1&&s.id<world.nextId
     &&typeof s.kind==='string'&&Object.hasOwn(STRUCTURE_DEFINITIONS,s.kind)
@@ -790,7 +793,7 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld,deferAnimalHolder=
     if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&(s.kind==='grave'||world.schemaVersion>=256&&s.kind==='sarcophagus'))
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
   }else return false;
-  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','prostheticWork273','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden',...((Number(world.schemaVersion)===295||Number(world.schemaVersion)===296)?['book']:[])].includes(key)))return false;
+  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','prostheticWork273','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden',...((Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))?['book']:[])].includes(key)))return false;
   if(!validMaterialPermission256(pile,world.schemaVersion))return false;
   if(!validEggPile256(pile,world.schemaVersion,heldDuckInventoryClock256(world,pile,world.schemaVersion,world.tick),world.nextId)||world.schemaVersion<256&&isFutureEcologyItem256(pile.item))return false;
   if(world.schemaVersion<194&&Object.hasOwn(pile,'mechCorpse'))return false;
@@ -1144,10 +1147,11 @@ export class SnapshotDecoder {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
     if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
     if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
+    if(!validPhaseCore297(packet.summary,packet.summary.schemaVersion)||!validCorePathBudget297(packet.summary,packet.summary.schemaVersion,packet.summary.tick,Number(packet.summary.schemaVersion)===297?Number(Object.getOwnPropertyDescriptor(packet.summary,'phaseCore297')?.value):0,false))return refuse();
     if(!validWallDoorHistoricalTransport296(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validNovelHistoricalTransport295(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validToxicFalloutTransport294(packet.summary,packet.summary.schemaVersion)||!validPeaceTalksHistorical293(packet.summary,packet.summary.schemaVersion)||!validPartyHistoricalTransport292(packet.summary,packet.summary.schemaVersion)||!validForestryHistoricalTransport291(packet.summary,packet.summary.schemaVersion)||!validFirefoamHistoricalTransport290(packet.summary,packet.summary.schemaVersion)||!validBillPauseHistoricalTransport289(packet.summary,packet.summary.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet.summary,packet.summary.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet.summary,packet.summary.schemaVersion)||!validLinkedStorageHistorical286(packet.summary,packet.summary.schemaVersion)||!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
-    if(!validWorldPawnsEnvelope256(packet.summary,packet.summary.schemaVersion,packet.summary.tick*10,packet.summary.nextId))return refuse();
+    if(!validWorldPawnsEnvelope256(packet.summary,packet.summary.schemaVersion,effectiveCore297(packet.summary),packet.summary.nextId))return refuse();
     if(!validPlanetGeographyHistorical256(packet.summary,packet.summary.schemaVersion))return refuse();
     const geographic=this.geographicTransport.prepare(packet.summary,packet.geography,Object.hasOwn(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return refuse();
     if(!validCampaignSummary(geographic.state)||!validFirefoamWorld290(geographic.state)||!validBillPauseWorld289(geographic.state)||!validAnimalThermalRefugeWorld288(geographic.state)||!validAnimalAreaWorld287(geographic.state))return refuse();const summary=geographic.state.worldPawns?.nativeOrder?{...geographic.state}:geographic.state,view=groupWorld(summary,null);if(!view||!this.validGeographicCalendar(view,packet.epoch,summary))return refuse();
@@ -1170,8 +1174,9 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
+    if(!validPhaseCore297(packet.world,packet.world.schemaVersion)||!validCorePathBudget297(packet.world,packet.world.schemaVersion,packet.world.tick,Number(packet.world.schemaVersion)===297?Number(Object.getOwnPropertyDescriptor(packet.world,'phaseCore297')?.value):0,true))return resync('Invalid physical clock or local path-budget owner.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
-    if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,packet.world.tick*10,packet.world.nextId))return resync('Invalid or future WorldPawns header.');
+    if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,effectiveCore297(packet.world),packet.world.nextId))return resync('Invalid or future WorldPawns header.');
     if(!validAnimalTrainingHistoricalTransport282(packet,packet.world.schemaVersion))return resync('Future animal training or hauling.');
     if(!validSmoothFloorsHistoricalTransport281(packet,packet.world.schemaVersion))return resync('Future natural stone smoothing.');
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
@@ -1241,7 +1246,7 @@ export class SnapshotDecoder {
     if(message.world.schemaVersion<194&&(Object.hasOwn(message.world,'mechanoids')||Object.hasOwn(message.world,'mechSalvage')
       ||['mechanoid','mechActive'].some(k=>Object.hasOwn(message.world.raids??{},k))
       ||['mechanoid','mechComposition'].some(k=>Object.hasOwn(message.world.raids?.last??{},k))))return resync('Propriétaire ou calendrier mécanique futur.');
-    if(Object.hasOwn(message.world,'mechanoids')&&(!Array.isArray(message.world.mechanoids)||message.world.mechanoids.some(m=>!validMechanoidShape(m,message.world.schemaVersion,message.world.tick))))return resync('Forme mécanique invalide.');
+    if(Object.hasOwn(message.world,'mechanoids')&&(!Array.isArray(message.world.mechanoids)||message.world.mechanoids.some(m=>!validMechanoidShape(m,message.world.schemaVersion,message.world.tick,undefined,Number(message.world.schemaVersion)===297?effectiveCore297(message.world):undefined))))return resync('Forme mécanique invalide.');
     if(validateDuckFlyers256(message.world,message.world.schemaVersion).length)return resync('Invalid actual Duck holder before pile owner lookup.');
     if(message.world.wildlife?.animals.some(a=>isMechanoidKind(a.health?.body)))return resync('Dossier mécanique attribué à un animal.');
     if(message.world.schemaVersion<194&&[...message.world.structures,...message.world.packed.map(p=>p.building)].some(s=>s.bills?.some(b=>['smash-mechanoid','shred-mechanoid'].includes(b.recipe))))return resync('Facture mécanique future.');
@@ -1260,8 +1265,8 @@ export class SnapshotDecoder {
     if(message.world.fires!==undefined&&!validFireResourceLosses(message.world.fires?.ledger?.resources,message.world.schemaVersion))return resync('Pertes végétales du feu invalides pour ce snapshot.');
     if(message.world.schemaVersion<193&&(Object.hasOwn(message.world,'bombWaves')||Object.hasOwn(message.world.research??{},'gunTurrets')
       ||[...message.world.structures,...message.world.jobs,...message.world.packed.map(p=>p.building)].some(s=>s.kind==='mini-turret'||Object.hasOwn(s,'turret'))))return resync('Tourelle, recherche ou vague future.');
-    for(const s of message.world.structures)if(Object.hasOwn(s,'turret')&&!validMiniTurretShape(s.turret,message.world.schemaVersion,message.world.tick*10,message.world.nextId))return resync('Canon intrinsèque invalide.');
-    if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion))))return resync('Forme de vague Bomb invalide.');
+    for(const s of message.world.structures)if(Object.hasOwn(s,'turret')&&!validMiniTurretShape(s.turret,message.world.schemaVersion,effectiveCore297(message.world),message.world.nextId))return resync('Canon intrinsèque invalide.');
+    if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion,Number(message.world.schemaVersion)===297?effectiveCore297(message.world):undefined))))return resync('Forme de vague Bomb invalide.');
     let hasDraftedTend=false;const forcedConsumers:Pawn[]=[];
     for(const pawn of message.world.pawns){
       if(!validCouplePawnShape285(pawn,message.world.schemaVersion,message.world.tick))return resync('Activité, horloge ou souvenir de couple invalide ou futur.');
@@ -1286,9 +1291,9 @@ export class SnapshotDecoder {
       if(!validDeathThoughtsPawnShape(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,message.world.tick))return resync('Souvenir de décès perçu invalide ou futur.');
       if(Object.hasOwn(pawn,'bombRefuge')&&!validBombRefugeShape(pawn.bombRefuge,message.world.schemaVersion))return resync('Refuge Bomb futur ou invalide.');
       if(!validMentalTransport(pawn,message.world))return resync('Crise mentale, menace ou autorité de mêlée invalide pour ce snapshot.');
-      if(!validShootingShape(pawn.shooting,message.world.schemaVersion,message.world.tick)
+      if(!validShootingShape(pawn.shooting,message.world.schemaVersion,message.world.tick,Number(message.world.schemaVersion)===297?effectiveCore297(message.world):undefined)
         ||!validShootingLeanOwner(pawn,message.world,message.world.schemaVersion)
-        ||pawn.shooting!==undefined&&!validStunShape(pawn.stun,message.world.schemaVersion,message.world.tick))return resync('Phase de tir humaine invalide pour ce snapshot.');
+        ||pawn.shooting!==undefined&&!validStunShape(pawn.stun,message.world.schemaVersion,message.world.tick,45,Number(message.world.schemaVersion)===297?effectiveCore297(message.world):undefined))return resync('Phase de tir humaine invalide pour ce snapshot.');
       if(!validBackgroundTransport(pawn,message.world.schemaVersion))return resync('Âge ou passé personnel invalide pour ce snapshot.');
       if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');
       if(!validImmuneDiseaseTransport(pawn,message.world))return resync('Maladie immunitaire invalide pour ce snapshot.');
@@ -1626,7 +1631,7 @@ export class SnapshotDecoder {
     if(next.pawns.some(p=>!validArrivalRotation256(p,next.schemaVersion)))return resync('Orientation d’arrivée retenue invalide ou future.');
     if(!validAnimalTrainingWorld282(next))return resync('Dressage ou transport animal incohérent.');
     if(!validWildlifePredationState(next,next.schemaVersion))return resync('Prédation de faune invalide.');
-    if(!validWildlifeManhunterState(next,next.schemaVersion))return resync('Rage de faune invalide.');
+    if(!validWildlifeManhunterState(next,next.schemaVersion,Number(next.schemaVersion)===297?effectiveCore297(next):undefined))return resync('Rage de faune invalide.');
     if(validateQuests(next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
     if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
       const registry=scoutRegistryView(next),pawn=next.scout.pawn;

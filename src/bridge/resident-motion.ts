@@ -1,3 +1,4 @@
+import {validCapturedCoreMove297} from '../sim/core-move-save-297.ts';
 import {MotionRecorder,type PawnTrack} from './motion-tracks.ts';
 import type {PresentationSegment} from '../sim/travel-timing.ts';
 import type {SnapshotMessage} from './snapshots.ts';
@@ -8,12 +9,17 @@ const integer=(v:unknown,min=0):v is number=>typeof v==='number'&&Number.isSafeI
 function record(v:unknown):v is Data {return !!v&&typeof v==='object'&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&Object.getOwnPropertyDescriptor(v,k)?.enumerable===true&&own(Object.getOwnPropertyDescriptor(v,k)!,'value'));}
 function dense(v:unknown):v is unknown[]{if(!Array.isArray(v)||Object.getPrototypeOf(v)!==Array.prototype||Reflect.ownKeys(v).length!==v.length+1)return false;for(let i=0;i<v.length;i++){const d=Object.getOwnPropertyDescriptor(v,String(i));if(!d?.enumerable||!own(d,'value'))return false;}return true;}
 const exact=(v:Data,keys:string[])=>Object.keys(v).length===keys.length&&Object.keys(v).every(k=>keys.includes(k));
-function copy(v:unknown,depth=0):unknown {
+function validPresentationStop297(v:Data,version:number):boolean {
+ if(!('stop297'in v))return true;
+ if(version!==297||v.stop297!==true||!exact(v,['from','to','start','end','fromFraction','toFraction','stop297'])||!record(v.from)||!record(v.to)||!exact(v.from,['x','z'])||!exact(v.to,['x','z']))return false;
+ return typeof v.from.x==='number'&&Number.isFinite(v.from.x)&&typeof v.from.z==='number'&&Number.isFinite(v.from.z)&&v.from.x===v.to.x&&v.from.z===v.to.z&&typeof v.start==='number'&&Number.isFinite(v.start)&&v.start>=0&&v.end===v.start&&Number.isSafeInteger(v.start*10)&&v.fromFraction===0&&v.toFraction===0;
+}
+function copy(v:unknown,depth=0,version?:number):unknown {
  if(depth>12)throw Error('Motion data depth');
  if(v===null||v===undefined||['number','string','boolean'].includes(typeof v))return v;
- if(dense(v))return v.map(x=>copy(x,depth+1));
- if(!record(v))throw Error('Motion requires plain own data');const out:Data={};
- for(const key of Object.keys(v))Object.defineProperty(out,key,{value:copy(v[key],depth+1),enumerable:true,writable:true,configurable:true});return out;
+ if(dense(v))return v.map(x=>copy(x,depth+1,version));
+ if(!record(v))throw Error('Motion requires plain own data');if(version!==undefined&&(!validCapturedCoreMove297(v,version)||!validPresentationStop297(v,version)))throw Error('Invalid or future captured Core motion');const out:Data={};
+ for(const key of Object.keys(v))Object.defineProperty(out,key,{value:copy(v[key],depth+1,version),enumerable:true,writable:true,configurable:true});return out;
 }
 function same(a:unknown,b:unknown):boolean {
  if(Object.is(a,b))return true;if(!a||!b||typeof a!=='object'||typeof b!=='object')return false;
@@ -22,8 +28,9 @@ function same(a:unknown,b:unknown):boolean {
  return keys.length===other.length&&keys.every((k,i)=>k===other[i]&&same((a as Data)[k as string],b[k as string]));
 }
 function freezeCopied(v:unknown):unknown {const result=copy(v);const freeze=(x:unknown):void=>{if(x&&typeof x==='object'){for(const key of Object.keys(x))freeze((x as Data)[key]);Object.freeze(x);}};freeze(result);return result;}
-function segment(v:unknown):v is PresentationSegment {
- if(!record(v)||Object.keys(v).some(k=>!['from','to','start','end','terrainDelay','speedFactor','stagger','stuns','animalFlight','snowEntryPending','edgeStart','fromFraction','toFraction'].includes(k)))return false;
+function segment(v:unknown,version:number):v is PresentationSegment {
+ if(!record(v)||Object.keys(v).some(k=>!['from','to','start','end','terrainDelay','speedFactor','stagger','stuns','animalFlight','snowEntryPending','edgeStart','fromFraction','toFraction',...(version===297?['coreMove297','coreMoveWalk297','stop297']:[])].includes(k)))return false;
+ if(!validCapturedCoreMove297(v,version)||!validPresentationStop297(v,version))return false;
  for(const name of ['from','to']){const c=v[name];if(!record(c)||!exact(c,['x','z'])||typeof c.x!=='number'||!Number.isFinite(c.x)||typeof c.z!=='number'||!Number.isFinite(c.z))return false;}
  if(typeof v.start!=='number'||!Number.isFinite(v.start)||typeof v.end!=='number'||!Number.isFinite(v.end)||v.end<v.start)return false;
  try{copy(v);return true;}catch{return false;}
@@ -57,7 +64,7 @@ export class ResidentMotionEncoder {
   const source=packet as unknown as Data,stamp=source.motion&&typeof source.motion==='object'?certified.get(source.motion):undefined;
   let section:Section,next:Held[]=[];
   if(!own(source,'motion'))section={mode:'absent'};
-  else if(!stamp)section={mode:'literal',value:copy(source.motion)};
+  else if(!stamp)section={mode:'literal',value:copy(source.motion,0,packet.world.schemaVersion)};
   else {
    const tracks=source.motion as PawnTrack[],old=this.previous,reset=packet.kind==='checkpoint'||old?.stamp?.owner!==stamp.owner||old?.stamp?.generation!==stamp.generation,
     before=reset?[]:old!.rows,byId=new Map(before.map(row=>[row.id,row])),rows:Patch[]=[],seen=new Set<number>();
@@ -71,7 +78,7 @@ export class ResidentMotionEncoder {
       keep++;
      }
     }
-    const appended=current.slice(keep).map(value=>{if(!segment(value))throw Error('Invalid recorded motion segment');return copy(value) as PresentationSegment;});
+    const appended=current.slice(keep).map(value=>{if(!segment(value,packet.world.schemaVersion))throw Error('Invalid recorded motion segment');return copy(value) as PresentationSegment;});
     const values=prior?prior.values.slice(drop,drop+keep).concat(appended):appended;
     if(!prior||drop||keep!==prior.sources.length||appended.length)rows.push({id:track.id,drop,keep,append:appended});
     next.push({id:track.id,sources:current.slice(),values});
@@ -101,7 +108,7 @@ export class ResidentMotionFrameOwner {
    ||raw.epoch!==packet.epoch||raw.revision!==packet.revision||raw.tick!==packet.world.tick||raw.checkpoint!==(packet.kind==='checkpoint')||packet.kind==='delta'&&raw.baseRevision!==packet.baseRevision||!record(raw.section))return;
   const section=raw.section;let value:unknown,tracks:PawnTrack[]|undefined,presence=true;
   if(section.mode==='absent'){if(!exact(section,['mode'])||own(packet,'motion'))return;presence=false;}
-  else if(section.mode==='literal'){if(!exact(section,['mode','value'])||!own(packet,'motion')||(packet as unknown as Data).motion!==0)return;try{value=copy(section.value);}catch{return;}}
+  else if(section.mode==='literal'){if(!exact(section,['mode','value'])||!own(packet,'motion')||(packet as unknown as Data).motion!==0)return;try{value=copy(section.value,0,packet.world.schemaVersion);}catch{return;}}
   else if(section.mode==='tracks'){
    if(!exact(section,own(section,'order')?['mode','reset','count','removed','rows','order']:['mode','reset','count','removed','rows'])||typeof section.reset!=='boolean'||packet.kind==='checkpoint'&&!section.reset
     ||!integer(section.count)||section.count>=packet.world.nextId||!dense(section.removed)||!dense(section.rows)||own(section,'order')&&!dense(section.order)
@@ -110,7 +117,7 @@ export class ResidentMotionFrameOwner {
    if(section.reset&&(section.removed.length||own(section,'order')))return;
    for(const id of section.removed){if(!integer(id,1)||touched.has(id)||!byId.has(id))return;touched.add(id);byId.delete(id);}
    for(const item of section.rows){
-    if(!record(item)||!exact(item,['id','drop','keep','append'])||!integer(item.id,1)||item.id>=packet.world.nextId||touched.has(item.id)||!integer(item.drop)||!integer(item.keep)||!dense(item.append)||!item.append.every(segment))return;
+    if(!record(item)||!exact(item,['id','drop','keep','append'])||!integer(item.id,1)||item.id>=packet.world.nextId||touched.has(item.id)||!integer(item.drop)||!integer(item.keep)||!dense(item.append)||!item.append.every(value=>segment(value,packet.world.schemaVersion)))return;
     touched.add(item.id);const prior=byId.get(item.id),held=prior?.segments??[];
     if(item.drop+item.keep>held.length||!prior&&(item.drop||item.keep))return;
     const segments=held.slice(item.drop,item.drop+item.keep).concat(item.append.map(v=>freezeCopied(v) as PresentationSegment));

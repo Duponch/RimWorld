@@ -31,6 +31,7 @@ export type Request =
 export interface CaravanEncounterProgressMessage261 {type:'caravan-encounter-progress';groupId:number;phase:string;reason?:string}
 export interface CaravanTradeArrivalMessage261 {type:'caravan-trade-arrival';groupId:number;settlementId:number;factionId:number;postId:number;checkpoint:{epoch:number;revision:number}}
 export type Response =
+  | import('./core-phase-projection-297').CorePhaseEnvelope297
   | CaravanTradeArrivalMessage261
   | CaravanEncounterProgressMessage261
   | WorldDraftPreviewMessage256

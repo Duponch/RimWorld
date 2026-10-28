@@ -16,9 +16,9 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const storageKeys=new Set<string>(['furniture','plant',...Object.values(ITEM_DEFINITIONS).map(d=>d.kind)]);
 export function validShelfSettings(value:unknown,version:number):boolean {
-  if(object(value)&&object(value.filters)&&'book'in value.filters){const d=Object.getOwnPropertyDescriptor(value.filters,'book');if((version!==295&&version!==296)||!d||!d.enumerable||!Object.hasOwn(d,'value')||typeof d.value!=='boolean')return false;}
+  if(object(value)&&object(value.filters)&&'book'in value.filters){const d=Object.getOwnPropertyDescriptor(value.filters,'book');if((version!==295&&(version!==296&&version!==297))||!d||!d.enumerable||!Object.hasOwn(d,'value')||typeof d.value!=='boolean')return false;}
   if(version<229||!object(value)||Reflect.ownKeys(value).some(k=>typeof k!=='string'||!['filters','priority','capacity','items','quality','hitPoints','allowFresh','allowRotten'].includes(k)))return false;
-  return object(value.filters)&&Reflect.ownKeys(value.filters).every(k=>typeof k==='string'&&storageKeys.has(k)&&(k!=='book'||(version===295||version===296))&&(isSchema273OrLater(version)||k!=='prosthesis')&&(version>=265||k!=='wort'&&k!=='beer')&&(version>=256||k!=='jade')&&(version>=241||k!=='uranium')&&(version>=235||k!=='plant')&&typeof value.filters![k as never]==='boolean')
+  return object(value.filters)&&Reflect.ownKeys(value.filters).every(k=>typeof k==='string'&&storageKeys.has(k)&&(k!=='book'||(version===295||(version===296||version===297)))&&(isSchema273OrLater(version)||k!=='prosthesis')&&(version>=265||k!=='wort'&&k!=='beer')&&(version>=256||k!=='jade')&&(version>=241||k!=='uranium')&&(version>=235||k!=='plant')&&typeof value.filters![k as never]==='boolean')
     &&integer(value.priority,1,5)&&value.capacity===500&&validStorageItems(value.items,version)&&validStorageConditions(value,version);
 }
 /** Reciprocal building/state admission, shared by files and snapshots. */

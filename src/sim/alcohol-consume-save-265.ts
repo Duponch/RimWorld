@@ -1,3 +1,5 @@
+import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
+import {validCapturedCoreMove297} from './core-move-save-297.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import {isColonist} from './affiliation.ts';
 import {pawnBody} from './health-rules.ts';
@@ -51,12 +53,12 @@ export function validAlcoholConsumePawnShape265(pawn:{need?:unknown;orders?:unkn
 function validTravel(p:Pawn,w:World):boolean {
  if(!Number.isFinite(p.moveCooldown)||p.moveCooldown<0||p.moveCooldown>MAX_PAWN_DELAY_V226)return false;
  const m=p.motion;if(m==null)return p.moveCooldown===0;
- return !!m&&typeof m==='object'&&cell(m.from,w)&&cell(m.to,w)&&same(m.to,p)&&step(m.from,m.to)===1
-  &&Number.isFinite(m.start)&&Number.isFinite(m.end)&&m.start>=0&&m.start<=w.tick
-  &&validStunIntervals(m.stuns,w.schemaVersion,m.start,w.tick)&&validSlowIntervals(m.stagger,w.schemaVersion,m.start,w.tick)
+ return !!m&&typeof m==='object'&&!('stop297'in m)&&cell(m.from,w)&&cell(m.to,w)&&same(m.to,p)&&step(m.from,m.to)===1
+  &&Number.isFinite(m.start)&&Number.isFinite(m.end)&&m.start>=0&&m.start<=effectiveLocal297(w)
+  &&validCapturedCoreMove297(m,w.schemaVersion)&&validStunIntervals(m.stuns,w.schemaVersion,m.start,w.tick,w.schemaVersion===297?effectiveCore297(w):undefined)&&validSlowIntervals(m.stagger,w.schemaVersion,m.start,w.tick,w.schemaVersion===297?effectiveCore297(w):undefined)
   &&(m.speedFactor===undefined||Number.isFinite(m.speedFactor)&&m.speedFactor>=MIN_PAWN_SPEED_V87&&m.speedFactor<=1)
   &&validCapturedTravelDelay(m.terrainDelay,w.schemaVersion)&&Math.abs(m.end-travelEnd(m))<=1e-7
-  &&Math.abs(p.moveCooldown-Math.max(0,m.end-w.tick))<=1e-7;
+  &&Math.abs(p.moveCooldown-Math.max(0,m.end-effectiveLocal297(w)))<=1e-7;
 }
 function actorValid(p:Pawn,w:World,t:Eat):boolean {
  if(!isColonist(p)||p.prisoner||p.visitor||p.raid||p.podRescue||p.health?.body!==undefined||p.health?.death||p.health&&medicalStatus(p.health)!=='mobile')return false;

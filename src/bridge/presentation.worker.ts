@@ -1,3 +1,4 @@
+import {validPhaseCore297} from '../sim/core-phase-297';
 import {ResidentMotionRecorder} from './resident-motion';
 /// <reference lib="webworker" />
 import {startSimulationWorker} from './simulation-runtime';
@@ -97,7 +98,7 @@ class FixedPresentationEncoder extends TerrainJournalSnapshotEncoder {
  }
  override encode(world:World,stepMs:number,speed:number,checkpoint=false):SnapshotMessage<true> {
   if(this.pending){this.clearNatural();this.forcePublicationCheckpoint();}
-  const supported=world.schemaVersion===296;
+  const supported=Number(world.schemaVersion)===296||Number(world.schemaVersion)===297&&validPhaseCore297(world,297);
   if(!supported)this.committed=undefined;
   const prior=this.committed;
   const possible=!!prior&&prior.world===world&&Object.is(prior.tick,world.tick)&&Object.is(prior.schema,world.schemaVersion)&&Object.is(prior.seed,world.seed)&&prior.width===world.width&&prior.height===world.height&&prior.nextId===world.nextId;
@@ -128,4 +129,4 @@ startSimulationWorker(scope,message=>{
  // replaces both retained sections and ordered filth with private wire data.
  const appearance=snapshots.takeNatural(originalPacket),resident=auxiliary.capture(publication);
  scope.postMessage(residentPublication(resident.publication,appearance,resident.auxiliary));
-},()=>new ResidentMotionRecorder());
+},()=>new ResidentMotionRecorder(),(_world,phase)=>scope.postMessage(phase));

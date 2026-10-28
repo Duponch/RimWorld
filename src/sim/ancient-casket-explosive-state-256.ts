@@ -1,3 +1,4 @@
+import {validationCore297} from './core-phase-297.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
@@ -12,12 +13,12 @@ const key=(v:unknown):v is BombInstigatorKey=>typeof v==='string'&&/^(pawn|anima
 function data(v:unknown):v is Record<string,unknown>{return !!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).every(k=>typeof k==='string'&&Object.getOwnPropertyDescriptor(v,k)?.enumerable&&Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)!,'value'));}
 /** A presence fence, including undefined/accessors and non-casket owners. The
  * duration is persisted, never redrawn by RAW/MAIN or owner reconstruction. */
-export function validAncientCasketWickField256(owner:object,version:number,tick=Number.MAX_SAFE_INTEGER):boolean {
+export function validAncientCasketWickField256(owner:object,version:number,tick=Number.MAX_SAFE_INTEGER,coreNow297?:number):boolean {
  const d=Object.getOwnPropertyDescriptor(owner,'casketWick');if(!d)return !('casketWick'in owner);
  const kind=Object.getOwnPropertyDescriptor(owner,'kind')?.value,spatial=isSchema277OrLater(version)&&kind==='ship-cryptosleep-casket';
  if(!isSchema256Or257(version)||!Object.hasOwn(d,'value')||!d.enumerable||!(kind==='ancient-cryptosleep-casket'||isSchema271OrLater(version)&&kind==='cryptosleep-casket'||spatial)||!data(d.value))return false;
- const w=d.value,keys=Object.keys(w);
- if(!keys.every(k=>['startedAtCore','endCore','instigatorKey'].includes(k))||!integer(w.startedAtCore)||!integer(w.endCore,w.startedAtCore+140,w.startedAtCore+150)||tick!==Number.MAX_SAFE_INTEGER&&(!Number.isSafeInteger(tick*10)||w.startedAtCore>tick*10||w.endCore<=tick*10))return false;
+ const w=d.value,keys=Object.keys(w),core=version===297&&tick!==Number.MAX_SAFE_INTEGER?validationCore297(version,tick,coreNow297):tick*10;
+ if(!keys.every(k=>['startedAtCore','endCore','instigatorKey'].includes(k))||!integer(w.startedAtCore)||!integer(w.endCore,w.startedAtCore+140,w.startedAtCore+150)||tick!==Number.MAX_SAFE_INTEGER&&(!Number.isSafeInteger(core)||w.startedAtCore>core||w.endCore<=core))return false;
  if(Object.hasOwn(w,'instigatorKey')&&!key(w.instigatorKey))return false;
  // StartWick is reached only after actual HP<=RoundToInt(.2*MaxHP).
  // The spatial200HP definition never widens ordinary/ancient250HP bounds.

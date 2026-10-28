@@ -8,4 +8,4 @@ export const FIREFOAM_CONTENT_290=Object.freeze({
  pathCostCore:30,detectRadius:3,effectRadius:9.9,useCore:100,
 });
 export const isFirefoamPopper290=(value:unknown):value is 'firefoam-popper'=>value==='firefoam-popper';
-export const firefoamResearchUnlocked290=(world:Pick<World,'schemaVersion'|'research'>):boolean=>(Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||Number(world.schemaVersion)===296))))))&&world.research?.firefoam?.completedAt!==undefined;
+export const firefoamResearchUnlocked290=(world:Pick<World,'schemaVersion'|'research'>):boolean=>(Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297)))))))&&world.research?.firefoam?.completedAt!==undefined;

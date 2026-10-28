@@ -26,7 +26,7 @@ export interface WorldMapRecord {
  postId?:number;
  visit:null|{groupId:number;memberIds:number[];homeEntry:Cell};
 }
-export interface RetiredWorldMap {id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;removedAt:number;reason:'abandon'|'camp-empty'|'battlefield-empty';markerUntilCore?:number}
+export interface RetiredWorldMap {id:number;tile:number|null;kind:WorldMapKind;createdAt:number;settledAt?:number;removedAt:number;removedAtCore297?:number;reason:'abandon'|'camp-empty'|'battlefield-empty';markerUntilCore?:number}
 export interface WorldMapRegistry {
  /** Prospective creation statics; never installed by historical migration. */
  nextLordId?:number;
@@ -75,7 +75,7 @@ const dataRecord=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='objec
 /** Pure envelope attestation; the complete worker save guard remains authoritative. */
 export function isMaplessCampaign(value:unknown):value is MaplessCampaign {
  if(!dataRecord(value)||!Number.isSafeInteger(value.schemaVersion)||Number(value.schemaVersion)<255||!dataRecord(value.worldMaps)||!dataRecord(value.worldGroups))return false;
- const allowed=['schemaVersion','tick','rng','nextId','planet','research','relationships','foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId','foodRules','restRules','gameProfile','worldIncidents','worldMaps','worldGroups',...(Number(value.schemaVersion)>=265?['drugPolicies','nextDrugPolicyId']:[]),...(Number(value.schemaVersion)>=256?['worldFactions','worldPawns']:[]),...(isSchema263OrLater(Number(value.schemaVersion))?['worldSites263']:[]),...(isSchema284OrLater(value.schemaVersion)?['tradeRequests284']:[]),...(isSchema286OrLater(value.schemaVersion)?['linkedStorage286']:[])];
+ const allowed=['schemaVersion','tick',...(Number(value.schemaVersion)===297?['phaseCore297']:[]),'rng','nextId','planet','research','relationships','foodPolicies','nextFoodPolicyId','apparelPolicies','nextApparelPolicyId','foodRules','restRules','gameProfile','worldIncidents','worldMaps','worldGroups',...(Number(value.schemaVersion)>=265?['drugPolicies','nextDrugPolicyId']:[]),...(Number(value.schemaVersion)>=256?['worldFactions','worldPawns']:[]),...(isSchema263OrLater(Number(value.schemaVersion))?['worldSites263']:[]),...(isSchema284OrLater(value.schemaVersion)?['tradeRequests284']:[]),...(isSchema286OrLater(value.schemaVersion)?['linkedStorage286']:[])];
  if(Reflect.ownKeys(value).some(k=>typeof k!=='string'||!allowed.includes(k)))return false;
  const m=value.worldMaps,g=value.worldGroups;return m.revision===1&&m.rootMapId===null&&m.selectedMapId===null&&Array.isArray(m.sites)&&m.sites.length===0&&Reflect.ownKeys(m.sites).length===1&&g.revision===1&&Array.isArray(g.groups)&&Array.isArray(g.losses)&&Array.isArray(g.abandonedPawns)&&Array.isArray(g.abandonedContents)&&Array.isArray(g.legacyTravellers)&&Array.isArray(g.events);
 }

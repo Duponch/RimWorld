@@ -1,0 +1,10 @@
+import {test,expect} from 'vitest';
+import {AudioCueRecorder} from '../src/bridge/audio-cues';
+import {AudioCueScheduler} from '../src/audio/scheduler';
+import type {World} from '../src/sim/types';
+// Numeric observer fixture only, not a valid saved World or a Native source.
+function numeric(){return {schemaVersion:297,tick:0,phaseCore297:0,nextId:100,seed:7,pawns:[],wildlife:{animals:[]},jobs:[],structures:[],piles:[],packed:[],resources:[],deconstructed:{count:0}} as unknown as World;}
+test('an intra-Core strike remains audible after the final World no longer contains that action',()=>{const w=numeric(),a=new AudioCueRecorder();a.capture(w);w.phaseCore297=1;a.capturePhysical297(w,1,[{actorId:7,kind:'human',atCore:1,x:4,z:5}],[]);expect(a.drain()).toEqual([{id:'melee:1:7',tick:.1,kind:'weapon.melee',x:4,z:5}]);});
+test('a mechanical birth produces one cue before macro even when the subsequent observer sees the same projectile',()=>{const w=numeric(),a=new AudioCueRecorder();a.capture(w);w.phaseCore297=1;w.projectiles=[{id:88,emittedAtCore:1,flight:{origin:{x:4,z:5}}}] as World['projectiles'];a.capturePhysical297(w,1,[],[{projectileId:88,atCore:1,x:4,z:5}]);const cues=a.drain();expect(cues).toEqual([{id:'shot:88',tick:.1,kind:'weapon.gunshot',x:4,z:5}]);w.tick=1;w.phaseCore297=0;a.capture(w);expect(a.drain()).toEqual([]);});
+test('same human volley preserves the historical single-shot identity and no gameplay state is written',()=>{const w=numeric(),a=new AudioCueRecorder();a.capture(w);w.phaseCore297=1;const before=JSON.stringify(w);a.capturePhysical297(w,1,[],[{projectileId:88,pawnId:7,atCore:1,x:4.5,z:5.5},{projectileId:89,pawnId:7,atCore:1,x:4.5,z:5.5}]);expect(a.drain()).toEqual([{id:'shot:7:1',tick:.1,kind:'weapon.gunshot',x:4.5,z:5.5}]);expect(JSON.stringify(w)).toBe(before);});
+test('the existing scheduler waits for the fractional confirmed frontier and deduplicates repeated ingestion',()=>{const s=new AudioCueScheduler(),cue={id:'shot:88',tick:20.3,kind:'weapon.gunshot',x:4,z:5};s.ingest([cue]);s.ingest([cue]);expect(s.takeDue(20.2)).toEqual([]);expect(s.takeDue(20.3)).toEqual([cue]);expect(s.takeDue(20.4)).toEqual([]);});
