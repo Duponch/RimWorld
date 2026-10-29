@@ -28,7 +28,7 @@ export function wakeTempleMechGroup256(w:World,member:Mechanoid,atCore:number):v
 /** Invoke only after the real fog transaction, including initial Fog1500. */
 export function wakeUnfoggedTempleMechs256(w:World):void {
  if(!isSchema256Or257(w.schemaVersion)||!w.exploration)return;
- for(const m of w.mechanoids??[])if(m.temple?.awakeAtCore===null&&m.state!=='dead'&&!foggedCell256(w,m.z*w.width+m.x))wakeTempleMechGroup256(w,m,w.tick*10);
+ for(const m of w.mechanoids??[])if(m.temple?.awakeAtCore===null&&m.state!=='dead'&&!foggedCell256(w,m.z*w.width+m.x))wakeTempleMechGroup256(w,m,Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10);
 }
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 export function validTempleMechField256(v:unknown,version:number,tick:number,coreNow297?:number):boolean {
