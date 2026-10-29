@@ -1,4 +1,6 @@
 import {preparePartyRelease292} from './party-release-292.ts';
+import {effectiveCore297} from './core-phase-297.ts';
+import {validStagger} from './stagger.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {projectedCapturePatient259} from './group-human-projection-259.ts';
 import {prospectiveHuman259,captiveAdmission259,autoCapturePatient259,actualReform259,hostedCaptive259} from './group-human-admission-259.ts';
@@ -31,6 +33,9 @@ function humanRows257(prep:GroupHumanPreparation257){
  index={rows:prep.passengers,length:prep.passengers.length,byCarrier,byPatient};rowIndexes.set(prep,index);return index;
 }
 export function groupHumanAdmissionReason257(w:World,p:Pawn,newIntent261=false):string|undefined {
+ return groupHumanAdmissionReasonCore257(w,p,newIntent261,false);
+}
+function groupHumanAdmissionReasonCore257(w:World,p:Pawn,newIntent261:boolean,savedStagger297:boolean):string|undefined {
  if(!w.pawns.includes(p)||p.state==='dead'||p.health?.death)return 'Choisissez une personne vivante présente sur cette carte.';
  const captive=captiveAdmission259(w,p),capture=autoCapturePatient259(w,p);
  if(p.prisoner&&!captive&&!capture)return 'Le captif doit avoir un hôte réel et être sécurisé, ou relever du reformage de ce site.';
@@ -45,7 +50,7 @@ export function groupHumanAdmissionReason257(w:World,p:Pawn,newIntent261=false):
  if(h&&(h.foodPoisoning?.vomit||h.cryptosleepSickness?.vomit||h.flu?.vomit||h.immuneDiseases?.malaria?.vomit||h.toxicBuildup?.vomit||h.toxicBuildup?.vomitRequestedAt!==undefined))return 'L’épisode physique de vomissement doit se terminer.';
  if(p.surgery||p.surgeryRequest||p.rescue?.phase==='carry'||p.animalRescue?.phase==='carry'||w.pawns.some(q=>q!==p&&(q.rescue?.patientId===p.id||q.tend?.patientId===p.id||q.feed?.patientId===p.id||q.ward?.patientId===p.id||q.surgery?.patientId===p.id)))return 'Un soin ou transport physique encore engagé réserve cette personne.';
  if(p.collapsePending&&p.state!=='downed')return 'L’effondrement physique engagé doit se terminer avant la formation.';
- if(p.equipmentDropPending||p.interruptedCargo||p.transitExit||(p.stun?.untilCore??0)>w.tick*10||(p.stagger?.untilCore??0)>w.tick*10)return 'Terminez la restitution ou la réaction physique en cours.';
+ if(p.equipmentDropPending||p.interruptedCargo||p.transitExit||(p.stun?.untilCore??0)>w.tick*10||!savedStagger297&&(p.stagger?.untilCore??0)>w.tick*10)return 'Terminez la restitution ou la réaction physique en cours.';
  if(p.state!=='downed'&&!groupHumanMobile257(p))return 'La personne doit être autonome ou admise comme passager à terre.';
  return undefined;
 }
@@ -158,13 +163,23 @@ const supportsGroupAdmission257=(version:number):boolean=>version===257||version
 export function validGroupAdmission257(value:unknown,version:number):value is GroupAdmission257|undefined {return value===undefined||supportsGroupAdmission257(version)&&record(value)&&fields(value,['revision'])&&(value.revision===1||version>=259&&value.revision===2);}
 /** Raw references are checked against the actual local owner array. This is
  * not a capability flag that can admit another map's human. */
+/** A fine physical impact can follow the last civil admission reconciliation.
+ * Only the save reader may retain its already-owned formation until the next
+ * ordinary reconciliation. New commands and runtime admission keep every refusal. */
+function savedStaggerInCurrentFineWindow297(w:World,p:Pawn,version:number):boolean {
+ if(version!==297||Number(w.schemaVersion)!==version)return false;
+ const stagger=p.stagger;if(!record(stagger)||!fields(stagger,['sinceCore','untilCore']))return false;
+ let core:number;try{core=effectiveCore297(w);}catch{return false;}
+ const macro=w.tick*10;
+ return core>macro&&stagger.sinceCore>macro&&stagger.sinceCore<=core&&validStagger(stagger,version,w.tick,core);
+}
 export function validGroupHumanPreparation257(value:unknown,w:World,g:PreparingGroup,version:number,referencesOnly=false):boolean {
  if(value===undefined)return !g.admission;
  if(!supportsGroupAdmission257(version)||!g.admission||!record(value)||!fields(value,['revision','releaseIds','passengers',...Object.hasOwn(value,'undraftIds261')?['undraftIds261']:[]])||value.revision!==1||!dense(value.releaseIds)||!dense(value.passengers))return false;
  const undraft=Object.hasOwn(value,'undraftIds261')?value.undraftIds261:undefined;
  if(Object.hasOwn(value,'undraftIds261')&&((version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))||!dense(undraft)||!undraft.length||undraft.some(id=>!Number.isSafeInteger(id)||!g.memberIds.includes(id as number))||new Set(undraft).size!==undraft.length))return false;
  const ids=new Set(g.memberIds),pawns=new Map(w.pawns.map(p=>[p.id,p])),released=new Set<number>(),patients=new Set<number>(),carrying=new Set<number>();
- const members=g.memberIds.map(id=>pawns.get(id));if(!referencesOnly&&(members.some(p=>!p||!!groupHumanAdmissionReason257(w,p,Array.isArray(undraft)&&undraft.includes(p.id)))||!members.some(p=>groupFreeHuman257(p!)&&groupHumanMobile257(p!))))return false;
+ const members=g.memberIds.map(id=>pawns.get(id));if(!referencesOnly&&(members.some(p=>!p||!!groupHumanAdmissionReasonCore257(w,p,Array.isArray(undraft)&&undraft.includes(p.id),savedStaggerInCurrentFineWindow297(w,p,version)))||!members.some(p=>groupFreeHuman257(p!)&&groupHumanMobile257(p!))))return false;
  for(const id of value.releaseIds){if(!Number.isSafeInteger(id)||!ids.has(id as number)||released.has(id as number))return false;released.add(id as number);}
  if(released.size&&g.phase!=='gathering')return false;
  if(!referencesOnly&&Array.isArray(undraft)&&undraft.some(id=>!pawns.get(id as number)?.draft))return false;
