@@ -550,7 +550,11 @@ export class NativeStage {
     }
     const hit=this.hit(event.clientX,event.clientY);
     const box=this.pageBox,x=event.clientX/this.displayScale,y=event.clientY/this.displayScale,inside=!!box&&x>=box.x&&x<=box.x+box.width&&y>=box.y&&y<=box.y+box.height;
-    const outside=event.button===0&&this.page&&this.page.closable!==false&&!this.belongsToPage(hit)&&(!inside||!!hit)?this.page.id:undefined;
+    // Map tool palettes keep empty-world presses on the renderer's gesture path.
+    // Actual UI hits and release-over-UI cancellation retain their ordinary rules.
+    const paletteWorldPress=event.button===0&&event.isPrimary&&!!box&&!hit&&!inside&&this.worldVisible&&!this.frontVisible&&!this.editor&&!this.dropdown&&!this.page?.modal
+      &&this.page?.layout==='palette'&&(this.page.palette==='orders'||this.page.palette==='zones');
+    const outside=!paletteWorldPress&&event.button===0&&this.page&&this.page.closable!==false&&!this.belongsToPage(hit)&&(!inside||!!hit)?this.page.id:undefined;
     if(outside&&(!hit||hit.piece.userData.nativeStatic||hit.control?.disabled||this.dropdown&&!this.dropdown.pieces.includes(hit.piece))){
       this.dismissPage();this.dismissedPointer=event.pointerId;this.swallow(event);return;
     }
