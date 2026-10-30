@@ -447,7 +447,7 @@ export class WeatherCloudLayer {
         const handle=this.animationHandles[index]??(this.animationHandles[index]=this.detail.createHandle());
         const previous=handle.level;
         const due=this.detail.shouldSample(handle,this.centerX+x,CLOUD_BASE_HEIGHT+(index%3)*CLOUD_BAND_SPACING+d*CLOUD_BAND_JITTER,this.centerZ+z);
-        if(!due||handle.level===0&&!poseChanged&&previous===0)continue;
+        if(handle.level===1?!poseChanged&&previous===1:!due||handle.level===0&&!poseChanged&&previous===0)continue;
       }
       const threshold = this.seededPositions[at+4]!;
       const activation = smoothstep(threshold - .075, threshold + .075, coverage);

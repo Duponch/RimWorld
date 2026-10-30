@@ -1312,7 +1312,11 @@ export class PawnLayer {
   }
   private captureAnimation(slot:number,owner?:number):void {
     const g=this.pawnMesh!.geometry,live=sampleActorRoot(g.getAttribute('aFrom'),g.getAttribute('aTo'),g.getAttribute('aTravel'),slot,this.travelTime.value,this.blend.value,this.animationRoot);
-    const due=owner===undefined?this.animationCache.shouldCapture(slot,live.x,live.y,live.z):this.animationCache.shouldCaptureLinked(slot,this.animationCache,owner);
+    const motion=g.getAttribute('aMotion'),cargo=g.getAttribute('aCargo'),pose=motion.getZ(slot);
+    // Awake idle actors breathe/blink. Even a reclined original rig can
+    // oscillate carried arms; decide from the actual encoded presentation.
+    const continuousMiddle=pose!==POSE_SLEEP&&pose!==POSE_DEAD||motion.getX(slot)!==0||Math.abs(cargo.getX(slot))>.5||Math.abs(cargo.getW(slot))>.0001;
+    const due=owner===undefined?this.animationCache.shouldCapture(slot,live.x,live.y,live.z,1,continuousMiddle):this.animationCache.shouldCaptureLinked(slot,this.animationCache,owner);
     if(!due)return;
     const root=owner!==undefined&&this.animationCache.readRoot(owner,this.linkedRoot)?this.linkedRoot:live;
     const time=owner===undefined?this.time.value:this.animationCache.cpuClock(owner,'time')??this.time.value;

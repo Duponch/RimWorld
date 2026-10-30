@@ -515,8 +515,9 @@ export class ActionVfxLayer {
     for(const row of this.activeRows){
       const level=this.cache.sample(row,to.getX(row),to.getY(row),to.getZ(row),()=>this.bake(row));if(level===2)continue;
       const effectChanged=values.getX(count)!==this.effects.getX(row)||values.getY(count)!==this.effects.getY(row)||values.getZ(count)!==this.effects.getZ(row)||values.getW(count)!==this.effects.getW(row);
-      if(level===0&&changed||effectChanged||this.drawn[count]!==row){
-        if(level===0||this.drawn[count]!==row){for(const name of sourceNames){const input=source.getAttribute(name),output=geometry.getAttribute(name) as THREE.InstancedBufferAttribute;output.setXYZW(count,input.getX(row),input.getY(row),input.getZ(row),input.getW(row));}poseDirty=true;}
+      const original=level===0||level===1&&this.cache.continuousMiddle;
+      if(original&&changed||effectChanged||this.drawn[count]!==row){
+        if(original||this.drawn[count]!==row){for(const name of sourceNames){const input=source.getAttribute(name),output=geometry.getAttribute(name) as THREE.InstancedBufferAttribute;output.setXYZW(count,input.getX(row),input.getY(row),input.getZ(row),input.getW(row));}poseDirty=true;}
         values.setXYZW(count,this.effects.getX(row),this.effects.getY(row),this.effects.getZ(row),this.effects.getW(row));slots.setX(count,row);this.drawn[count]=row;dirty=true;
       }count++;
     }

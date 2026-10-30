@@ -21,7 +21,7 @@ export class FxAnimationCache {
   private dirty=false;
   readonly minimumScale=uniform(1).setGroup(renderGroup);
   private readonly slot=varying(uint(attribute('fxSlot','float'))).setInterpolation('flat');
-  constructor(readonly cells:number,readonly detail?:AnimationDetail){
+  constructor(readonly cells:number,readonly detail?:AnimationDetail,readonly continuousMiddle=true){
     this.values=new Float32Array(cells*4);this.image=this.makeTexture();this.node=texture(this.image);
   }
   private makeTexture():DataTexture {
@@ -54,18 +54,18 @@ export class FxAnimationCache {
     this.ensure(row+1);
     const handle=this.handles[row]??(this.handles[row]=this.detail.createHandle());
     const due=this.detail.shouldSample(handle,x,y,z,scale),level=handle.level as 0|1|2;
-    return level===1&&due;
+    return level===1&&due&&!this.continuousMiddle;
   }
   commitSample(row:number):0|1|2 {
     if(!this.detail)return 0;
     const level=this.handles[row]!.level as 0|1|2;
-    this.set(row,0,level);return level;
+    this.set(row,0,this.continuousMiddle&&level===1?0:level);return level;
   }
   /** A carried effect follows its owner's actual publication, not another
    * distance threshold or a particle instance's unrelated slot. */
   sampleLinked(row:number,level:0|1|2,publication:number,writer:()=>void):0|1|2 {
-    if(level===1&&this.linkedPublications[row]!==publication)writer();
-    this.linkedPublications[row]=publication;this.set(row,0,level);return level;
+    if(level===1&&!this.continuousMiddle&&this.linkedPublications[row]!==publication)writer();
+    this.linkedPublications[row]=publication;this.set(row,0,this.continuousMiddle&&level===1?0:level);return level;
   }
   set(row:number,cell:number,x:number,y=0,z=0,w=0):void {
     this.ensure(row+1);const at=(row*this.cells+cell)*4;
@@ -82,7 +82,7 @@ export class FxAnimationCache {
     const read=this.node.load(ivec2(x,y));read.updateMatrix=false;return read;
   }
   choose<T extends 'float'|'vec2'|'vec3'|'vec4'>(original:()=>Node<T>,cached:()=>Node<T>,initial:Node<T>=vec3(0) as unknown as Node<T>,row:Node<'uint'>=this.slot):Node<T> {
-    if(!this.detail)return original();
+    if(!this.detail||this.continuousMiddle)return original();
     // Retain one result in the caller's shader stack. Reusing a bare
     // ShaderCall can otherwise re-emit its zero initializer without its If.
     return Var<T,Node<T>>(Fn(()=>{const result=Var<T,Node<T>>(initial);

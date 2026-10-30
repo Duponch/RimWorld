@@ -54,8 +54,8 @@ export class NaturalAnimationCache {
     detail.shouldSample(this.sample!,0,0,0);
     const reset=this.capturedEpoch!==this.sample!.epoch||detail.frameTick<this.previousTick||detail.now<this.previousNow;
     this.previousTick=detail.frameTick;this.previousNow=detail.now;
-    if(!reset&&this.capturedTick===detail.middleTick&&this.settings===detail.settings)return false;
-    this.capturedTick=detail.middleTick;this.settings=detail.settings;this.capturedEpoch=this.sample!.epoch;
+    if(!reset&&this.capturedTick===detail.frameTick&&this.settings===detail.settings)return false;
+    this.capturedTick=detail.frameTick;this.settings=detail.settings;this.capturedEpoch=this.sample!.epoch;
     this.wind.value.set(dirX,dirZ,strength);
     this.phaseA.value.set(Math.sin(phaseA),Math.cos(phaseA));
     if(phaseB===phaseA)this.phaseB.value.copy(this.phaseA.value);

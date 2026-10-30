@@ -168,7 +168,7 @@ export class ResourceLayer {
   }
   presentWind(tick:number):void {
     this.windTick.value=((tick%7200)+7200)%7200;
-    if(this.detail){const sample=((this.detail.middleTick%7200)+7200)%7200;
+    if(this.detail){const sample=this.windTick.value;
       this.middleWind.capture(this.detail,this.windDirection.value.x,this.windDirection.value.y,this.windStrength.value,sample*2*Math.PI/48,sample*2*Math.PI/15);}
   }
   setTexturesEnabled(enabled:boolean):void {
@@ -224,7 +224,7 @@ export class ResourceLayer {
       const at=(cycle*2*Math.PI-phase)/11;
       const dx=job.x-pawn.x,dz=job.z-pawn.z,length=Math.hypot(dx,dz)||1;
       const priorHit=this.treeHits.get(treeId);
-      const held=!!priorHit&&!!this.detail&&this.detail.classify(job.x,0,job.z)!==0;
+      const held=!!priorHit&&!!this.detail&&this.detail.classify(job.x,0,job.z)===2;
       if(priorHit&&!held)this.poseTree(treeId,priorHit,0);
       // The first positive lobe leans away from the worker, as if struck.
       this.treeHits.set(treeId,{at,x:job.x,z:job.z,axisX:dz/length,axisZ:-dx/length,
@@ -243,8 +243,7 @@ export class ResourceLayer {
         hit.sample??=this.detail.createHandle();
         const due=this.detail.shouldSample(hit.sample,hit.x,0,hit.z);
         if(hit.sample.level===2){if(hit.angle!==0)this.poseTree(id,hit,0);if(timeSeconds-hit.at>=CHOP_RECOIL_SECONDS)this.treeHits.delete(id);continue;}
-        if(!due)continue;
-        if(hit.sample.level===1)sampleSeconds=hit.sample.tick/TICKS_PER_SECOND;
+        if(!due&&hit.sample.level!==1)continue;
       }
       const angle=chopRecoilAngle(sampleSeconds-hit.at);
       if(angle!==hit.angle||hit.pendingPose){this.poseTree(id,hit,angle);hit.pendingPose=false;}

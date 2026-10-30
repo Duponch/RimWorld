@@ -75,10 +75,13 @@ export class ActorAnimationCache {
     if(!this.shouldCapture(slot,x,y,z,scale))return false;
     writer();this.publish(slot);return true;
   }
-  shouldCapture(slot:number,x:number,y:number,z:number,scale=1):boolean {
+  shouldCapture(slot:number,x:number,y:number,z:number,scale=1,continuousMiddle=false):boolean {
     const entry=this.entries[slot];if(!entry)return false;
     const due=this.detail.shouldSample(entry.handle,x,y,z,scale);
-    if(entry.handle.level===0){if(this.get(slot,1,3)!==0)this.set(slot,1,1,0,0,0);return false;}
+    // A dynamic middle rig uses its existing original GPU graph. A held
+    // 12Hz pose cannot reconstruct fast work/attack phases by interpolation.
+    // Far and genuinely static middle owners retain their original policy.
+    if(entry.handle.level===0||entry.handle.level===1&&continuousMiddle){if(this.get(slot,1,3)!==0)this.set(slot,1,1,0,0,0);return false;}
     return due;
   }
   publish(slot:number):void {
@@ -95,7 +98,9 @@ export class ActorAnimationCache {
   }
   shouldCaptureLinked(slot:number,parent:ActorAnimationCache,parentSlot:number):boolean {
     const entry=this.entries[slot],owner=parent.entries[parentSlot];if(!entry||!owner)return false;
-    if(owner.handle.level===0){entry.handle.level=0;entry.linkedPublication=-1;if(this.get(slot,1,3)!==0)this.set(slot,1,1,0,0,0);return false;}
+    // Original middle carriers must keep their children on the same live
+    // graph, even when their retained handle still classifies as level1.
+    if(owner.handle.level===0||parent.get(parentSlot,1,3)!==1){entry.handle.level=owner.handle.level;entry.linkedPublication=-1;if(this.get(slot,1,3)!==0)this.set(slot,1,1,0,0,0);return false;}
     if(entry.linkedPublication===owner.publication&&entry.handle.level===owner.handle.level)return false;
     entry.handle.level=owner.handle.level;entry.linkedPublication=owner.publication;return true;
   }

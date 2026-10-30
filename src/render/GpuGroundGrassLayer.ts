@@ -364,7 +364,7 @@ export class GpuGroundGrassLayer {
   }
   presentWind(tick:number):void {
     this.windTick.value=((tick%7200)+7200)%7200;
-    if(this.detail){const sample=((this.detail.middleTick%7200)+7200)%7200;
+    if(this.detail){const sample=this.windTick.value;
       this.middleWind.capture(this.detail,this.windDirection.value.x,this.windDirection.value.y,this.windStrength.value,sample*2*Math.PI/18);}
   }
 

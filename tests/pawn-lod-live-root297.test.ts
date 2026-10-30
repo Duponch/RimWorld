@@ -19,6 +19,10 @@ function camera(pixels:number){const c=new THREE.OrthographicCamera(-360/pixels,
 function streams(layer:PawnLayer){const g=layer.feedbackSource;if(!g)throw Error('Actual PawnLayer streams missing');return {g,from:g.getAttribute('aFrom') as THREE.InstancedBufferAttribute,to:g.getAttribute('aTo') as THREE.InstancedBufferAttribute,travel:g.getAttribute('aTravel') as THREE.InstancedBufferAttribute};}
 function livePose(layer:PawnLayer):Pose{const a=streams(layer);expect(a.from.getX(0)).toBe(a.to.getX(0));expect(a.from.getZ(0)).toBe(a.to.getZ(0));return sampleActorRoot(a.from,a.to,a.travel,0,layer.travelTime.value,layer.blend.value);}
 function copyPose(value:Pose|undefined){return value?{x:value.x,y:value.y,z:value.z,yaw:value.yaw}:undefined;}
+// The production picking fallback consumes these published visual vectors
+// when no retained pose exists. This spring fixture already requires equal
+// endpoints, so no independent interpolation model is introduced by the test.
+function originalVisualPose(layer:PawnLayer,id:number):Pose {const visual=layer.visuals.get(id);if(!visual)throw Error('Actual published original visual missing');expect(visual.from.x).toBe(visual.to.x);expect(visual.from.y).toBe(visual.to.y);expect(visual.from.z).toBe(visual.to.z);return{x:visual.from.x,y:visual.from.y,z:visual.from.z,yaw:visual.from.w};}
 function whole(world:World){expect(validateWorld(world)).toEqual([]);const raw=serializeWorld(world),loaded=deserializeWorld(raw);expect(validateWorld(loaded)).toEqual([]);expect(serializeWorld(loaded)).toBe(raw);return raw;}
 function scene(){
   const world=deconstructionCamp(1,32),pawn=world.pawns[0]!;expect(Number(world.schemaVersion)).toBe(297);expect(effectiveCore297(world)).toBe(0);
@@ -34,7 +38,7 @@ function scene(){
 }
 function rigToken(layer:PawnLayer){const values:number[]=[];for(let cell=3;cell<63;cell++)for(let component=0;component<4;component++)values.push(layer.animationCache.get(0,cell,component));return JSON.stringify(values);}
 
-test.each([{pixels:16,level:1,name:'middle16px'},{pixels:4,level:2,name:'far4px'}])('$name: cached rig remains paced while the production CPU presented-root reader follows the live297 root',({pixels,level,name})=>{
+test.each([{pixels:16,level:1,name:'middle16px'},{pixels:4,level:2,name:'far4px'}])('$name: original middle or retained far rig keeps the production displayed root on the live297 path',({pixels,level,name})=>{
   const s=scene(),rows:Row[]=[],c=camera(pixels),near=camera(32),sampleSpy=vi.spyOn(rigSampling,'samplePawnRig');
   let heldRaw:string|undefined,heldRng:number|undefined,heldNextId:number|undefined;
   const frame=(index:number,mode:Row['mode']='cached',view=c)=>{
@@ -43,13 +47,17 @@ test.each([{pixels:16,level:1,name:'middle16px'},{pixels:4,level:2,name:'far4px'
     s.layer.time.value=(s.timeline.tick/6)%(2*Math.PI);
     s.detail.beginFrame(index*1000/60,view,720,s.timeline.tick);
     s.layer.presentAnimations();
-    const live=livePose(s.layer),cache=s.layer.animationCache,presented=copyPose(s.layer.presentedPose(s.pawn.id)),cpuForId=copyPose(s.layer.cpuPoseForId(s.pawn.id));
+    const live=livePose(s.layer),cache=s.layer.animationCache,rawPresented=copyPose(s.layer.presentedPose(s.pawn.id)),cpuForId=copyPose(s.layer.cpuPoseForId(s.pawn.id));
+    const originalMiddle=level===1&&(mode==='cached'||mode==='restored');
+    const presented=rawPresented??(originalMiddle?originalVisualPose(s.layer,s.pawn.id):undefined);
     const row:Row={frame:index,mode,core,tick:s.timeline.tick,ms:index*1000/60,level:s.detail.classify(live.x,live.y,live.z),live,presented,cpuForId,
       cell0:[0,1,2,3].map(component=>cache.get(0,0,component)),publication:cache.cpuPublication(0),clocks:[cache.cpuClock(0,'time'),cache.cpuClock(0,'travelTime'),cache.cpuClock(0,'cargoTime'),cache.cpuClock(0,'blend')],rigToken:rigToken(s.layer),rigCalls:sampleSpy.mock.calls.length,cacheActive:cache.cpuPose(0)!==undefined};
     expect(s.layer.presentedPose(Number.MAX_SAFE_INTEGER)).toBeUndefined();expect(s.layer.cpuPoseForId(Number.MAX_SAFE_INTEGER)).toBeUndefined();
     if(mode==='cached'||mode==='restored'){
-      expect(row.level).toBe(level);expect(row.cacheActive).toBe(true);expect(row.publication).toBeGreaterThan(0);
-      expect.soft(presented,name+' frame'+index+' active cache has a production presented pose').toBeDefined();
+      expect(row.level).toBe(level);expect(row.cacheActive).toBe(level===2);
+      if(level===2)expect(row.publication).toBeGreaterThan(0);
+      else{expect(row.publication).toBe(0);expect(rawPresented).toBeUndefined();expect(cpuForId).toBeUndefined();expect(row.clocks).toEqual([undefined,undefined,undefined,undefined]);}
+      expect.soft(presented,name+' frame'+index+' displayed root comes from its production retained or original visual path').toBeDefined();
       if(presented){expect.soft(presented.x,name+' frame'+index+' presented X follows live root').toBeCloseTo(live.x,5);expect.soft(presented.y,name+' frame'+index+' presented Y follows live root').toBeCloseTo(live.y,5);expect.soft(presented.z,name+' frame'+index+' presented Z follows live root').toBeCloseTo(live.z,5);}
     }else{
       expect(row.level).toBe(0);expect(row.cacheActive).toBe(false);expect(presented).toBeUndefined();expect(cpuForId).toBeUndefined();
@@ -71,16 +79,18 @@ test.each([{pixels:16,level:1,name:'middle16px'},{pixels:4,level:2,name:'far4px'
     const cached=rows.filter(row=>row.mode==='cached'),held=cached.filter(row=>row.frame>=20),publications=new Set(cached.map(row=>row.publication));
     expect(held).toHaveLength(60);expect(held.at(-1)!.live.x).toBeGreaterThan(held[0]!.live.x);
     const witnesses=cached.filter((row,index)=>index>0&&row.publication===cached[index-1]!.publication&&Math.hypot(row.live.x-cached[index-1]!.live.x,row.live.z-cached[index-1]!.live.z)>0);
-    expect(witnesses.length,'The actual root must move while a rig publication is held').toBeGreaterThan(0);
+    expect(witnesses.length,'The actual root must move without a new rig publication').toBeGreaterThan(0);
     if(level===2){expect(publications.size).toBe(1);expect(cached.at(-1)!.rigCalls).toBe(cached[0]!.rigCalls);}
     else{
-      expect(publications.size).toBeGreaterThan(1);expect(publications.size).toBeLessThan(cached.length);
-      const changed=cached.filter((row,index)=>index===0||row.publication!==cached[index-1]!.publication);
-      for(let i=1;i<changed.length;i++)expect(changed[i]!.ms-changed[i-1]!.ms).toBeGreaterThanOrEqual(1000/s.detail.settings.middleHz-1000/60-1e-6);
+      // A moving middle actor is intentionally original, so none of its
+      // frames publishes a CPU rig. Static middle pacing has separate tests.
+      expect(publications).toEqual(new Set([0]));expect(cached.every(row=>!row.cacheActive&&row.rigCalls===0)).toBe(true);
     }
     const last=cached.at(-1)!;const nearRow=frame(80,'near',near);expect(nearRow.publication).toBe(last.publication);expect(nearRow.rigCalls).toBe(last.rigCalls);
     s.detail.setSettings({...DEFAULT_ANIMATION_SETTINGS,enabled:false});const offRow=frame(81,'off');expect(offRow.publication).toBe(last.publication);expect(offRow.rigCalls).toBe(last.rigCalls);
-    s.detail.setSettings({...DEFAULT_ANIMATION_SETTINGS});const restored=frame(82,'restored');expect(restored.publication).toBeGreaterThan(last.publication);expect(restored.rigCalls).toBe(last.rigCalls+1);
+    s.detail.setSettings({...DEFAULT_ANIMATION_SETTINGS});const restored=frame(82,'restored');
+    if(level===2){expect(restored.publication).toBeGreaterThan(last.publication);expect(restored.rigCalls).toBe(last.rigCalls+1);}
+    else{expect(restored.publication).toBe(0);expect(restored.rigCalls).toBe(last.rigCalls);expect(restored.cacheActive).toBe(false);}
     expect(serializeWorld(s.world)).toBe(heldRaw);expect(s.world.rng).toBe(heldRng);expect(s.world.nextId).toBe(heldNextId);expect(effectiveCore297(s.world)).toBe(19);whole(s.world);
   }finally{
     sampleSpy.mockRestore();s.layer.dispose();

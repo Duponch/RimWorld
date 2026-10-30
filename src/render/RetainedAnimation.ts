@@ -41,7 +41,7 @@ export class RetainedAnimation {
     this.owners.forEach((owner,row)=>this.write(row,owner));
   }
   private write(row:number,owner:RetainedAnimationOwner):void {
-    const at=row*8,flag=owner.handle.level>0?1:0;
+    const at=row*8,flag=owner.handle.level===2?1:0;
     if(this.data[at]!==flag){this.data[at]=flag;this.dirty=true;}
     for(let k=0;k<4;k++){const value=Math.fround(owner.values[k]!);if(this.data[at+4+k]!==value){this.data[at+4+k]=value;this.dirty=true;}}
   }
@@ -49,7 +49,7 @@ export class RetainedAnimation {
     const detail=this.detail;if(!detail)return;
     for(let row=0;row<this.owners.length;row++){
       const owner=this.owners[row]!,due=detail.shouldSample(owner.handle,owner.x,owner.y,owner.z);
-      if(due&&owner.handle.level>0)writer(owner,row);
+      if(due&&owner.handle.level===2)writer(owner,row);
       if(due)this.write(row,owner);
     }
     if(this.dirty){this.image.needsUpdate=true;this.dirty=false;}

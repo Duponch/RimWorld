@@ -12,6 +12,9 @@ import { BrawlCloudLayer } from '../src/render/BrawlCloudLayer';
 import { StructureVfxLayer } from '../src/render/StructureVfxLayer';
 import { WeatherPrecipitationLayer,precipitationHash,precipitationGlobalDetail,precipitationMapLayout } from '../src/render/WeatherPrecipitationLayer';
 
+// Renderer-only cases below deliberately prepare projection records. They
+// are not validated Engine Worlds, RAWs or Native/campaign authority. Pure
+// cache/geometry assertions remain ordinary component contracts.
 function iso(pixels=16):THREE.OrthographicCamera {
   const half=50/pixels,camera=new THREE.OrthographicCamera(-half,half,half,-half,.1,1000);
   camera.position.set(8,20,30);camera.lookAt(8,0,8);camera.updateProjectionMatrix();return camera;
@@ -24,16 +27,16 @@ function source(count:number):THREE.InstancedBufferGeometry {
 }
 function fireWorld(){const world=createWorld(331,32,32);ensureFireState(world).items=[{id:world.nextId++,x:8,z:8,size:.4,bornCore:world.tick*10,nextPulseCore:world.tick*10+15,complexCore:0,spreadCore:0}];return world;}
 
-test.each([1,6])('medium FX publications follow 12 real-wall Hz at x%i, and do not upload a paused sample',(speed)=>{
+test.each([1,6])('medium FX preserve native classification with original flags and no CPU bake at x%i, including pause',(speed)=>{
   const detail=new AnimationDetail(),camera=iso(),cache=new FxAnimationCache(2,detail);let calls=0;
   const publish=()=>{calls++;cache.set(0,1,detail.frameTick);};
-  detail.beginFrame(0,camera,100,100);cache.sample(0,8,0,8,publish);cache.flush();const initial=cache.get(0,1);
+  detail.beginFrame(0,camera,100,100);expect(cache.sample(0,8,0,8,publish)).toBe(1);cache.flush();const initial=cache.get(0,1);expect(cache.get(0,0)).toBe(0);expect(calls).toBe(0);
   detail.beginFrame(40,camera,100,100+.24*speed);cache.sample(0,8,0,8,publish);expect(cache.get(0,1)).toBe(initial);
-  detail.beginFrame(84,camera,100,100+.504*speed);cache.sample(0,8,0,8,publish);expect(calls).toBe(2);
-  const paused=cache.get(0,1);detail.beginFrame(168,camera,100,detail.frameTick);cache.sample(0,8,0,8,publish);expect(cache.get(0,1)).toBe(paused);expect(calls).toBe(2);
-  detail.beginFrame(169,iso(5),100,detail.frameTick);expect(cache.sample(0,8,0,8,publish)).toBe(2);expect(calls).toBe(2);
-  detail.beginFrame(170,iso(50),100,detail.frameTick);expect(cache.sample(0,8,0,8,publish)).toBe(0);expect(calls).toBe(2);
-  detail.beginFrame(171,camera,100,detail.frameTick);cache.sample(0,8,0,8,publish);expect(calls).toBe(3);cache.dispose();
+  detail.beginFrame(84,camera,100,100+.504*speed);expect(cache.sample(0,8,0,8,publish)).toBe(1);expect(cache.get(0,0)).toBe(0);expect(calls).toBe(0);
+  const paused=cache.get(0,1);detail.beginFrame(168,camera,100,detail.frameTick);cache.sample(0,8,0,8,publish);expect(cache.get(0,1)).toBe(paused);expect(calls).toBe(0);
+  detail.beginFrame(169,iso(5),100,detail.frameTick);expect(cache.sample(0,8,0,8,publish)).toBe(2);expect(cache.get(0,0)).toBe(2);expect(calls).toBe(0);
+  detail.beginFrame(170,iso(50),100,detail.frameTick);expect(cache.sample(0,8,0,8,publish)).toBe(0);expect(cache.get(0,0)).toBe(0);expect(calls).toBe(0);
+  detail.beginFrame(171,camera,100,detail.frameTick);expect(cache.sample(0,8,0,8,publish)).toBe(1);expect(cache.get(0,0)).toBe(0);expect(calls).toBe(0);cache.dispose();
 });
 
 test('far removes ground fire, precipitation and structural FX draws; complete detail restores current membership without changing World',()=>{
@@ -49,7 +52,7 @@ test('far removes ground fire, precipitation and structural FX draws; complete d
   }finally{fire.dispose();structures.dispose();weather.dispose();}
 });
 
-test('medium action FX retain their palette and pose uploads between deadlines, then retract immediately on a confirmed state change',()=>{
+test('medium action FX update original pose streams before deadlines, hold unchanged uploads on pause and retract immediately',()=>{
   const world=createWorld(332,32,32);world.pawns.forEach(p=>{p.state='idle';});world.pawns[1]!.state='sleeping';
   const stream=source(world.pawns.length),detail=new AnimationDetail(),camera=iso(),clock={travelTime:uniform(0),blend:uniform(1)},layer=new ActionVfxLayer(clock,detail);
   try{
@@ -57,8 +60,13 @@ test('medium action FX retain their palette and pose uploads between deadlines, 
     const geometry=layer.mesh.geometry,slots=geometry.getAttribute('fxSlot');expect(geometry.instanceCount).toBe(1);expect(slots.getX(0)).toBe(1);
     const attr=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute,version=attr.version,point=Array.from(attr.array);
     (stream.getAttribute('aTo') as THREE.InstancedBufferAttribute).setX(1,10);(stream.getAttribute('aTo') as THREE.InstancedBufferAttribute).needsUpdate=true;
-    detail.beginFrame(20,camera,100,101);layer.present(101);expect(attr.version).toBe(version);expect(Array.from(attr.array)).toEqual(point);
-    world.pawns[1]!.state='idle';layer.update(world,stream);layer.present(101);expect(geometry.instanceCount).toBe(0);expect(layer.mesh.visible).toBe(false);
+    const sourceAfter=Array.from(stream.getAttribute('aTo').array);
+    detail.beginFrame(20,camera,100,101);layer.present(101);expect(attr.version).toBeGreaterThan(version);expect(Array.from(attr.array)).not.toEqual(point);
+    expect(attr.getX(0)).toBe(10);expect(slots.getX(0)).toBe(1);expect(geometry.instanceCount).toBe(1);expect(Array.from(stream.getAttribute('aTo').array)).toEqual(sourceAfter);
+    const movedVersion=attr.version,movedPoint=Array.from(attr.array);
+    detail.beginFrame(40,camera,100,101);layer.present(101);expect(attr.version).toBe(movedVersion);expect(Array.from(attr.array)).toEqual(movedPoint);expect(slots.getX(0)).toBe(1);
+    expect(layer.mesh.geometry).toBe(geometry);expect(geometry.getAttribute('aTo')).toBe(attr);expect(Array.from(stream.getAttribute('aTo').array)).toEqual(sourceAfter);
+    world.pawns[1]!.state='idle';layer.update(world,stream);layer.present(101);expect(geometry.instanceCount).toBe(0);expect(layer.mesh.visible).toBe(false);expect(Array.from(stream.getAttribute('aTo').array)).toEqual(sourceAfter);
   }finally{layer.dispose();stream.dispose();}
 });
 

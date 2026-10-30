@@ -195,7 +195,9 @@ class MechanicalRaceBatch {
   presentAnimations(pawns?:PawnLayer):void {
     if(!this.body)return;const g=this.body.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),travel=g.getAttribute('aTravel');
     if(!this.animationCache.prepareOriginalOnly())for(let i=0;i<this.records.length;i++){const live=sampleActorRoot(from,to,travel,i,this.travelTime.value,this.blend.value,this.animationRoot),owner=this.carrierSlots.get(i);
-      const due=owner!==undefined&&pawns?this.animationCache.shouldCaptureLinked(i,pawns.animationCache,owner):this.animationCache.shouldCapture(i,live.x,live.y,live.z);
+      const rig=g.getAttribute('aRig'),carrier=g.getAttribute('aCarrier'),handoff=g.getAttribute('aCorpseHandoff');
+      const continuousMiddle=rig.getX(i)>.5||rig.getZ(i)>0||carrier.getX(i)>.5||Math.abs(handoff.getY(i))>.0001;
+      const due=owner!==undefined&&pawns?this.animationCache.shouldCaptureLinked(i,pawns.animationCache,owner):this.animationCache.shouldCapture(i,live.x,live.y,live.z,1,continuousMiddle);
       if(!due)continue;
       const root=owner!==undefined&&pawns?.animationCache.readRoot(owner,this.linkedRoot)?this.linkedRoot:live;
       const time=owner===undefined?0:pawns?.animationCache.cpuClock(owner,'time')??0;

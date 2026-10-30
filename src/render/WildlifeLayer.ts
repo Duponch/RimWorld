@@ -409,7 +409,11 @@ class SpeciesRig {
     const g=this.mesh.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),travel=g.getAttribute('aTravel');
     if(!this.animationCache.prepareOriginalOnly())for(let i=0;i<this.animals.length;i++){
       const live=sampleActorRoot(from,to,travel,i,this.travelTime.value,this.blend.value,this.animationRoot),owner=this.carrierSlots.get(i);
-      const due=owner!==undefined&&pawns?this.animationCache.shouldCaptureLinked(i,pawns.animationCache,owner):this.animationCache.shouldCapture(i,live.x,live.y,live.z,g.getAttribute('aScale').getX(i));
+      const state=g.getAttribute('aAnimal'),carrier=g.getAttribute('aCarrier'),handoff=g.getAttribute('aCorpseHandoff');
+      // Standing idle animals breathe; eating and attacks have their own
+      // confirmed analytic cycle. Rest/death without cargo is static.
+      const continuousMiddle=state.getZ(i)<.5||state.getX(i)>.5||state.getY(i)>.5||carrier.getX(i)>.5||Math.abs(handoff.getY(i))>.0001;
+      const due=owner!==undefined&&pawns?this.animationCache.shouldCaptureLinked(i,pawns.animationCache,owner):this.animationCache.shouldCapture(i,live.x,live.y,live.z,g.getAttribute('aScale').getX(i),continuousMiddle);
       if(!due)continue;
       const root=owner!==undefined&&pawns?.animationCache.readRoot(owner,this.linkedRoot)?this.linkedRoot:live;
       const time=owner===undefined?this.time.value:pawns?.animationCache.cpuClock(owner,'time')??this.time.value;

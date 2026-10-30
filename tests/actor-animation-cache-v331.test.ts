@@ -105,9 +105,12 @@ test.each([4,16])('live pickup ownership survives clock origin 1024 at %s pixels
     people.updateTravel(current,timeline);people.presentCargo(tick,current);detail.beginFrame(ms,camera(pixels),720,tick);people.presentAnimations();};
   const cargo=people.feedbackSource!.getAttribute('aCargo');
   step(0,1023.25);const pose=people.presentedPose(id),publication=people.animationCache.cpuPublication(0);
-  const progress=()=> (people.animationCache.cpuClock(0,'cargoTime')!-cargo.getZ(0))/(Math.abs(cargo.getW(0))-cargo.getZ(0));
+  // Far keeps its sampled clock. Original middle cargo reads the actual
+  // live uniform, as its existing shader does when the cache flag is zero.
+  const progress=()=> ((people.animationCache.cpuClock(0,'cargoTime')??people.cargoTime.value)-cargo.getZ(0))/(Math.abs(cargo.getW(0))-cargo.getZ(0));
   const before=progress();expect(before).toBeCloseTo(1/6,4);expect(cargo.getZ(0)).toBeGreaterThan(0);
-  step(1,1024.25);expect(cargo.getZ(0)).toBeLessThan(0);expect(progress()).toBeCloseTo(before,4);
+  step(1,1024.25);expect(cargo.getZ(0)).toBeLessThan(0);expect(progress()).toBeCloseTo(pixels===4?before:5/6,4);
+  if(pixels===16){expect(people.animationCache.cpuPose(0)).toBeUndefined();expect(people.animationCache.cpuClock(0,'cargoTime')).toBeUndefined();expect(people.animationCache.cpuPublication(0)).toBe(0);}
   expect(people.presentedPose(id)).toEqual(pose);expect(people.animationCache.cpuPublication(0)).toBe(publication);
   expect(current.piles[0]!.owner).toEqual({type:'pawn',pawnId:id});
   people.presentCargo(1024.6,current);expect(cargo.getW(0)).toBe(0);

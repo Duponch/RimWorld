@@ -9,6 +9,9 @@ import { PaintedWater } from '../src/render/PaintedWater';
 import { createWorld } from '../src/sim/index';
 import type { Job } from '../src/sim/types';
 
+// Renderer-only cases below deliberately prepare projection records. They
+// are not validated Engine Worlds, RAWs or Native/campaign authority. Pure
+// cache/geometry assertions remain ordinary component contracts.
 function camera(zoom=1):THREE.OrthographicCamera {
   const camera=new THREE.OrthographicCamera(-40,40,40,-40,.1,1000);
   camera.position.set(8,30,35);camera.lookAt(8,0,8);camera.zoom=zoom;camera.updateProjectionMatrix();return camera;
@@ -17,12 +20,13 @@ function snapshot(cache:NaturalAnimationCache):number[] {
   return [...cache.wind.value.toArray(),...cache.phaseA.value.toArray(),...cache.phaseB.value.toArray()];
 }
 
-test('middle coefficients and the complete wind vector publish together only at actual wall deadlines',()=>{
+test('middle coefficients and the complete wind vector publish together on each new confirmed tick and hold on pause',()=>{
   const detail=new AnimationDetail(),cache=new NaturalAnimationCache(),view=camera();
   detail.beginFrame(0,view,1440,120);expect(detail.classify(8,0,8)).toBe(1);
   expect(cache.capture(detail,1,0,.5,1,2)).toBe(true);const first=snapshot(cache);
   detail.beginFrame(16,view,1440,120.576); // real x6 progress: 36 ticks/s
-  expect(cache.capture(detail,0,1,2,3,4)).toBe(false);expect(snapshot(cache)).toEqual(first);
+  expect(cache.capture(detail,0,1,2,3,4)).toBe(true);expect(snapshot(cache)).not.toEqual(first);
+  expect(cache.wind.value.toArray()).toEqual([0,1,2]);expect(cache.phaseA.value.x).toBeCloseTo(Math.sin(3));expect(cache.phaseB.value.y).toBeCloseTo(Math.cos(4));
   detail.beginFrame(90,view,1440,123.24);
   expect(cache.capture(detail,0,1,2,3,4)).toBe(true);
   expect(cache.wind.value.toArray()).toEqual([0,1,2]);
@@ -97,7 +101,7 @@ test('wind presentations hold resident colour, normals, geometry and coverage wi
   }finally{resources.dispose();plants.dispose();grass.dispose();material.dispose();}
 });
 
-test('water retains the complete legacy integration through weather changes, pause and load while its middle phases hold',()=>{
+test('water retains the complete legacy integration through weather changes, pause and load with live middle phases',()=>{
   const paint=new THREE.DataTexture(new Uint8Array([120,150,180,255]),1,1),detail=new AnimationDetail(),view=camera();
   const full=new PaintedWater(paint,()=>{}),lod=new PaintedWater(paint,()=>{},detail);
   try {
@@ -108,7 +112,10 @@ test('water retains the complete legacy integration through weather changes, pau
       expect(lod['time'].value).toBe(full['time'].value);expect(lod['ripplePhase'].value).toBe(full['ripplePhase'].value);
       if(index===0){const first=snapshot(lod['middleWater']);
         detail.beginFrame(1,view,1440,60.006);lod.setWind(2,1,0);lod.present(10.001);
-        expect(snapshot(lod['middleWater'])).toEqual(first);
+        expect(snapshot(lod['middleWater'])).not.toEqual(first);
+        expect(lod['middleWater'].wind.value.toArray()).toEqual([1,0,2]);
+        expect(lod['middleWater'].phaseA.value.x).toBeCloseTo(Math.sin(lod['time'].value),10);
+        expect(lod['middleWater'].phaseB.value.y).toBeCloseTo(Math.cos(lod['ripplePhase'].value),10);
         // Bring the legacy integrator through that same real input as well.
         full.setWind(2,1,0);full.present(10.001);
       }
@@ -126,7 +133,7 @@ function treeStreams(group:THREE.Group):{positions:number[][];versions:number[]}
     positions.push(Array.from(position.array));versions.push(position.version);
   }});return {positions,versions};
 }
-test('tree recoil updates at middle deadlines and returns to rest once on entry into far',()=>{
+test('tree recoil follows current middle time, pauses without upload and returns to rest once on entry into far',()=>{
   const world=createWorld(332,20,20),pawn=world.pawns[0]!,detail=new AnimationDetail(),view=camera();
   world.resources=[{id:9001,kind:'tree',species:'oak',x:8,z:8,amount:30,growth:1}];
   pawn.x=7;pawn.z=8;pawn.state='working';pawn.jobId=9100;
@@ -142,7 +149,9 @@ test('tree recoil updates at middle deadlines and returns to rest once on entry 
     const contact=(Math.floor((11*next.tick/6+phase)/(2*Math.PI))*2*Math.PI-phase)/11;
     const present=(now:number,age:number)=>{detail.beginFrame(now,view,1440,(contact+age)*6);layer.presentChop(contact+age);};
     present(0,.09);const first=treeStreams(layer.group);expect(first.positions).not.toEqual(rest);
-    present(16,.12);expect(treeStreams(layer.group)).toEqual(first);
+    present(16,.12);const continuous=treeStreams(layer.group);expect(continuous.positions).not.toEqual(first.positions);
+    expect(continuous.versions.some((version,index)=>version>first.versions[index]!)).toBe(true);
+    present(32,.12);expect(treeStreams(layer.group)).toEqual(continuous);
     present(90,.18);expect(treeStreams(layer.group).positions).not.toEqual(first.positions);
     view.zoom=.2;view.updateProjectionMatrix();present(100,.2);
     const far=treeStreams(layer.group);expect(far.positions).toEqual(rest);

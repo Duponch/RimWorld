@@ -10,6 +10,9 @@ import { MiniTurretLayer } from '../src/render/MiniTurretLayer';
 import { BoxBatches } from '../src/render/BoxBatches';
 import { campTurret,miniTurretCamp } from './scenarios/mini-turret-v212';
 
+// Renderer-only cases below deliberately prepare projection records. They
+// are not validated Engine Worlds, RAWs or Native/campaign authority. Pure
+// cache/geometry assertions remain ordinary component contracts.
 const setup=(pixels:number)=>{
   const detail=new AnimationDetail(),camera=new OrthographicCamera(-50,50,50,-50,.1,1000);
   camera.position.set(0,100,100);camera.lookAt(0,0,0);camera.zoom=pixels/10;camera.updateProjectionMatrix();
@@ -26,7 +29,14 @@ test('far door retains leaf amount across actual reversals; return medium adopts
   door.door={...door.door!,open:false,changedAt:104,from:.8};layer.update(world,false);
   f.frame(2000,110);layer.present(110);expect(layer['animation'].owners[0]!.values[0]).toBe(held);
   f.camera.zoom=1.6;f.camera.updateProjectionMatrix();f.frame(2001,110);layer.present(110);
-  expect(layer['animation'].owners[0]!.values[0]).toBeLessThan(held);expect(layer.mesh.geometry).toBe(geometry);layer.dispose();
+  // Middle uses the original segment; its old far coefficients are no
+  // longer rewritten or consumed. Check the actual encoded segment/flag.
+  const owner=layer['animation'].owners[0]!,current=geometry.getAttribute('doorCurrent');
+  expect(owner.handle.level).toBe(1);expect(owner.values[0]).toBe(held);
+  expect((layer['animation'] as unknown as {data:Float32Array}).data[0]).toBe(0);
+  expect(current.getX(0)).toBe(104);expect(current.getY(0)).toBeCloseTo(.8,6);expect(current.getZ(0)).toBeLessThan(0);
+  const liveAmount=Math.max(0,Math.min(1,current.getY(0)+(110-current.getX(0))*current.getZ(0)));
+  expect(liveAmount).toBeLessThan(held);expect(layer.mesh.geometry).toBe(geometry);layer.dispose();
 });
 
 test('far turbine retains angle through power adoption and emits no periodic palette upload',()=>{
