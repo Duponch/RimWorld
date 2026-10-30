@@ -185,8 +185,18 @@ export class WeatherPrecipitationLayer {
       worldXZ.assign(point.xz);
       return point;
     })(),()=>{
-      const facts=this.cache.cell(5),point=this.cache.affine(positionLocal);
-      kind.assign(facts.x);ink.assign(facts.y);visible.assign(facts.z);sampledDaylight.assign(facts.w);worldXZ.assign(point.xz);return point;
+      const facts=this.cache.cell(5),metadata=this.cache.cell(4),snow=facts.x.greaterThan(.5);
+      const phase=snow.select(this.snowPhase,this.rainPhase);
+      const height=metadata.w.sub(phase.mul(metadata.z).mul(1/FIELD_HEIGHT)).fract().mul(FIELD_HEIGHT).toVar();
+      const drift=this.wind.mul(float(FIELD_HEIGHT).sub(height)).mul(snow.select(.27,.13));
+      const wx=metadata.x.add(drift.x).mul(this.inverseDimensions.x).fract().mul(this.dimensions.x).toVar();
+      const wz=metadata.y.add(drift.y).mul(this.inverseDimensions.y).fract().mul(this.dimensions.y).toVar();
+      // Only the confirmed centre/fade are live; billboard bases stay at12Hz.
+      const point=vec3(wx.sub(.5),height.add(1.7),wz.sub(.5))
+        .add(this.cache.cell(1).xyz.mul(positionLocal.x)).add(this.cache.cell(2).xyz.mul(positionLocal.y));
+      const edge=wx.min(this.dimensions.x.sub(wx)).min(wz).min(this.dimensions.y.sub(wz));
+      const alpha=smoothstep(0,.8,height).mul(float(1).sub(smoothstep(FIELD_HEIGHT-.8,FIELD_HEIGHT,height))).mul(smoothstep(0,.6,edge));
+      kind.assign(facts.x);ink.assign(facts.y);visible.assign(alpha);sampledDaylight.assign(facts.w);worldXZ.assign(point.xz);return point;
     });
     const pigmentPixel = uv().sub(vec2(.5));
     const paperGrain = sin(pigmentPixel.x.mul(93).add(ink.mul(29)))
@@ -306,7 +316,7 @@ export class WeatherPrecipitationLayer {
         if(snow){ux=ry*fz-rz*fy;uy=rz*fx-rx*fz;uz=rx*fy-ry*fx;const n=Math.hypot(ux,uy,uz)||1;ux/=n;uy/=n;uz/=n;}
         else{ux=-this.wind.value.x*.13;uz=-this.wind.value.y*.13;const n=Math.hypot(ux,1,uz);ux/=n;uy/=n;uz/=n;const ax=fy*uz-fz*uy,ay=fz*ux-fx*uz,az=fx*uy-fy*ux,l=Math.hypot(ax,ay,az);if(l>.001){rx=ax/l;ry=ay/l;rz=az/l;}}
         const near=this.perspective.value?Math.max(.001,fxSmoothstep(2,8,distance)):1,projection=snow&&this.perspective.value?.58:1,width=(snow?.30+ink*.12:.11+ink*.045)*near*projection,breadth=(snow?.30+ink*.12:.68+ink*.32)*near*projection;
-        this.cache.set(row,1,rx*width,ry*width,rz*width);this.cache.set(row,2,ux*breadth,uy*breadth,uz*breadth);this.cache.set(row,3,0,0,0);this.cache.set(row,4,x,y,z);
+        this.cache.set(row,1,rx*width,ry*width,rz*width);this.cache.set(row,2,ux*breadth,uy*breadth,uz*breadth);this.cache.set(row,3,0,0,0);this.cache.set(row,4,rootX,rootZ,this.metadata[at+4]!,this.metadata[at+5]!);
         const edge=Math.min(wx,this.dimensions.value.x-wx,wz,this.dimensions.value.y-wz),alpha=fxSmoothstep(0,.8,height)*(1-fxSmoothstep(FIELD_HEIGHT-.8,FIELD_HEIGHT,height))*fxSmoothstep(0,.6,edge);
         this.cache.set(row,5,snow?1:0,ink,alpha,this.daylight.value);
   }

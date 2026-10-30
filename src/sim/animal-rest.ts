@@ -75,7 +75,7 @@ export function processAnimalRest(w:World,a:WildAnimal,ctx:AnimalRestContext):bo
   const replaceThermal=(Number(w.schemaVersion)===288||(Number(w.schemaVersion)===289||(Number(w.schemaVersion)===290||(Number(w.schemaVersion)===291||(Number(w.schemaVersion)===292||(Number(w.schemaVersion)===293||(Number(w.schemaVersion)===294||(Number(w.schemaVersion)===295||(Number(w.schemaVersion)===296||Number(w.schemaVersion)===297)))))))))&&ctx.medicalRest&&!!a.animalThermalRefuge288;
   if(!wanted||a.meal||a.path.length&&!replaceAreaReturn&&!replaceThermal||a.nextDecision>w.tick&&!replaceThermal)return false;
   const rank=(s:Structure)=>s.medical?0:a.domestic?.bedId===s.id?1:2;
-  const bedOwners=w.schemaVersion>=256?captureActorBeds256(w):undefined;
+  const bedOwners=w.schemaVersion>=256&&w.structures.some(s=>s.kind==='animal-sleeping-spot')?captureActorBeds256(w):undefined;
   const spots=w.structures.filter(s=>inside(s)&&animalSpotAvailable(w,s,a,undefined,bedOwners)&&ctx.free(s)).sort((x,y)=>rank(x)-rank(y)
     ||(x.x-a.x)**2+(x.z-a.z)**2-((y.x-a.x)**2+(y.z-a.z)**2)||x.id-y.id);
   // One flood finds all available ranks, including a fallback if medical is unreachable.

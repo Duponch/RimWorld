@@ -45,7 +45,11 @@ export function createCorePhysics297(world:World) {
   };
   let captured:ReturnType<typeof captureOwners>|undefined;
   let batch:ReturnType<typeof combatShotBatch>|undefined,physical:Uint8Array|undefined;
-  let disturbance=disturbanceEvents(world),ownContacts:SpikeTrapWindow|undefined,lastUsedExternal=false;
+  // undefined: not captured; null: no trap at the last structure/barrier capture.
+  // Movement cannot create a trap. Macro/command/impact revoke only an absence;
+  // a present owner keeps the existing live refresh and ordered contact queue.
+  let disturbance=disturbanceEvents(world),ownContacts:SpikeTrapWindow|null|undefined,lastUsedExternal=false;
+  let absentStructures:World['structures']|undefined,absentStructureCount=-1;
   const contactGrid=()=>physical??=blockedCells(world,true);
   const captureQueries=()=>{let index:ReturnType<typeof captureTurretTargets>|undefined;
     batch??=combatShotBatch(world);
@@ -53,7 +57,9 @@ export function createCorePhysics297(world:World) {
     return {...common,turretTargets:()=>index??=captureTurretTargets(world),mechanoid:{...mechanical,targets:common.targets,stands:common.stands}};
   };
   let queries:ReturnType<typeof captureQueries>|undefined;
-  const invalidate=(_reason:CorePhysicsInvalidation297)=>{dirty=true;batch=undefined;physical=undefined;queries=undefined;projectiles.invalidate();};
+  const invalidate=(reason:CorePhysicsInvalidation297)=>{dirty=true;batch=undefined;physical=undefined;queries=undefined;projectiles.invalidate();
+    if(ownContacts===null&&reason!=='movement')ownContacts=undefined;
+  };
   return {invalidate,advance(core:number,externalContacts?:SpikeTrapWindow):CoreStepResult297 {
     // These guards precede pruning, chance draws, owner counters or capture adoption.
     if(!Number.isSafeInteger(core)||core!==lastCore+1||core!==effectiveCore297(world)||Number(world.schemaVersion)!==297)throw new RangeError('Invalid next physical Core');
@@ -62,10 +68,12 @@ export function createCorePhysics297(world:World) {
       dirty=false;
     }
     if(!externalContacts){
-      if(!ownContacts||lastUsedExternal)ownContacts=spikeTrapWindow297(world,lastCore);
-      else if(contactsDirty)ownContacts.refresh();
+      if(ownContacts===undefined||lastUsedExternal||ownContacts===null&&(absentStructures!==world.structures||absentStructureCount!==world.structures.length)){
+        ownContacts=spikeTrapWindow297(world,lastCore)??null;
+        if(ownContacts===null){absentStructures=world.structures;absentStructureCount=world.structures.length;}
+      }else if(contactsDirty)ownContacts?.refresh();
     }
-    const contacts=externalContacts??ownContacts;lastUsedExternal=externalContacts!==undefined;
+    const contacts=externalContacts??ownContacts??undefined;lastUsedExternal=externalContacts!==undefined;
     queries??=captureQueries();
     const changedActors=new Set<number>(),strikeAudio297:CoreStrikeAudio297[]=[];
     let requiresFull=false,threatsChanged=false,audioChanged=false;
