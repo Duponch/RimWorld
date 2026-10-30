@@ -33,8 +33,11 @@ test('gait advances by shown distance, not elapsed time, across slowdowns, stopp
   expect(animalGaitRadiansPerUnit('hare')).toBeGreaterThan(animalGaitRadiansPerUnit('deer'));
 });
 
-test('humans and animals share the confirmed edge phase while speed changes, without a frame upload',()=>{
+test('legacy GPU humans and animals share the confirmed edge phase while speed changes, without a frame upload',()=>{
   const world=animalCombatCamp(),pawn=world.pawns[0]!,animal=world.wildlife!.animals[0]!;
+  // Historical GPU stream adapter only, not a valid Engine/Whole world.
+  // Current physical297 and own reload are covered by pawn-gait-visible297.
+  (world as {schemaVersion:number}).schemaVersion=296;
   world.tick=101;
   const edge={from:{x:10,z:10},to:{x:11,z:10},start:100,end:104};
   Object.assign(pawn,{x:11,z:10,state:'moving',motion:edge,path:[]});

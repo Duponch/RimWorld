@@ -1111,13 +1111,14 @@ export class PawnLayer {
   private springTo297=new THREE.BufferAttribute(new Float32Array(0),4);
   private springTravel297=new THREE.BufferAttribute(new Float32Array(0),4);
   private springMotionW297=new Float32Array(0);
+  private springGaitPhase297=new Float32Array(0);
   private springValid297=new Uint8Array(0);
   private readonly springTarget297={x:0,y:0,z:0,yaw:0};
   private ensureSpring297(count:number):void {
     if(count<=this.springCapacity297)return;const n=2**Math.ceil(Math.log2(Math.max(1,count)));
     const copy=(old:THREE.BufferAttribute)=>{const value=new THREE.BufferAttribute(new Float32Array(n*4),4);(value.array as Float32Array).set(old.array);return value;};
     this.springFrom297=copy(this.springFrom297);this.springTo297=copy(this.springTo297);this.springTravel297=copy(this.springTravel297);
-    const w=new Float32Array(n),valid=new Uint8Array(n);w.set(this.springMotionW297);valid.set(this.springValid297);this.springMotionW297=w;this.springValid297=valid;this.springCapacity297=n;this.tweener297.ensure(n);
+    const w=new Float32Array(n),phase=new Float32Array(n),valid=new Uint8Array(n);w.set(this.springMotionW297);phase.set(this.springGaitPhase297);valid.set(this.springValid297);this.springMotionW297=w;this.springGaitPhase297=phase;this.springValid297=valid;this.springCapacity297=n;this.tweener297.ensure(n);
   }
   private captureSpring297(slot:number,from:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,to:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,travel:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,motion:THREE.BufferAttribute|THREE.InterleavedBufferAttribute):void {
     this.springFrom297.setXYZW(slot,from.getX(slot),from.getY(slot),from.getZ(slot),from.getW(slot));
@@ -1131,8 +1132,14 @@ export class PawnLayer {
     // the tweened position; map and actor-slot resets clear its history.
     const explicitReset=pawn.body?.pileId!==undefined||pawn.body?.lostAt!==undefined;
     const pose=this.tweener297.advance(slot,pawn.id,target.x,target.y,target.z,dt,speed,explicitReset);
-    const stepping=motion.getX(slot)>.5;
-    const phase=Math.fround(this.springMotionW297[slot]!+(stepping?Math.hypot(target.x-this.springFrom297.getX(slot),target.z-this.springFrom297.getZ(slot))*HUMAN_GAIT_RADIANS_PER_UNIT:0));
+    const walking=motion.getX(slot),stepping=walking<-.5?(-walking-1)>CROUCH_WALK_MARK:walking>.5;
+    // Keep distance travelled on screen continuous across confirmed edges and Full adoption.
+    let gaitPhase=this.tweener297.fresh?0:this.springGaitPhase297[slot]!;
+    if(stepping&&speed>0){gaitPhase+=Math.hypot(this.tweener297.deltaX,this.tweener297.deltaZ)*HUMAN_GAIT_RADIANS_PER_UNIT;if(gaitPhase>=Math.PI*2)gaitPhase%=Math.PI*2;}
+    this.springGaitPhase297[slot]=gaitPhase;
+    // Float32 rounding at the turn boundary must not leave an out-of-range phase.
+    if(this.springGaitPhase297[slot]!>=Math.PI*2)this.springGaitPhase297[slot]=0;
+    const phase=stepping?this.springGaitPhase297[slot]!:this.springMotionW297[slot]!;
     const changed=from.getX(slot)!==pose.x||from.getY(slot)!==pose.y||from.getZ(slot)!==pose.z||to.getX(slot)!==pose.x||to.getY(slot)!==pose.y||to.getZ(slot)!==pose.z||from.getW(slot)!==Math.fround(target.yaw)||to.getW(slot)!==Math.fround(target.yaw)||motion.getW(slot)!==phase;
     from.setXYZW(slot,pose.x,pose.y,pose.z,target.yaw);to.setXYZW(slot,pose.x,pose.y,pose.z,target.yaw);travel.setXYZW(slot,0,0,0,2);motion.setW(slot,phase);
     const visual=this.visuals.get(pawn.id)!;visual.from.set(pose.x,pose.y,pose.z,target.yaw);visual.to.copy(visual.from);return changed;

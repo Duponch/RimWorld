@@ -49,6 +49,16 @@ Le résultat JSON expose les deux volumes, leur libre et leur verdict. Code de s
 
 Le seuil prévient une reprise sans marge ; il ne réserve pas cet espace et ne garantit pas qu’un lot d’une taille quelconque tiendra. Les grosses sorties restent sur C ; ne pas créer de nouvelle copie générale du graphe ou de nettoyage global de tmp par défaut.
 
+## 30 octobre — garde appliqué et anciens caches SSR
+
+Le garde a effectivement **bloqué le contrôle CPU avant son lancement** : environ 1,375 Go libres sur C, sous le minimum de 2 Gio. Root a ensuite retiré seulement des sorties de compilation SSR anciennes et recréables, dans `Cvisualizations/v492-compiler-cache` : **40 répertoires du 27 octobre**, code généré et empreintes vérifiés, soit **54 883 fichiers / 1 302 495 672 octets logiques** au total.
+
+Le premier plan PowerShell, trop lent, a été arrêté avant tout retrait. Le plan rapide suivant a été conservé ; son premier retrait a été interrompu, puis repris sur le même inventaire : **13 400 fichiers déjà absents après l’interruption +41 483 fichiers retirés à la reprise**, soit les 54 883 prévus. Le reçu final donne `complete:true`. Aucun RAW, source, rapport, métadonnée, serveur, cache récent ou build public n’a été ciblé.
+
+Le plan relevait **1 071 890 432 octets libres sur C** ; le reçu après reprise en observait **3 010 838 528**. Ces bornes ne permettent pas d’attribuer leur différence exacte au cache : allocation et variations extérieures restent inexpliquées. Un contrôle ultérieur du garde a réellement passé avec **C : 3 010 678 784 / E : 2 829 398 016 octets libres**, autorisant alors le contrôle CPU. Ce sont des relevés ponctuels, pas une réserve garantie. Les 2,83 Go observés sur E lors du nettoyage du 29 octobre restent un résultat distinct, sans nouveau gain E attribué à cette reprise.
+
+Preuves privées : `action-fluency-20261030/ssr-recovery-fast-v2/`, sous la même racine Cvisualizations que le dossier des preuves ci-dessous. `plan.json`, `plan.jsonl`, `removed.jsonl`, `resumed-removed.jsonl` et `resumed-result.json` conservent sélection, empreintes et retraits/reprise. Aucun `result.json` de la première tentative interrompue n’était présent à la lecture ; il n’est pas compté comme reçu de réussite. Les anciens caches pourront être régénérés lors d’un rejeu ; leurs sources et résultats de contrôle sont conservés. Le garde de 2 Gio demeure requis à chaque reprise et avant/après les lots volumineux.
+
 ## Preuves conservées et portée
 
 Dossier des preuves :
