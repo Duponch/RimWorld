@@ -129,8 +129,11 @@ test('work gestures and weighted animal neck coefficients are evaluated at the c
   expect(cache.get(0,12,0)).toBeCloseTo(Math.cos((Math.sin(.7*5)*.12+.48)*.35),6);g.dispose();cache.dispose();
 });
 
-test('three resident actor rigs keep World and physical edges live while displayed positions stop',()=>{
+test('legacy GPU actor streams retain rig captures while presented XYZ follows the live roots',()=>{
   const world=animalCombatCamp(),pawn=world.pawns[0]!,animal=world.wildlife!.animals[0]!;
+  // Historical renderer-only adapter for the synthetic100..104 edge below.
+  // This does not declare a valid296 Engine World, Raw save or Native receipt.
+  (world as {schemaVersion:number}).schemaVersion=296;
   const edge={from:{x:10,z:10},to:{x:11,z:10},start:100,end:104};world.tick=101;
   Object.assign(pawn,{x:11,z:10,state:'moving',motion:edge,path:[]});Object.assign(animal,{x:11,z:10,state:'moving',motion:edge});
   const mech={id:world.nextId++,mechKind:'scyther' as const,state:'moving' as const,x:11,z:10,path:[],motion:edge,heading:0,moveCooldown:0,planCooldown:0};world.mechanoids=[mech];
@@ -139,10 +142,23 @@ test('three resident actor rigs keep World and physical edges live while display
   const step=(ms:number,tick:number,pixels:number)=>{timeline.tick=tick;people.time.value=tick/TICKS_PER_SECOND;
     people.updateTravel(world,timeline);people.presentCargo(tick,world);animals.update(world,timeline,false,people);machines.update(world,timeline,false,people);
     detail.beginFrame(ms,camera(pixels),720,tick);people.presentAnimations();animals.presentAnimations(people);machines.presentAnimations(people);};
-  step(0,101,4);const first=people.presentedPose(pawn.id)!;expect(first).toBeDefined();
-  step(400,103,4);expect(people.presentedPose(pawn.id)).toEqual(first);expect(people.travelTime.value).toBe(103/TICKS_PER_SECOND);
-  const wildlife=animals.presentedPose(animal.id)!;expect(wildlife.x).toBeCloseTo(first.x,5);
-  let machineX=0;machines.forEachPose((id,x)=>{if(id===mech.id)machineX=x;});expect(machineX).toBeCloseTo(first.x,5);
-  step(401,103.5,30);expect(people.presentedPose(pawn.id)).toBeUndefined();expect(animals.presentedPose(animal.id)).toBeUndefined();expect(JSON.stringify(world)).toBe(before);
+  step(0,101,4);const first=people.presentedPose(pawn.id)!;expect(first).toBeDefined();const firstX=first.x;
+  const animalBody=animals.mesh.children.find(child=>child.name.startsWith(`Wild ${animal.species} `)) as THREE.Mesh|undefined;
+  const machineBody=machines.group.children.find(child=>child.name.startsWith(`${mech.mechKind} bodies `)) as THREE.Mesh|undefined;
+  if(!animalBody||!machineBody)throw Error('Declared actor rig geometry missing');
+  const geometries=[people.feedbackSource!,animalBody.geometry,machineBody.geometry];
+  const captured=(geometry:THREE.BufferGeometry)=>{
+    const cache=geometry.userData.animationCache as ActorAnimationCache,rig:number[]=[];
+    for(let cell=3;cell<63;cell++)for(let component=0;component<4;component++)rig.push(cache.get(0,cell,component));
+    return {pose:cache.cpuPose(0),publication:cache.cpuPublication(0),rig,clocks:[cache.cpuClock(0,'time'),cache.cpuClock(0,'travelTime'),cache.cpuClock(0,'cargoTime'),cache.cpuClock(0,'blend')]};
+  };
+  const captures=geometries.map(captured);expect(captures.every(capture=>capture.pose!==undefined)).toBe(true);
+  step(400,103,4);expect(geometries.map(captured)).toEqual(captures);expect(people.travelTime.value).toBe(103/TICKS_PER_SECOND);
+  const live=(geometry:THREE.BufferGeometry)=>sampleActorRoot(geometry.getAttribute('aFrom'),geometry.getAttribute('aTo'),geometry.getAttribute('aTravel'),0,people.travelTime.value,people.blend.value);
+  const humanLive=live(geometries[0]!),animalLive=live(geometries[1]!),machineLive=live(geometries[2]!);
+  const human=people.presentedPose(pawn.id)!;expect(human.x).toBeCloseTo(humanLive.x,5);expect(human.y).toBeCloseTo(humanLive.y,5);expect(human.z).toBeCloseTo(humanLive.z,5);expect(human.x).toBeGreaterThan(firstX);
+  const wildlife=animals.presentedPose(animal.id)!;expect(wildlife.x).toBeCloseTo(animalLive.x,5);expect(wildlife.y).toBeCloseTo(animalLive.y,5);expect(wildlife.z).toBeCloseTo(animalLive.z,5);
+  let machineX=0,machineY=0,machineZ=0;machines.forEachPose((id,x,y,z)=>{if(id===mech.id){machineX=x;machineY=y;machineZ=z;}});expect(machineX).toBeCloseTo(machineLive.x,5);expect(machineY).toBeCloseTo(machineLive.y,5);expect(machineZ).toBeCloseTo(machineLive.z,5);
+  step(401,103.5,30);expect(people.presentedPose(pawn.id)).toBeUndefined();expect(animals.presentedPose(animal.id)).toEqual(live(geometries[1]!));expect(JSON.stringify(world)).toBe(before);
   people.dispose();animals.dispose();machines.dispose();
 });

@@ -115,9 +115,9 @@ export function fxActorCache(source:BufferGeometry|undefined,clock:PresentationC
   return source?.userData.animationCache as ActorAnimationCache|undefined??clock.animationCache;
 }
 export function fxActorPose(source:BufferGeometry,clock:PresentationClock,slot:number):CachedActorPose {
-  const cache=fxActorCache(source,clock),cached=cache?.cpuPose(slot);if(cached)return cached;
   type Stream=BufferAttribute|InterleavedBufferAttribute;
-  return sampleActorRoot(source.getAttribute('aFrom') as Stream,source.getAttribute('aTo') as Stream,source.getAttribute('aTravel') as Stream,slot,clock.travelTime.value,clock.blend.value);
+  const from=source.getAttribute('aFrom') as Stream,to=source.getAttribute('aTo') as Stream,travel=source.getAttribute('aTravel') as Stream;
+  return fxActorCache(source,clock)?.presentedRoot(slot,from,to,travel,clock.travelTime.value,clock.blend.value)??sampleActorRoot(from,to,travel,slot,clock.travelTime.value,clock.blend.value);
 }
 
 /** Billboard basis sampled with the emitter; camera motion does not restart

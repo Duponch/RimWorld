@@ -190,7 +190,7 @@ class MechanicalRaceBatch {
   forEachPose(visit:(id:number,x:number,y:number,z:number,height:number,radius:number,dead:boolean)=>void):void {
     if(!this.body)return;const g=this.body.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),times=g.getAttribute('aTravel'),rig=g.getAttribute('aRig');
     this.records.forEach((actor,i)=>{if(actor.pile)return;const start=times.getX(i),end=times.getY(i),alpha=end>start?THREE.MathUtils.clamp((this.travelTime.value-start)/(end-start),0,1):this.blend.value;
-      const cached=this.animationCache.cpuPose(i),fallen=rig.getW(i)>.5;visit(actor.id,cached?.x??THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),cached?.y??travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),Math.min(1,times.getW(i)),alpha)),cached?.z??THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),fallen?1.30:this.kind==='pikeman'?1.36:this.kind==='lancer'?1.90:1.81,fallen?1.0:this.kind==='pikeman'?.88:.69,actor.state==='dead');});
+      const cached=this.animationCache.presentedRoot(i,from,to,times,this.travelTime.value,this.blend.value),fallen=rig.getW(i)>.5;visit(actor.id,cached?.x??THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),cached?.y??travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),Math.min(1,times.getW(i)),alpha)),cached?.z??THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),fallen?1.30:this.kind==='pikeman'?1.36:this.kind==='lancer'?1.90:1.81,fallen?1.0:this.kind==='pikeman'?.88:.69,actor.state==='dead');});
   }
   presentAnimations(pawns?:PawnLayer):void {
     if(!this.body)return;const g=this.body.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),travel=g.getAttribute('aTravel');

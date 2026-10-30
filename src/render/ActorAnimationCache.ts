@@ -129,7 +129,7 @@ export class ActorAnimationCache {
   // Reusing the call itself can rebuild only its zero initializer in another
   // block while reusing the already-built branches (including the root).
   poseNode(original:()=>Node<'vec4'>,index:Node<'uint'>=instanceIndex,cached:Node<'bool'>=this.cached(index)):Node<'vec4'> {
-    return Fn(()=>{const result=vec4(0).toVar();If(cached,()=>{result.assign(this.cell(0,index));}).Else(()=>{result.assign(original());});return result;})().toVar();
+    return Fn(()=>{const result=vec4(0).toVar();If(cached,()=>{const live=original();result.assign(vec4(live.xyz,this.cell(0,index).w));}).Else(()=>{result.assign(original());});return result;})().toVar();
   }
   clockNode(original:Node<'float'>,name:CachedActorClock,index:Node<'uint'>=instanceIndex,cached:Node<'bool'>=this.cached(index)):Node<'float'> {
     return Fn(()=>{const result=float(0).toVar();If(cached,()=>{
@@ -141,6 +141,11 @@ export class ActorAnimationCache {
   }
   yawNode(yaw:Node<'float'>,kind:'cos'|'sin',index:Node<'uint'>=instanceIndex,cached:Node<'bool'>=this.cached(index)):Node<'float'> {
     return Fn(()=>{const result=float(0).toVar();If(cached,()=>{result.assign(this.cell(1,index)[kind==='cos'?'x':'y']);}).Else(()=>{result.assign(kind==='cos'?cos(yaw):sin(yaw));});return result;})().toVar();
+  }
+  /** Live translation with the retained rig's heading; no cache means the caller's original path. */
+  presentedRoot(slot:number,from:Stream,to:Stream,travel:Stream,time:number,blend:number,result?:CachedActorPose):CachedActorPose|undefined {
+    if(this.get(slot,1,3)!==1)return;
+    const pose=sampleActorRoot(from,to,travel,slot,time,blend,result);pose.yaw=this.get(slot,0,3);return pose;
   }
   cpuPose(slot:number):CachedActorPose|undefined {
     if(this.get(slot,1,3)!==1)return;

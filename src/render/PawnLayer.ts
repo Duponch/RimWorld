@@ -215,7 +215,7 @@ export class PawnLayer {
   private groupHumanCarrierIds=new Set<number>();
   private rescuePairs:readonly (readonly [number,number])[]=[];
   constructor(private readonly configure?: (material: THREE.MeshStandardNodeMaterial) => void,private readonly animationDetail=new AnimationDetail()) {this.animationCache=new ActorAnimationCache(animationDetail);this.partialAnimationCache=new ActorAnimationCache(animationDetail);}
-  cpuPoseForId(id:number){const slot=this.pawnIndices.get(id);return slot===undefined?undefined:this.animationCache.cpuPose(slot);}
+  cpuPoseForId(id:number){const slot=this.pawnIndices.get(id),g=this.pawnMesh?.geometry;return slot===undefined||!g?undefined:this.animationCache.presentedRoot(slot,g.getAttribute('aFrom'),g.getAttribute('aTo'),g.getAttribute('aTravel'),this.travelTime.value,this.blend.value);}
   presentedPose(id:number){return this.cpuPoseForId(id);}
   /** Warm the resident fire graph before the first burning actor appears. */
   prepareFiresForCompile():()=>void {
@@ -762,7 +762,7 @@ export class PawnLayer {
   private cachedPawnPosition():THREE.Node<'vec3'> {
     return Fn(()=>{
       const bone=attribute('boneId','float'),dye=attribute('dye','float'),motion=vec4(0,this.animationCache.cell(4).z,this.animationCache.cell(4).y,0);
-      const pose=this.animationCache.cell(0);
+      const pose=pawnPresentationPose({travelTime:this.travelTime,blend:this.blend});
       const pivot=pawnMorph(attribute('bindPivot','vec3')),local=pawnMorph(positionLocal).sub(pivot);
       const data=this.animationCache.cellAt(float(8).add(bone));
       const animated=vec3(local.x,local.y.mul(data.x).sub(local.z.mul(data.y)),local.y.mul(data.y).add(local.z.mul(data.x))).add(pivot).toVar();
@@ -849,11 +849,11 @@ export class PawnLayer {
   private presentedCargoAnchor(id:number,tick:number):CargoAnchor|undefined {
     const index=this.pawnIndices.get(id),geometry=this.pawnMesh?.geometry;
     if(index===undefined||!geometry)return;
-    const cached=this.animationCache.cpuPose(index);
-    if(cached)return {x:cached.x+Math.sin(cached.yaw)*WORLD_SCALE.carriedForward,y:cached.y+this.animationCache.get(index,4,0),z:cached.z+Math.cos(cached.yaw)*WORLD_SCALE.carriedForward,yaw:cached.yaw};
     const from=geometry.getAttribute('aFrom') as THREE.InstancedBufferAttribute;
     const to=geometry.getAttribute('aTo') as THREE.InstancedBufferAttribute;
     const travel=geometry.getAttribute('aTravel') as THREE.InstancedBufferAttribute;
+    const cached=this.animationCache.presentedRoot(index,from,to,travel,this.travelTime.value,this.blend.value);
+    if(cached)return {x:cached.x+Math.sin(cached.yaw)*WORLD_SCALE.carriedForward,y:cached.y+this.animationCache.get(index,4,0),z:cached.z+Math.cos(cached.yaw)*WORLD_SCALE.carriedForward,yaw:cached.yaw};
     const motion=geometry.getAttribute('aMotion') as THREE.InstancedBufferAttribute;
     const clock=localTimeSeconds(tick,this.travelOrigin),start=travel.getX(index),end=travel.getY(index);
     const alpha=end>start?THREE.MathUtils.clamp((clock-start)/(end-start),0,1):this.blend.value;

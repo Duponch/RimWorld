@@ -189,7 +189,7 @@ class SpeciesRig {
       const start=times.getX(i),end=times.getY(i),alpha=end>start?THREE.MathUtils.clamp((this.travelTime.value-start)/(end-start),0,1):1;
       const growth=scale.getX(i),posture=state.getZ(i);
       const height=(posture>=1?this.restingHeight:box.max.y)*growth;
-      const cached=this.animationCache.cpuPose(i);
+      const cached=this.animationCache.presentedRoot(i,from,to,times,this.travelTime.value,this.blend.value);
       visit(a.id,this.species,cached?.x??THREE.MathUtils.lerp(from.getX(i),to.getX(i),alpha),cached?.y??travelHeight(from.getY(i),to.getY(i),THREE.MathUtils.lerp(times.getZ(i),times.getW(i),alpha)),cached?.z??THREE.MathUtils.lerp(from.getZ(i),to.getZ(i),alpha),height,(posture>=1?this.restingRadius:radius)*growth);
     });
   }
@@ -351,7 +351,7 @@ class SpeciesRig {
     // Near actors use the original GPU path, which deliberately has no cached
     // CPU pose. Attached presentation samples those same streams and clocks.
     const g=this.mesh.geometry;
-    return this.animationCache.cpuPose(slot)??sampleActorRoot(g.getAttribute('aFrom'),g.getAttribute('aTo'),g.getAttribute('aTravel'),slot,this.travelTime.value,this.blend.value);
+    return this.animationCache.presentedRoot(slot,g.getAttribute('aFrom'),g.getAttribute('aTo'),g.getAttribute('aTravel'),this.travelTime.value,this.blend.value)??sampleActorRoot(g.getAttribute('aFrom'),g.getAttribute('aTo'),g.getAttribute('aTravel'),slot,this.travelTime.value,this.blend.value);
   }
   presentAnimations(pawns?:PawnLayer):void {
     const g=this.mesh.geometry,from=g.getAttribute('aFrom'),to=g.getAttribute('aTo'),travel=g.getAttribute('aTravel');

@@ -145,8 +145,8 @@ export function attachedFireMesh(source:THREE.BufferGeometry,clock:PresentationC
     const offset=carried?attribute('aMotion','vec4').z.equal(6).select(vec3(sin(pose.w).mul(.3*PAWN_MODEL_SCALE),.95+.19*PAWN_MODEL_SCALE,cos(pose.w).mul(.3*PAWN_MODEL_SCALE)),vec3(0)):vec3(0);
     return size.greaterThan(0).select(local.add(pose.xyz).add(offset),vec3(0,-100,0));
   })(),()=>{
-    const root=cache.cell(1),shape=cache.cell(2);
-    return vec3(positionLocal.x,positionLocal.y.add(.75).mul(shape.x),positionLocal.z).mul(shape.y).add(root.xyz);
+    const offset=cache.cell(1),shape=cache.cell(2),pose=pawnPresentationPose(clock,uint(attribute('fxSlot','float')));
+    return vec3(positionLocal.x,positionLocal.y.add(.75).mul(shape.x),positionLocal.z).mul(shape.y).add(pose.xyz).add(offset.xyz);
   });
   geometry.instanceCount=0;const mesh=new THREE.Mesh(geometry,material);mesh.frustumCulled=false;mesh.name='Attached fire — body GPU poses';
   attachedStates.set(mesh,{cache,capacity:0,drawn:[],scale,versions:[],amounts:[]});
@@ -187,12 +187,12 @@ export function presentAttachedFire(mesh:THREE.Mesh,source:THREE.BufferGeometry,
     const bake=()=>{
       const pose=fxActorPose(source,clock,row),time=actor?.cpuClock(row,'travelTime')??clock.travelTime.value;
       const carried=source.hasAttribute('aMotion')&&source.getAttribute('aMotion').getZ(row)===6;
-      state.cache.set(row,1,pose.x+(carried?Math.sin(pose.yaw)*.3*PAWN_MODEL_SCALE:0),pose.y+(carried?.95+.19*PAWN_MODEL_SCALE:0),pose.z+(carried?Math.cos(pose.yaw)*.3*PAWN_MODEL_SCALE:0));
+      state.cache.set(row,1,carried?Math.sin(pose.yaw)*.3*PAWN_MODEL_SCALE:0,carried?.95+.19*PAWN_MODEL_SCALE:0,carried?Math.cos(pose.yaw)*.3*PAWN_MODEL_SCALE:0);
       state.cache.set(row,2,Math.sin(time*8+pose.x)*.15+1,fire.getX(row)*state.scale*scale);
     };
     const level=actor?state.cache.sampleLinked(row,(actor.get(row,1,2)||0) as 0|1|2,actor.cpuPublication(row),bake):state.cache.sample(row,to.getX(row),to.getY(row),to.getZ(row),bake,scale);
     if(level===2)continue;
-    if(level===0&&sourceChanged||amountChanged||state.drawn[count]!==row){
+    if(sourceChanged||amountChanged||state.drawn[count]!==row){
       for(const name of names){const input=source.getAttribute(name),output=geometry.getAttribute(name) as THREE.InstancedBufferAttribute;for(let c=0;c<input.itemSize;c++)output.setComponent(count,c,input.getComponent(row,c));}
       slots.setX(count,row);state.drawn[count]=row;dirty=true;
     }count++;

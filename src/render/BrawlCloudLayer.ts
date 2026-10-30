@@ -8,7 +8,7 @@ import { TICKS_PER_SECOND } from '../sim/types';
 import type { PawnLayer } from './PawnLayer';
 import type { AnimationDetail } from './AnimationDetail';
 import type { PresentationClock } from './pawn-presentation';
-import { FxAnimationCache,fxActorCache,fxActorPose,fxFract,fxClamp } from './FxAnimationCache';
+import { FxAnimationCache,fxActorCache,fxFract,fxClamp } from './FxAnimationCache';
 
 /** The reference's 24/6/16/12 pieces are instanced, rather than 58 meshes per
  * fight. The sole adaptation is a uniform scale from its diorama to our cells. */
@@ -136,7 +136,7 @@ export class BrawlCloudLayer {
     const impactOn = impactAge.greaterThanEqual(0).and(impactAge.lessThan(.25));
     const flash = float(1).sub(impactAge.mul(4)).clamp(0,1).mul(impactOn.select(1,0));
 
-    const sampledPosition=(batch:Batch,original:()=>THREE.Node<'vec3'>,outline=0)=>batch.cache.choose(original,()=>batch.cache.affine(outline?positionLocal.add(normalLocal.mul(outline)):positionLocal,int(attribute('aPartThree','vec4').z).mul(5).add(1)));
+    const sampledPosition=(batch:Batch,original:()=>THREE.Node<'vec3'>,outline=0)=>batch.cache.choose(original,()=>batch.cache.affine(outline?positionLocal.add(normalLocal.mul(outline)):positionLocal,int(attribute('aPartThree','vec4').z).mul(5).add(1)).add(pairCenter(this.clock)));
     const puffPosition = (outline: boolean) => sampledPosition(puff,()=>Fn(() => {
       const one = attribute('aPartOne','vec4'), two = attribute('aPartTwo','vec4'), three = attribute('aPartThree','vec4');
       const t = referenceTime(this.time).mul(two.x).add(two.y);
@@ -366,11 +366,12 @@ export class BrawlCloudLayer {
       for(let row=0;row<this.pairs.length;row++){
         const pair=this.pairs[row]!,x=(to.getX(pair.a)+to.getX(pair.b))*.5,y=(to.getY(pair.a)+to.getY(pair.b))*.5,z=(to.getZ(pair.a)+to.getZ(pair.b))*.5;
         const level=batch.cache.sample(row,x,y,z,()=>this.bakePair(batch,row,pair));if(level===2)continue;
-        if(batch.drawn[count]!==row||level===0&&changed){
+        const repack=batch.drawn[count]!==row||level===0;
+        if(batch.drawn[count]!==row||changed){
           for(let local=0;local<batch.count;local++){
             const slot=count*batch.count+local;
             for(let actor=0;actor<2;actor++)for(let field=0;field<3;field++){const input=sources[field]!,index=actor?pair.b:pair.a;attrs[actor*3+field]!.setXYZW(slot,input.getX(index),input.getY(index),input.getZ(index),input.getW(index));}
-            attrs[6]!.setXYZW(slot,pair.hitAt,pair.seed,pair.a,pair.b);slots.setX(slot,row);
+            if(repack){attrs[6]!.setXYZW(slot,pair.hitAt,pair.seed,pair.a,pair.b);slots.setX(slot,row);}
           }
           batch.drawn[count]=row;dirty=true;
         }count++;
@@ -381,8 +382,7 @@ export class BrawlCloudLayer {
   }
 
   private bakePair(batch:Batch,row:number,pair:Pair):void {
-    const a=fxActorPose(this.source!,this.clock,pair.a),b=fxActorPose(this.source!,this.clock,pair.b),time=this.time.value,reference=time*SPEED+pair.seed;
-    const center:[number,number,number]=[(a.x+b.x)*.5,(a.y+b.y)*.5,(a.z+b.z)*.5],centerY=Math.sin(reference*12)*.06*INTENSITY+1.45;
+    const time=this.time.value,reference=time*SPEED+pair.seed,centerY=Math.sin(reference*12)*.06*INTENSITY+1.45;
     const age=time-pair.hitAt,flash=age>=0&&age<.25?fxClamp(1-age*4):0;
     const parts=partNames.map(name=>batch.geometry.getAttribute(name) as THREE.InterleavedBufferAttribute);
     for(let local=0;local<batch.count;local++){
@@ -419,7 +419,7 @@ export class BrawlCloudLayer {
       batch.cache.set(row,at,xx*sx*SCALE,xy*sx*SCALE,xz*sx*SCALE);
       batch.cache.set(row,at+1,yx*sy*SCALE,yy*sy*SCALE,yz*sy*SCALE);
       batch.cache.set(row,at+2,zx*sz*SCALE,zy*sz*SCALE,zz*sz*SCALE);
-      batch.cache.set(row,at+3,center[0]+px*SCALE,center[1]+py*SCALE,center[2]+pz*SCALE);
+      batch.cache.set(row,at+3,px*SCALE,py*SCALE,pz*SCALE);
       batch.cache.set(row,at+4,flash);
     }
   }
