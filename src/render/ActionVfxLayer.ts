@@ -1,12 +1,12 @@
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, cameraPosition, cos, dot, float, int, uint, mix, sin, smoothstep, uniform, uv, varying, vec2, vec3, vec4, modelViewMatrix,modelWorldMatrix,positionGeometry } from 'three/tsl';
+import { Fn, If, attribute, cameraPosition, cos, dot, float, int, uint, mix, sin, smoothstep, uniform, uv, varying, vec2, vec3, vec4, modelViewMatrix,modelWorldMatrix,positionGeometry } from 'three/tsl';
 import type { Pawn, World } from '../sim/types';
 import { TICKS_PER_SECOND } from '../sim/types';
 import { footprintCells } from '../sim/definitions';
 import type { PawnLayer } from './PawnLayer';
 import { pawnPresentationPose,type PresentationClock } from './pawn-presentation';
 import type { AnimationDetail } from './AnimationDetail';
-import { FxAnimationCache,fxActorPose,fxFract,fxSmoothstep } from './FxAnimationCache';
+import { FxAnimationCache,fxActorPose } from './FxAnimationCache';
 
 /** These are presentation codes, never saved in the world or consumed by AI. */
 export const ACTION_FX = {
@@ -160,15 +160,16 @@ function spriteGeometry(): THREE.InstancedBufferGeometry {
  * sampled path uses resident sine/cosine coefficients instead of rotating a
  * changing angle independently in every sprite vertex. */
 class ActionSpriteMaterial extends THREE.SpriteNodeMaterial {
-  constructor(private readonly palette:FxAnimationCache,parameters:THREE.SpriteNodeMaterialParameters){super(parameters);}
+  constructor(private readonly palette:FxAnimationCache,parameters:THREE.SpriteNodeMaterialParameters,
+    private readonly middleCenter:()=>THREE.Node<'vec3'>,private readonly middleScale:()=>THREE.Node<'vec2'>){super(parameters);}
   override setupPositionView(builder:THREE.NodeBuilder):THREE.Node {
     return this.palette.choose(()=>super.setupPositionView(builder) as THREE.Node<'vec4'>,()=>{
-      const cell=int(attribute('actionPart','float')).mul(3),center=this.palette.cell(cell.add(1)),shape=this.palette.cell(cell.add(2));
-      // Three's SpriteNodeMaterial indexes these TSL matrix columns; its
-      // current declarations omit their numeric accessors.
+      const cell=int(attribute('actionPart','float')).mul(3),rotation=this.palette.cell(cell.add(3));
+      // Keep Three's own sprite projection and the retained rotation basis;
+      // only center/size follow the already-confirmed decorative clock.
       const columns=modelWorldMatrix as unknown as {readonly 0:THREE.Node<'vec4'>;readonly 1:THREE.Node<'vec4'>};
-      const view=modelViewMatrix.mul(vec3(center.xyz)),scale=vec2(columns[0].xyz.length(),columns[1].xyz.length()).mul(shape.xy);
-      const local=positionGeometry.xy.mul(scale),rotated=vec2(local.x.mul(shape.z).sub(local.y.mul(shape.w)),local.x.mul(shape.w).add(local.y.mul(shape.z)));
+      const view=modelViewMatrix.mul(vec3(this.middleCenter())),scale=vec2(columns[0].xyz.length(),columns[1].xyz.length()).mul(this.middleScale());
+      const local=positionGeometry.xy.mul(scale),rotated=vec2(local.x.mul(rotation.x).sub(local.y.mul(rotation.y)),local.x.mul(rotation.y).add(local.y.mul(rotation.x)));
       return vec4(view.xy.add(rotated),view.zw);
     },vec4(0));
   }
@@ -199,8 +200,27 @@ export class ActionVfxLayer {
     const geometry = spriteGeometry();
     // The contact marks are placed just outside physical surfaces so normal
     // scene depth still hides them behind walls, roofs and furniture.
-    const material = new ActionSpriteMaterial(this.cache,{ transparent: true, depthTest: true, depthWrite: false, alphaTest: .08 });
     const particleCell=(offset:number)=>this.cache.cell(int(attribute('actionPart','float')).mul(3).add(offset));
+    const actionCycle=(sleeping=false)=>this.time.mul(sleeping?.15:1.65)
+      .add(attribute('actionPart','float').mul(sleeping?.21:.173))
+      .add(attribute('actionFx','vec4').w.mul(sleeping?.003:.017)).fract();
+    const middleCenter=()=>Fn(()=>{
+      const sleeping=attribute('actionFx','vec4').x.equal(ACTION_FX.sleep);
+      const cycle=sleeping.select(actionCycle(true),actionCycle());
+      const center=particleCell(1).xyz.add(particleCell(2).xyz.mul(cycle)).toVar();
+      If(sleeping,()=>{center.assign(center.add(vec3(sin(cycle.mul(2*Math.PI)).mul(.11),0,0)));});
+      return center;
+    })();
+    const middleScale=()=>Fn(()=>{
+      const base=vec2(particleCell(2).w,particleCell(3).z),size=base.toVar();
+      If(attribute('actionFx','vec4').x.equal(ACTION_FX.sleep),()=>{
+        const cycle=actionCycle(true);
+        const growth=float(.19).add(cycle.mul(.17)).mul(smoothstep(0,.10,cycle)).mul(float(1).sub(smoothstep(.82,1,cycle)));
+        size.assign(base.mul(growth));
+      });
+      return size;
+    })();
+    const material = new ActionSpriteMaterial(this.cache,{ transparent: true, depthTest: true, depthWrite: false, alphaTest: .08 },middleCenter,middleScale);
     material.positionNode = this.cache.choose(()=>Fn(() => {
       const fx = attribute('actionFx', 'vec4'), part = attribute('actionPart', 'float');
       const pose = pawnPresentationPose(this.clock,uint(attribute('fxSlot','float')));
@@ -241,7 +261,7 @@ export class ActionVfxLayer {
         sin(angle).mul(workSpread));
       return sleeping.select(pose.xyz.add(sleepOffset),
         fx.x.equal(ACTION_FX.eat).select(pose.xyz.add(mealOffset),workTarget.add(workOffset)));
-    })(),()=>particleCell(1).xyz);
+    })(),middleCenter);
     material.scaleNode = this.cache.choose(()=>Fn(() => {
       const kind = attribute('actionFx', 'vec4').x, part = attribute('actionPart', 'float');
       const sleeping = kind.equal(ACTION_FX.sleep);
@@ -257,7 +277,7 @@ export class ActionVfxLayer {
         kind.equal(ACTION_FX.cook).or(kind.equal(ACTION_FX.butcher)).or(kind.equal(ACTION_FX.butcherGround)).select(vec2(.42),
         kind.equal(ACTION_FX.research).select(vec2(.43),vec2(.39,.36))));
       return sleeping.select(vec2(sleepSize),workSize).mul(visible.select(1,0));
-    })(),()=>particleCell(2).xy,vec2(0));
+    })(),middleScale,vec2(0));
     material.rotationNode = this.cache.choose(()=>Fn(() => {
       const fx=attribute('actionFx','vec4'),part=attribute('actionPart','float');
       const angle=part.mul(2.39996323).add(fx.w.mul(.03));
@@ -273,10 +293,9 @@ export class ActionVfxLayer {
       // fragment below. Publish them in this outer stack before any If.
       const part=varying(rawPart), pixel=varying(uv()).sub(vec2(.5)).toVar();
       const radius=pixel.length(), ink=vec3(.20,.13,.075);
-      const cycle=varying(this.cache.choose(()=>this.time.mul(1.65).add(rawPart.mul(.173)).add(fx.w.mul(.017)).fract(),()=>particleCell(3).z,float(0)));
-      const workLifeSample=this.cache.cachedVarying(()=>particleCell(3).x);
-      const workLife=this.cache.choose(()=>smoothstep(0,.09,cycle).mul(float(1).sub(smoothstep(.66,.98,cycle))),()=>workLifeSample,float(0));
-      const sleepCycle=varying(this.cache.choose(()=>this.time.mul(.15).add(rawPart.mul(.21)).add(fx.w.mul(.003)).fract(),()=>particleCell(3).w,float(0)));
+      const cycle=varying(this.time.mul(1.65).add(rawPart.mul(.173)).add(fx.w.mul(.017)).fract());
+      const workLife=smoothstep(0,.09,cycle).mul(float(1).sub(smoothstep(.66,.98,cycle)));
+      const sleepCycle=varying(this.time.mul(.15).add(rawPart.mul(.21)).add(fx.w.mul(.003)).fract());
       const stroke=(ax:number,ay:number,bx:number,by:number,width:number)=>{
         const a=vec2(ax,ay),direction=vec2(bx-ax,by-ay);
         const t=dot(pixel.sub(a),direction).div(dot(direction,direction)).clamp(0,1);
@@ -289,8 +308,7 @@ export class ActionVfxLayer {
       const projection=dot(fromTop,diagonalDirection).div(dot(diagonalDirection,diagonalDirection)).clamp(0,1);
       const distance=top.min(bottom).min(fromTop.sub(diagonalDirection.mul(projection)).length()).toVar();
       const sleepShape=float(1).sub(smoothstep(.095,.11,distance)).toVar();
-      const sleepFadeSample=this.cache.cachedVarying(()=>particleCell(3).y);
-      const sleepAlpha=this.cache.choose(()=>sleepShape.mul(smoothstep(0,.10,sleepCycle)).mul(float(1).sub(smoothstep(.53,1,sleepCycle))).mul(.74),()=>sleepShape.mul(sleepFadeSample),float(0));
+      const sleepAlpha=sleepShape.mul(smoothstep(0,.10,sleepCycle)).mul(float(1).sub(smoothstep(.53,1,sleepCycle))).mul(.74);
       // A flat parchment fill matches the UI; both silhouette and opacity
       // disappear gradually instead of an opaque gradient-coloured Z popping.
       const sleepColor=mix(ink,vec3(.95,.86,.67),float(1).sub(smoothstep(.055,.071,distance)));
@@ -509,24 +527,29 @@ export class ActionVfxLayer {
   private bake(row:number):void {
     const pose=fxActorPose(this.source!,this.clock,row),kind=this.effects.getX(row),x=this.effects.getY(row),z=this.effects.getZ(row),seed=this.effects.getW(row),time=this.time.value;
     for(let part=0;part<SPRITES_PER_PAWN;part++){
-      const angle=part*2.39996323+seed*.03,work=fxFract(time*1.65+part*.173+seed*.017),sleep=fxFract(time*.15+part*.21+seed*.003);
-      let px=x,py=0,pz=z;
-      if(kind===ACTION_FX.sleep){px=pose.x+Math.sin(pose.yaw)*-SLEEP_SIGN_HEAD_DISTANCE+Math.sin(sleep*2*Math.PI)*.11+part*.035;py=pose.y+SLEEP_SIGN_BASE_HEIGHT+sleep*SLEEP_SIGN_RISE;pz=pose.z+Math.cos(pose.yaw)*-SLEEP_SIGN_HEAD_DISTANCE+part*.05;}
-      else if(kind===ACTION_FX.eat){px=pose.x+Math.sin(pose.yaw)*.33+Math.cos(angle)*.24;py=pose.y+1.48+work*.30;pz=pose.z+Math.cos(pose.yaw)*.33+Math.sin(angle)*.24;}
+      const angle=part*2.39996323+seed*.03;
+      let px=x,py=0,pz=z,dx=0,dy=0,dz=0;
+      if(kind===ACTION_FX.sleep){px=pose.x+Math.sin(pose.yaw)*-SLEEP_SIGN_HEAD_DISTANCE+part*.035;py=pose.y+SLEEP_SIGN_BASE_HEIGHT;pz=pose.z+Math.cos(pose.yaw)*-SLEEP_SIGN_HEAD_DISTANCE+part*.05;dy=SLEEP_SIGN_RISE;}
+      else if(kind===ACTION_FX.eat){px=pose.x+Math.sin(pose.yaw)*.33+Math.cos(angle)*.24;py=pose.y+1.48;pz=pose.z+Math.cos(pose.yaw)*.33+Math.sin(angle)*.24;dy=.30;}
       else {
-        if(kind===ACTION_FX.mine||kind===ACTION_FX.chop){const dx=(part<4?pose.x:this.cameraPoint.x)-x,dz=(part<4?pose.z:this.cameraPoint.z)-z,length=Math.max(.001,Math.hypot(dx,dz)),reach=part<4?(kind===ACTION_FX.mine?.61:.58):(kind===ACTION_FX.mine?.73:.84);px+=dx/length*reach;pz+=dz/length*reach;}
+        if(kind===ACTION_FX.mine||kind===ACTION_FX.chop){const ax=(part<4?pose.x:this.cameraPoint.x)-x,az=(part<4?pose.z:this.cameraPoint.z)-z,length=Math.max(.001,Math.hypot(ax,az)),reach=part<4?(kind===ACTION_FX.mine?.61:.58):(kind===ACTION_FX.mine?.73:.84);px+=ax/length*reach;pz+=az/length*reach;}
         const ground=kind===ACTION_FX.tailorGround||kind===ACTION_FX.butcherGround,bench=kind>=ACTION_FX.cook&&kind!==ACTION_FX.extinguish&&!ground;
-        const contact=ground?.55:bench?1.25:kind===ACTION_FX.mine?1.65:kind===ACTION_FX.chop?1.50:1.18,spread=kind===ACTION_FX.research?.22+work*.34:.13+work*.24;
-        px+=Math.cos(angle)*spread;pz+=Math.sin(angle)*spread;py=contact+work*(kind===ACTION_FX.cook?.48:kind===ACTION_FX.chop?.22:.38);
+        const contact=ground?.55:bench?1.25:kind===ACTION_FX.mine?1.65:kind===ACTION_FX.chop?1.50:1.18;
+        const spread=kind===ACTION_FX.research?.22:.13,growth=kind===ACTION_FX.research?.34:.24;
+        const cosAngle=Math.cos(angle),sinAngle=Math.sin(angle);
+        px+=cosAngle*spread;pz+=sinAngle*spread;py=contact;
+        dx=cosAngle*growth;dz=sinAngle*growth;dy=kind===ACTION_FX.cook?.48:kind===ACTION_FX.chop?.22:.38;
       }
       const visible=kind===ACTION_FX.sleep?part<5:kind===ACTION_FX.research?part<6:kind>=ACTION_FX.chop;
       let sx=kind===ACTION_FX.eat?.26:kind===ACTION_FX.cook||kind===ACTION_FX.butcher||kind===ACTION_FX.butcherGround?.42:kind===ACTION_FX.research?.43:.39,sy=sx===.39?.36:sx;
-      if(kind===ACTION_FX.sleep)sx=sy=(.19+sleep*.17)*fxSmoothstep(0,.10,sleep)*(1-fxSmoothstep(.82,1,sleep));
+      if(kind===ACTION_FX.sleep)sx=sy=1;
       if(!visible)sx=sy=0;
+      // Same 25 cells per actor: anchor, linear drift/base X, retained
+      // rotation/base Y. Decorative cycles/fades no longer enter the upload.
       this.cache.set(row,1+part*3,px,py,pz);
+      this.cache.set(row,2+part*3,dx,dy,dz,sx);
       const rotation=kind===ACTION_FX.sleep?Math.sin(time*2*Math.PI*.15+part)*.13:kind>=ACTION_FX.chop?angle+.3:0;
-      this.cache.set(row,2+part*3,sx,sy,Math.cos(rotation),Math.sin(rotation));
-      this.cache.set(row,3+part*3,fxSmoothstep(0,.09,work)*(1-fxSmoothstep(.66,.98,work)),fxSmoothstep(0,.10,sleep)*(1-fxSmoothstep(.53,1,sleep))*.74,work,sleep);
+      this.cache.set(row,3+part*3,Math.cos(rotation),Math.sin(rotation),sy);
     }
   }
   setDetailVisible(visible: boolean): void { this.detailVisible = visible; this.mesh.visible = visible && this.active; }

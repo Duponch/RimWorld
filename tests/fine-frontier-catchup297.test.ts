@@ -7,11 +7,11 @@ import type {World} from '../src/sim/types';
 const eps=1e-9;
 function fine(t:MotionTimeline,tick:number,speed:number,now:number,reset=false,tracks:PawnTrack[]=[]){t.adopt(tick,speed,tracks,now,reset,true,true);}
 
-test('a delayed already-confirmed positive receipt closes accumulated fine297 lag to at most one Core immediately',()=>{
+test('a delayed confirmed positive receipt joins at most36ms of current-rate history immediately',()=>{
  const t=new MotionTimeline();fine(t,100,1,0,true);fine(t,100.1,1,20);t.advance(200);
  expect(t.tick).toBeCloseTo(100.1,9);const before=t.tick;
- fine(t,101.8,1,500);expect(t.tick).toBeCloseTo(101.7,9);expect(t.tick).toBeGreaterThan(before+1);
- expect(t.tick).toBeLessThanOrEqual(101.8);expect(101.8-t.tick).toBeLessThanOrEqual(.1+eps);
+ fine(t,101.8,1,500);expect(t.tick).toBeCloseTo(101.8-6*.036,9);expect(t.tick).toBeGreaterThan(before+1);
+ expect(t.tick).toBeLessThanOrEqual(101.8);expect(101.8-t.tick).toBeLessThanOrEqual(6*.036+eps);
  expect(t.advance(100000)).toBe(101.8);expect(t.advance(200000)).toBe(101.8);
 });
 
@@ -21,7 +21,7 @@ test.each([30,60])('delivered-late fine297 samples do not retain10-22Core of ext
  for(let frame=1;frame<=Math.ceil(1400*raf/1000);frame++){
   const now=frame*1000/raf;
   while(messages[index]&&messages[index]!.at<=now){const m=messages[index++]!,before=t.tick;fine(t,m.tick,m.speed,m.at);confirmed=m.tick;
-   expect(t.tick).toBeGreaterThanOrEqual(before-eps);expect(t.tick).toBeLessThanOrEqual(confirmed+eps);expect(confirmed-t.tick).toBeLessThanOrEqual(.1+eps);if(t.tick>before+eps)jumps++;
+   expect(t.tick).toBeGreaterThanOrEqual(before-eps);expect(t.tick).toBeLessThanOrEqual(confirmed+eps);expect(confirmed-t.tick).toBeLessThanOrEqual(m.speed*6*.036+eps);if(t.tick>before+eps)jumps++;
   }
   const played=t.advance(now);expect(played).toBeGreaterThanOrEqual(previous-eps);expect(played).toBeLessThanOrEqual(confirmed+eps);previous=played;
  }
@@ -34,12 +34,12 @@ test('a stale or repeated receipt cannot rewind fine297; no delivery advances pa
  t.advance(10000);expect(t.tick).toBe(102);fine(t,101.9,6,11000);expect(t.tick).toBe(102);expect(t.advance(20000)).toBe(102);
 });
 
-test('fine297 pause remains exact and frozen, clearing earlier rate changes; resume waits only for a genuinely new Core',()=>{
+test('fine297 pause stays exact; resume buffers36ms or releases isolated confirmed history after bounded silence',()=>{
  const t=new MotionTimeline();fine(t,10,1,0,true);fine(t,12,3,100);fine(t,14,6,120);fine(t,14.2,0,130);
  expect(t.tick).toBe(14.2);for(const now of [120,130,200,100000])expect(t.advance(now)).toBe(14.2);
  fine(t,14.2,1,100010);expect(t.tick).toBe(14.2);expect(t.advance(100020)).toBe(14.2);
  fine(t,14.3,1,100030);expect(t.tick).toBeCloseTo(14.2,9);expect(t.advance(100030)).toBeCloseTo(14.2,9);
- expect(t.advance(100040)).toBeCloseTo(14.26,9);fine(t,14.4,3,100050);expect(t.tick).toBeCloseTo(14.3,9);expect(t.tick).toBeLessThanOrEqual(14.4);
+ expect(t.advance(100040)).toBeCloseTo(14.2,9);fine(t,14.4,3,100050);expect(t.tick).toBeCloseTo(14.2,9);expect(t.tick).toBeLessThanOrEqual(14.4);fine(t,14.9,3,100070);expect(t.advance(100080)).toBeGreaterThan(14.2);expect(t.tick).toBeLessThanOrEqual(14.9);
 });
 
 test('an explicit owner reset keeps its lower frontier, revokes old cursor generation and replaces old track membership',()=>{
@@ -53,7 +53,7 @@ test('fine297 forward correction keeps every received track piece and lets the r
  const tracks:PawnTrack[]=[{id:7,segments:[{from:{x:0,z:0},to:{x:1,z:0},start:100,end:101},{from:{x:1,z:0},to:{x:1,z:0},start:101.2,end:101.2,fromFraction:0,toFraction:0,stop297:true},{from:{x:1,z:0},to:{x:2,z:0},start:101.4,end:104}]}];
  const before=structuredClone(tracks),t=new MotionTimeline(),q=new PresentationQueue();
  const worlds=[101,102,103].map(tick=>({tick,label:String(tick)}) as unknown as World);for(const w of worlds)q.push(w);
- fine(t,100,1,0,true,tracks);fine(t,103,1,500,false,tracks);expect(t.tick).toBeCloseTo(102.9,9);
+ fine(t,100,1,0,true,tracks);fine(t,103,1,500,false,tracks);expect(t.tick).toBeCloseTo(103-6*.036,9);
  expect(q.take(t.tick)).toBe(worlds[1]);expect(q.size).toBe(1);expect(q.take(t.tick)).toBeUndefined();expect(q.take(103)).toBe(worlds[2]);
  expect(t.tracks.get(7)).toBe(tracks[0]!.segments);expect(t.playbackSegment435(7)).toBe(tracks[0]!.segments[2]);expect(tracks).toStrictEqual(before);
 });

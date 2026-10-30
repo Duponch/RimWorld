@@ -575,7 +575,7 @@ class MainColonyRenderer extends ColonyRenderer {
   protected override cameraOnlyInput():boolean{return nativeUi?.hasOpenGamePage(true)??false;}
   protected override createSelectionRectanglePort(){return nativeUi?(bounds:{left:number;top:number;width:number;height:number}|null)=>nativeUi!.setSelectionRectangle(bounds):undefined;}
   get admissionFrameReady():boolean {return !this.disposed&&!this.preparing&&!this.fatalError;}
-  protected override frame(now:number):void {this.beginPresentationFrame297();drainMainAdmissionsBeforeFrame();try{super.frame(now);}finally{notifyMainAdmissionAvailability();}}
+  protected override frame(now:number):void {this.beginPresentationFrame297();drainMainAdmissionsBeforeFrame();const frameNow=Math.max(now,this.hostPort.now());try{super.frame(frameNow);}finally{notifyMainAdmissionAvailability();}}
   protected override createApplicationContext():SceneApplicationContext{return new SceneApplicationContext();}
   protected override createEnvironmentLighting():EnvironmentLighting {const context=this.applicationContext!;return new EnvironmentLighting(new EnvironmentLightField(context.topology,world=>context.read(world)?.lighting));}
   protected override createIntentReader(){return createClosedMainMapIntentReader();}

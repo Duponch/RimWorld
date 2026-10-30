@@ -1,0 +1,62 @@
+import {expect,test} from 'vitest';
+import {MotionTimeline} from '../src/render/MotionTimeline';
+
+// Numeric clock transitions only: these cases grant no World/Native authority.
+test('semantic speed timestamps, immediate Pause and new-owner reset survive adaptive pacing',()=>{
+ const t=new MotionTimeline();t.adopt(100,6,[],0,true,true,true);
+ t.adopt(101.44,6,[],40,false,true,true);t.advance(50);
+ // A receipt may be later than a pending RAF. A semantic change can refill the
+ // confirmed reserve, but its new rate cannot run before its timestamp.
+ t.adopt(101.8,1,[],60,false,true,true);const one=t.tick;
+ expect(t.advance(58)).toBe(one);
+ expect(t.advance(62)-one).toBeCloseTo(.012,12);
+ t.adopt(103,6,[],80,false,true,true);const six=t.tick;
+ expect(t.advance(79)).toBe(six);
+ expect(t.advance(82)-six).toBeCloseTo(.072,12);
+ t.adopt(103,0,[],83,false,true,true);
+ expect(t.tick).toBe(103);expect(t.advance(100000)).toBe(103);
+ // A load/new owner can legitimately restart at an earlier Core. Old rate,
+ // backlog and future events cannot leak into that replacement history.
+ t.adopt(10,6,[],100001,true,true,true);
+ expect(t.tick).toBe(10);expect(t.advance(100020)).toBe(10);
+ t.adopt(11.44,6,[],100041,false,true,true);const fresh=t.tick;
+ expect(fresh).toBeCloseTo(10.144,12);
+ expect(t.advance(100051)-fresh).toBeCloseTo(.36,12);
+ expect(t.tick).toBeLessThanOrEqual(11.44);
+});
+
+test('duplicate receipts never renew a genuine no-progress silence or invent a Core',()=>{
+ const t=new MotionTimeline();t.adopt(100,6,[],0,true,true,true);
+ t.adopt(100.1,6,[],20,false,true,true);
+ for(const now of [40,60,80,100]){
+  t.adopt(100.1,6,[],now,false,true,true);expect(t.advance(now)).toBe(100);
+ }
+ // The last actual advance was at20, not the last duplicate at100.
+ expect(t.advance(121)).toBe(100.1);expect(t.advance(200)).toBe(100.1);
+ const before=t.tick;t.adopt(104,6,[],300,false,true,true);
+ expect(t.tick).toBeGreaterThan(before);expect(t.tick).toBeLessThanOrEqual(104);
+ expect((104-t.tick)/36).toBeCloseTo(.036,12);
+ const joined=t.tick;
+ t.adopt(104.72,6,[],320,false,true,true);expect(t.tick).toBe(joined);
+ expect(t.advance(320)-joined).toBeCloseTo(.72,12);
+ t.adopt(104.72,0,[],321,false,true,true);
+ expect(t.advance(100000)).toBe(104.72);
+});
+
+test('post-drain host time crosses a real receipt that lies after the RAF timestamp',()=>{
+ const t=new MotionTimeline();t.adopt(100,6,[],100,true,true,true);
+ t.adopt(101.44,6,[],140,false,true,true);const joined=t.tick;
+ // These are caller clock inputs, not a fake Main renderer or source-text test.
+ expect(t.advance(120)).toBe(joined);
+ const postDrainHost=142,staleRaf=120;
+ expect(t.advance(Math.max(staleRaf,postDrainHost))-joined).toBeCloseTo(.072,12);
+ expect(t.tick).toBeLessThanOrEqual(101.44);
+});
+
+test('the historical two-tick clock retains its original startup and rate',()=>{
+ const t=new MotionTimeline();t.adopt(100,6,[],0,true,true,false);
+ t.adopt(101.9,6,[],40,false,true,false);expect(t.advance(50)).toBe(100);
+ t.adopt(102,6,[],60,false,true,false);expect(t.tick).toBe(100);
+ expect(t.advance(70)).toBeCloseTo(100.36,12);
+ t.adopt(102,0,[],71,false,true,false);expect(t.advance(100000)).toBe(102);
+});
