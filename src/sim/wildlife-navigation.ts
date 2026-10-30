@@ -1,3 +1,5 @@
+import {effectiveLocal297} from './core-phase-297.ts';
+import {animalMoveCostCore297} from './animal-move-cost-297.ts';
 import {actualAnimalProfile256,actualAnimalMoveSpeedFactor256} from './actual-animal-profile-256.ts';
 import {naturalTerrainWalkable256} from './natural-terrain-movement-256.ts';
 import {duckTerrainWalkable256,duckTerrainOverride256} from './duck-water-256.ts';
@@ -40,39 +42,53 @@ function rankedFood(world:World,cells:Cell[],search:WeightedSearch,rank:(c:Cell)
 /** Same species/flight geometry for the decision loop and cold validators.
  * The reader lives for one synchronous pass; geometry remains lazy/shared. */
 export type AnimalNavigationReader=((a:WildAnimal)=>ReturnType<typeof animalNavigation>)&{invalidate():void};
-export function createAnimalNavigationReader(world:World,getGeometry?:()=>StructureNavigationGeometry,readArea:(a:WildAnimal)=>AnimalAreaPolicy287|undefined=a=>captureAnimalAreaPolicy287(world,a)):AnimalNavigationReader {
+export function createAnimalNavigationReader(world:World,getGeometry?:()=>StructureNavigationGeometry,readArea:(a:WildAnimal)=>AnimalAreaPolicy287|undefined=a=>captureAnimalAreaPolicy287(world,a),physicalNow?:()=>number):AnimalNavigationReader {
   let geometry:StructureNavigationGeometry|undefined,ordinary:ReturnType<typeof animalNavigation>|undefined,unfenced:ReturnType<typeof animalNavigation>|undefined;
   const ducks=new Map<boolean,ReturnType<typeof animalNavigation>>();
   const captured=()=>geometry??=getGeometry?.()??captureStructureNavigation(world);
   const read=(animal:WildAnimal)=>{
     if(world.schemaVersion>=256&&animal.species==='duck'){
       const flying=duckFlying256(animal.flight);let nav=ducks.get(flying);
-      if(!nav){nav=animalNavigation(world,false,true,animal,false,captured(),readArea);ducks.set(flying,nav);}return nav;
+      if(!nav){nav=animalNavigation(world,false,true,animal,false,captured(),readArea,physicalNow);ducks.set(flying,nav);}return nav;
     }
     const passFence=isAnimalSpecies256(animal.species)?animalCore256(animal.species).race.roamMtbDays===null:
       animal.species==='hare'||animal.species==='snow-hare'||animalSpecies(animal.species).predator;
-    return passFence?unfenced??=animalNavigation(world,false,true,undefined,false,captured(),readArea):ordinary??=animalNavigation(world,false,false,undefined,false,captured(),readArea);
+    return passFence?unfenced??=animalNavigation(world,false,true,undefined,false,captured(),readArea,physicalNow):ordinary??=animalNavigation(world,false,false,undefined,false,captured(),readArea,physicalNow);
   };
   return Object.assign(read,{invalidate(){geometry=undefined;ordinary=undefined;unfenced=undefined;ducks.clear();}});
 }
 /** Short-lived capture: no world mutation may interleave its searches/steps. */
 /** `allowClosedGate` is for planning a handler-led route only. Physical steps
  * must use the default navigation after the handler opens each passage. */
-export function animalNavigation(world:World,allowClosedGate=false,fencePassable=false,actor?:WildAnimal,capturedFlight=false,providedGeometry?:StructureNavigationGeometry,readArea:(a:WildAnimal)=>AnimalAreaPolicy287|undefined=a=>captureAnimalAreaPolicy287(world,a)) {
+export function animalNavigation(world:World,allowClosedGate=false,fencePassable=false,actor?:WildAnimal,capturedFlight=false,providedGeometry?:StructureNavigationGeometry,readArea:(a:WildAnimal)=>AnimalAreaPolicy287|undefined=a=>captureAnimalAreaPolicy287(world,a),physicalNow?:()=>number) {
   let failedRoute:{actor:Cell;x:number;z:number;tick:number;field:DistanceField}|undefined;
   const area=(start:Cell)=>{if(![287,288,289,290,291,292,293,294,295,296,297].includes(Number(world.schemaVersion)))return;const original=world.wildlife?.animals.find(a=>a===start);return original?readArea(original):undefined;};
   const duck=world.schemaVersion>=256&&actor?.species==='duck'?actor:undefined,override=duck&&duckTerrainOverride256(world,duck),flying=!!duck&&(capturedFlight||duckFlying256(duck.flight));
   const terrainFree=(terrain:unknown)=>naturalTerrainWalkable256(terrain)||flying&&terrain==='water-deep';
   const geometry=providedGeometry??captureStructureNavigation(world);
-  const solids=new Set<number>(),corners=geometry.corners,stand=captureStandability(world,geometry),width=world.width;
+  const solids=new Set<number>(),corners=geometry.corners,width=world.width;
+  // Fine continuation reads step/haulStep only. Preserve immediate legacy
+  // capture; the physical reader pays for standability only if free is used.
+  let stand=physicalNow?undefined:captureStandability(world,geometry);
+  const liveDoors=physicalNow?new Map<number,World['structures']>():undefined;
   const add=(s:Parameters<typeof footprintCells>[0])=>{for(const c of footprintCells(s))solids.add(c.z*width+c.x);};
   for(const {structure:s,cells} of geometry.entries) {
     if(s.kind==='vent'||s.kind==='wall'||s.kind==='cooler'||s.kind==='fence'&&!fencePassable&&!flying||world.schemaVersion<22&&s.kind==='table')for(const i of cells)solids.add(i);
-    if(isPassageDoor(s.kind)&&(s.door?.forbidden||!allowClosedGate&&(!s.door?.open||doorOpenness(s,world.tick)<1-1e-9)))solids.add(s.z*width+s.x);
+    if(isPassageDoor(s.kind)){
+      if(liveDoors){const index=s.z*width+s.x,row=liveDoors.get(index)??[];row.push(s);liveDoors.set(index,row);}
+      else if(s.door?.forbidden||!allowClosedGate&&(!s.door?.open||doorOpenness(s,world.tick)<1-1e-9))solids.add(s.z*width+s.x);
+    }
   }
   for(const j of world.jobs)if(jobBlocksTransit(world,j))add(j);
-  const blockedAt=(index:number)=>solids.has(index)||!terrainFree(world.tiles[index]?.terrain);
-  const free=(c:Cell)=>inBounds(world,c.x,c.z)&&(stand(c)||flying&&world.tiles[c.z*width+c.x]?.terrain==='water-deep')&&!blockedAt(c.z*width+c.x);
+  const liveDoorBlocked=(index:number):boolean=>{
+    const doors=liveDoors?.get(index);if(!doors)return false;
+    const now=physicalNow!();
+    return doors.some(s=>s.door?.forbidden||!allowClosedGate&&(!s.door?.open||doorOpenness(s,now)<1-1e-9));
+  };
+  const blockedAt=liveDoors
+    ?(index:number)=>solids.has(index)||!terrainFree(world.tiles[index]?.terrain)||liveDoorBlocked(index)
+    :(index:number)=>solids.has(index)||!terrainFree(world.tiles[index]?.terrain);
+  const free=(c:Cell)=>inBounds(world,c.x,c.z)&&((stand??=captureStandability(world,geometry))(c)||flying&&world.tiles[c.z*width+c.x]?.terrain==='water-deep')&&!blockedAt(c.z*width+c.x);
   // Animal origins deliberately have no Pawn identity in canStep. The same
   // solid/door corner rule can use point queries without a map-sized mask.
   const step=(a:Cell,b:Cell)=>{
@@ -84,6 +100,9 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
   let blocked:Uint8Array|undefined;
   const routeGrid=()=>{
     if(!blocked){blocked=new Uint8Array(width*world.height);for(let i=0;i<world.tiles.length;i++){const t=world.tiles[i]!.terrain;if(!terrainFree(t))blocked[i]=1;}for(const i of solids)blocked[i]=1;}
+    // A physical reader retains geometry, never a frozen door phase. Route
+    // queries refresh only the sparse door entries; point steps scan no map.
+    if(liveDoors)for(const index of liveDoors.keys())blocked[index]=Number(solids.has(index)||!terrainFree(world.tiles[index]?.terrain)||liveDoorBlocked(index));
     return blocked;
   };
   // Haul uses OnCell, not Standability: a partial shelf or a chunk can be the
@@ -107,7 +126,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     if(!haulActor(a)||!inBounds(world,c.x,c.z)||!naturalTerrainWalkable256(world.tiles[c.z*width+c.x]?.terrain)||haulStaticSolids().has(c.z*width+c.x))return false;
     for(const s of geometry.at(c)){
       if(START_STRUCTURE_PHYSICS_256[s.kind].fence&&haulFenceBlocked(a))return false;
-      if(isPassageDoor(s.kind)&&!animalHaulDoorPassable282(world,a,s,planning))return false;
+      if(isPassageDoor(s.kind)&&!animalHaulDoorPassable282(world,a,s,planning,physicalNow?.()))return false;
     }
     return true;
   };
@@ -191,7 +210,7 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
       for(let i=0;i<world.tiles.length;i++)if(!naturalTerrainWalkable256(world.tiles[i]?.terrain))unavailable[i]=1;
       for(const i of haulStaticSolids())unavailable[i]=1;
       for(const {structure:s,cells} of geometry.entries){
-        if(START_STRUCTURE_PHYSICS_256[s.kind].fence&&haulFenceBlocked(a)||isPassageDoor(s.kind)&&!animalHaulDoorPassable282(world,a,s,true))for(const i of cells)unavailable[i]=1;
+        if(START_STRUCTURE_PHYSICS_256[s.kind].fence&&haulFenceBlocked(a)||isPassageDoor(s.kind)&&!animalHaulDoorPassable282(world,a,s,true,physicalNow?.()))for(const i of cells)unavailable[i]=1;
       }
       const policy=area(a),n=navigationCosts(world,a,undefined,geometry),search=new WeightedSearch(width,world.height,a.z*width+a.x,unavailable,scaleNavigationCosts(n.costs,3),n.repeaters,scaleNavigationCosts(n.floors,3),corners,policy?.costs);
       return {
@@ -254,11 +273,27 @@ export function animalNavigation(world:World,allowClosedGate=false,fencePassable
     }};
 }
 export function moveAnimal(world:World,a:WildAnimal,step:(a:Cell,b:Cell)=>boolean,moving=1,geometry?:StructureNavigationGeometry):boolean {
-  const next=a.path[0];if(!next)return false;
+  const physical=Number(world.schemaVersion)===297,now=physical?effectiveLocal297(world):world.tick;
+  const next=a.path[0];if(!next||a.motion&&a.motion.end>now)return false;
   if(!step(a,next)){a.path=[];delete a.meal;a.state='idle';a.nextDecision=world.tick+10;return false;}
-  const flight=duckFlightMoveFactor256(world,a),species=actualAnimalProfile256(a),pace=(a.meal||a.flee||a.retaliation||a.predation||a.manhunter||a.burning||a.haul&&a.haul.phase!=='holding'||a.animalThermalRefuge288?.phase==='travel'?species.moveTicks:species.walkTicks)/(moving*weatherMoveFactor(world,a)*actualAnimalMoveSpeedFactor256(a))/flight,delay=furnitureDelay(world,a,next,duckTerrainOverride256(world,a),geometry)/flight,start=a.motion&&a.motion.end>=world.tick-1?a.motion.end:world.tick;
+  const flight=duckFlightMoveFactor256(world,a),species=actualAnimalProfile256(a);
+  const jog=!!(a.meal||a.flee||a.retaliation||a.predation||a.manhunter||a.burning||a.haul&&a.haul.phase!=='holding'||a.animalThermalRefuge288?.phase==='travel'||a.eggLay||a.mating||a.animalAreaReturn287||a.hiveJob?.kind==='maintain'||a.hiveJob?.kind==='attack');
+  const weather=weatherMoveFactor(world,a),stage=actualAnimalMoveSpeedFactor256(a);
+  const terrain=furnitureDelay(world,a,next,duckTerrainOverride256(world,a),geometry);
+  // Continue only the same immediately completed physical interval. A later
+  // newly chosen job does not acquire unplayed movement before its own start.
+  const start=a.motion&&a.motion.end>=now-(physical?.1:1)?a.motion.end:now;
   if(next.x!==a.x||next.z!==a.z)delete a.arrivalRotation;
-  a.motion={...(flight>1?{animalFlight:true as const}:{}),from:{x:a.x,z:a.z},to:{...next},start,end:start+Math.hypot(next.x-a.x,next.z-a.z)*pace+delay,speedFactor:3/pace,terrainDelay:delay};
+  const from={x:a.x,z:a.z},to={...next},distance=Math.hypot(next.x-a.x,next.z-a.z);
+  if(physical){
+    const cost=animalMoveCostCore297({speed:6/species.moveTicks,moving,stage,weather,diagonal:next.x!==a.x&&next.z!==a.z,walk:!jog,terrainCore:terrain*10,flight});
+    // Existing numeric segment equation captures the complete definitive cost.
+    // Old edges are never reinterpreted; no human Core token or4.6 is borrowed.
+    a.motion={...(flight>1?{animalFlight:true as const}:{}),from,to,start,end:start+cost/10,speedFactor:30*distance/cost,terrainDelay:0};
+  }else{
+    const pace=(jog?species.moveTicks:species.walkTicks)/(moving*weather*stage)/flight,delay=terrain/flight;
+    a.motion={...(flight>1?{animalFlight:true as const}:{}),from,to,start,end:start+distance*pace+delay,speedFactor:3/pace,terrainDelay:delay};
+  }
   if(a.stagger&&a.stagger.untilCore/10>start){a.motion.stagger=mergeSlowIntervals([{start:Math.max(start,a.stagger.sinceCore/10),end:a.stagger.untilCore/10}]);a.motion.end=travelEnd(a.motion);}
   if(world.snow&&animalBodySize(a)>.9)a.motion.snowEntryPending=true;
   a.x=next.x;a.z=next.z;a.path.shift();a.state='moving';finishSnowStep(world,a,animalBodySize(a));return true;

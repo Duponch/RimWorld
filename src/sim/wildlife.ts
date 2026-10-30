@@ -9,7 +9,7 @@ import {readyAnimalHaulDoorEntry282} from './doors.ts';
 import {siteAmbushWaiting263} from './world-site-ambush-263.ts';
 import {advanceGeographicRenewal262} from './geographic-renewal-runtime-262.ts';
 import {toxicFalloutActive294} from './toxic-fallout-state-294.ts';
-import {processAnimalFalloutShelter294} from './animal-fallout-shelter-294.ts';
+import {processAnimalFalloutShelter294,animalFalloutNextStepBlocked294} from './animal-fallout-shelter-294.ts';
 import {isRoofed,roofIndex} from './roof-rules.ts';
 import {processHivePriority256,processHiveWander256} from './cave-hive-lord-256.ts';
 import {reconcileHiveMaintenance256} from './cave-hive-maintenance-256.ts';
@@ -18,7 +18,7 @@ import {processAnimalConfusedWander256} from './animal-confused-wander-256.ts';
 import {animalClinicalRandom256} from './animal-condition-medical-frontier-256.ts';
 import {finishArrivalFacing256} from './arrival-rotation-256.ts';
 import {attachGeneratedAnimalGrowth256} from './animal-growth-runtime-256.ts';
-import {processGroupAnimalOnMap256} from './group-animal-formation-256.ts';
+import {processGroupAnimalOnMap256,groupAnimalPreparation} from './group-animal-formation-256.ts';
 import {hitSkyfallerRoof256} from './roofing.ts';
 import {advanceDuckFlyers256,commitDuckFlyExits256,holdNewDuckArrival256,beginDuckFlyExit256,duckPhysicalOwnerCount256,type DuckFlyerServices256} from './duck-flyer-runtime-256.ts';
 import {selectDuckFlyerArrival256} from './duck-flyer-selection-256.ts';
@@ -50,7 +50,7 @@ import type { Cell,Resource,World } from './types.ts';
 import { animalSpecies,faunaBiome,selectBiomeSpecies,type AnimalSpeciesId,type FaunaBiomeId } from './animal-species.ts';
 import { animalHandlingHolding } from './animal-handling.ts';
 import { animalCareInProgress,animalCareTargets } from './animal-care.ts';
-import { animalCarrier } from './animal-rest-state.ts';
+import { animalCarrier,animalServiceIds } from './animal-rest-state.ts';
 import { processAnimalRest } from './animal-rest.ts';
 import { animalFeedingInProgress } from './animal-feeding.ts';
 import { veterinaryCareSpeciesAllowed,veterinaryNeedsRest } from './veterinary-rules.ts';
@@ -253,7 +253,7 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
     // Transport owns position only: life, health, bleeding and needs still advance.
     if(world.schemaVersion>=221&&animalCarrier(world,a.id))continue;
     hauling.recover(a);
-    if(a.filthFeet&&a.motion&&a.motion.end>world.tick-1&&a.motion.end<=world.tick)recordShipCasketFilthMovement277(world,a);
+    if(Number(world.schemaVersion)!==297&&a.filthFeet&&a.motion&&a.motion.end>world.tick-1&&a.motion.end<=world.tick)recordShipCasketFilthMovement277(world,a);
     if(a.exitFlight)continue;
     if(!a.burning&&!a.flee&&!a.retaliation&&siteAmbushWaiting263(world,a.id,'animal')){a.path=[];if(!a.motion||a.motion.end<=world.tick)a.state='idle';continue;}
     advanceAnimalManhunter(world,a);
@@ -436,4 +436,40 @@ export function advanceWildlife(world:World,duckFlyerServices:DuckFlyerServices2
   if(retiredDucks.size)s.animals=s.animals.filter(a=>!retiredDucks.has(a.id));
   finishAnimalExits(world,departures);
   commitDuckFlyExits256(world);advanceDuckFlyers256(world,duckFlyerServices);
+}
+
+/** Read-only participants captured only until macro/command/impact. This is
+ * neither an animal job planner nor permission to replace its true owner. */
+export interface AnimalPathGuards297 {readonly led:ReadonlySet<number>;readonly matingFemales:ReadonlySet<number>;readonly services:ReadonlySet<number>;readonly night:boolean}
+export function captureAnimalPathGuards297(world:World):AnimalPathGuards297 {
+ const led=new Set<number>(),services=new Set<number>();
+ for(const p of world.pawns){for(const id of animalServiceIds(p))services.add(id);
+  if(p.animalHandling?.kind==='lead'&&p.animalHandling.phase!=='approach')for(const id of p.animalHandling.ropees??[p.animalHandling.animalId])led.add(id);}
+ const matingFemales=new Set((world.wildlife?.animals??[]).flatMap(a=>a.mating?[a.mating.femaleId]:[]));
+ const hour=Math.floor(calendarTick(world)%6000/250);return {led,matingFemales,services,night:hour<7||hour>=22};
+}
+/** Same external owners as the wildlife pass, with actual Core comparisons
+ * for physical recovery. No job transition, search, quota or RNG is run. */
+export function animalPathContinuationAllowed297(world:World,a:WildAnimal,core:number,c:AnimalPathGuards297):boolean {
+ if(a.state!=='moving'||!a.path.length||a.health?.death||a.exitFlight||animalCarrier(world,a.id)
+  ||a.stun&&a.stun.untilCore>core||a.strike&&a.strike.untilCore>core||a.manhunter?.exhausted
+  ||a.health?.foodPoisoning?.vomit||a.health?.cryptosleepSickness?.vomit||a.health?.toxicBuildup?.vomit||a.health?.toxicBuildup?.vomitRequestedAt!==undefined)return false;
+ const body=animalBody(a);if(!body.movingCapable||!body.canBeAwake||body.painShock||body.vitalFailure)return false;
+ if(!a.burning&&!a.flee&&!a.retaliation&&siteAmbushWaiting263(world,a.id,'animal'))return false;
+ const danger=!!(a.burning||a.flee||a.threat||a.retaliation||a.strike&&a.strike.untilCore>core||a.manhunter);
+ if(!danger&&!a.confusion&&(c.led.has(a.id)||c.matingFemales.has(a.id)))return false;
+ if(!danger&&c.services.has(a.id)&&((!!a.taming?.designated||!!a.domestic)&&animalHandlingHolding(world,a.id)
+  ||!!a.domestic&&(animalCareInProgress(world,a)||animalFeedingInProgress(world,a))))return false;
+ const group=groupAnimalPreparation(world,a.id);
+ if(group&&!a.burning&&!a.flee&&!a.threat&&!a.retaliation&&!a.manhunter){
+  const {line}=group,p=world.pawns.find(p=>p.id===line.handlerId);
+  if(!p||!line.gathered||line.mode==='carry'||Math.hypot(a.x-p.x,a.z-p.z)<=1.5)return false;
+  const end=a.path.at(-1)!;if(Math.abs(end.x-p.x)>1||Math.abs(end.z-p.z)>1)return false;
+ }
+ if(a.haul&&a.haul.phase!=='holding'&&!animalHaulAvailable282(world,a,c.night))return false;
+ // Specialized routes were admitted before the generic pen fallback. Keep
+ // this separation: allowed-area costs are not a strict corridor wall.
+ const special=!!(group||a.burning||a.flee||a.threat||a.retaliation||a.manhunter||a.predation||a.exiting||a.animalRest||a.eggLay||a.confusion||a.hiveJob||a.animalAreaReturn287||a.animalThermalRefuge288||a.haul&&a.haul.phase!=='holding');
+ if(!special){if(animalFalloutNextStepBlocked294(world,a))return false;const pen=grazingPen(world,a),next=a.path[0]!;if(pen&&!pen.has(next.z*world.width+next.x))return false;}
+ return true;
 }

@@ -1530,7 +1530,7 @@ export class SceneRenderCore {
       this.invalidatePausedShadow(false);this.updatePiles(this.world,false);
     }
     if(this.pawns.feedbackSource)this.actionFeedback.syncTravel(this.pawns.feedbackSource);
-    if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns,this.actorScene297);
+    if(this.world)this.wildlife.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns,this.actorScene297,dtTweener297,this.received?.speed??0);
     if(this.world)this.mechanoids.update(this.world,this.hasTracks?this.timeline:undefined,false,this.pawns,this.actorScene297);
     this.pawns.presentAnimations();this.wildlife.presentAnimations(this.pawns);this.mechanoids.presentAnimations(this.pawns);
     if(this.animalCargo.present(this.wildlife))this.invalidatePausedShadow(false);

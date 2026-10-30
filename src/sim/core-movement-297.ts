@@ -1,3 +1,4 @@
+import {createAnimalCoreMovement297} from './animal-core-movement-297.ts';
 import {captureCorePassengers297} from './core-passengers-297.ts';
 import {advancePhysicalDoors297,invalidatePhysicalDoors297} from './doors.ts';
 import {recordFilthMovement297} from './filth.ts';
@@ -26,9 +27,10 @@ export function createCoreMovement297(world:World){
  const budget:SearchBudget={get remaining(){return owned!.remaining;},set remaining(value){owned!.remaining=value;},get pairs(){return owned!.pairs;},set pairs(value){owned!.pairs=value;}};
  const readLight:LightReader=Object.assign(()=>light.read(world),{speedAt:(cell:Cell)=>light.speedAt(world,cell)});
  const grid=()=>blocked??=blockedCells(world);
+ const animals=createAnimalCoreMovement297(world);
  return {
-  invalidate(){passengers=undefined;budget.structureGeometry=undefined;invalidatePhysicalDoors297(world);blocked=undefined;},
-  beginMacro(next:SearchBudget){passengers=undefined;owned=world.corePathBudget297={tick:world.tick,remaining:next.remaining,pairs:next.pairs};budget.stats=next.stats;budget.structureGeometry=next.structureGeometry;invalidatePhysicalDoors297(world);blocked=undefined;},
+  invalidate(){animals.invalidate();passengers=undefined;budget.structureGeometry=undefined;invalidatePhysicalDoors297(world);blocked=undefined;},
+  beginMacro(next:SearchBudget){animals.beginMacro();passengers=undefined;owned=world.corePathBudget297={tick:world.tick,remaining:next.remaining,pairs:next.pairs};budget.stats=next.stats;budget.structureGeometry=next.structureGeometry;invalidatePhysicalDoors297(world);blocked=undefined;},
   budget(){return budget;},
   advance():{actorsChanged:number[];changedCells:boolean;requiresFull:boolean;topologyChanged:boolean}{
    const now=effectiveLocal297(world),core=effectiveCore297(world),changed:number[]=[];let changedCells=false,requiresFull=false;
@@ -58,7 +60,9 @@ export function createCoreMovement297(world:World){
     else {const next=pawn.path[0];if(next&&canStep(world,pawn,next,grid(),CIVIL_TRANSIT_BLOCKERS)&&startTravel(world,pawn,next,readLight))pawn.path.shift();}
     if(m!==pawn.motion||x!==pawn.x||z!==pawn.z){if(!changed.includes(pawn.id))changed.push(pawn.id);touchPassengers(pawn);changedCells=true;}
    }
-   const doors=advancePhysicalDoors297(world);
+   const animal=animals.advance();for(const id of animal.actorsChanged)if(!changed.includes(id))changed.push(id);
+   changedCells||=animal.changedCells;requiresFull||=animal.requiresFull;
+   const doors=advancePhysicalDoors297(world);if(doors.topologyChanged)animals.invalidate();
    return {actorsChanged:changed,changedCells,requiresFull:doors.changed||requiresFull,topologyChanged:doors.topologyChanged};
   }
  };

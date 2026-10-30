@@ -31,11 +31,20 @@ function shelteredPen(w:World,a:WildAnimal):ReadonlySet<number>|undefined {
  * Paths and optional goto mind are existing physical owners, not a new task
  * registry. Fire, threats, clinical rest, handling, transport and real meals
  * are resolved before this node by the wildlife scheduler and remain intact. */
-export function processAnimalFalloutShelter294(w:World,a:WildAnimal,c:AnimalFalloutShelterContext294):0|1|2 {
+function activeShelteredPen294(w:World,a:WildAnimal):ReadonlySet<number>|undefined {
  if(!toxicFalloutActive294(w)||a.state==='dead'||a.state==='downed'||a.state==='sleeping'||a.health?.death||a.shipCryptosleepHeldAt277!==undefined
    ||a.burning||a.flee||a.threat||a.retaliation||a.strike||a.stun||a.manhunter||a.confusion
-   ||a.meal||a.animalRest||a.animalThermalRefuge288||a.animalAreaReturn287||a.haul||a.eggLay||a.mating||a.predation||a.exiting||a.exitFlight||a.hiveJob)return 0;
- const pen=shelteredPen(w,a);if(!pen)return 0;
+   ||a.meal||a.animalRest||a.animalThermalRefuge288||a.animalAreaReturn287||a.haul||a.eggLay||a.mating||a.predation||a.exiting||a.exitFlight||a.hiveJob)return;
+ return shelteredPen(w,a);
+}
+/** Pure revocation guard for a committed route's next edge. The ordinary
+ * macro remains the sole owner of path retirement, mind changes and planning. */
+export function animalFalloutNextStepBlocked294(w:World,a:WildAnimal):boolean {
+ if(!a.path.length)return false;const pen=activeShelteredPen294(w,a);if(!pen)return false;
+ const next=a.path[0]!;return isRoofed(w,roofIndex(w,a))&&(!pen.has(roofIndex(w,next))||!isRoofed(w,roofIndex(w,next)));
+}
+export function processAnimalFalloutShelter294(w:World,a:WildAnimal,c:AnimalFalloutShelterContext294):0|1|2 {
+ const pen=activeShelteredPen294(w,a);if(!pen)return 0;
  const covered=isRoofed(w,roofIndex(w,a));
  if(a.path.length){
   const next=a.path[0]!;

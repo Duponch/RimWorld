@@ -41,16 +41,17 @@ export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
 /** Real domestic hauler at the threshold. Opening uses the existing timed
  * door transaction; a false result consumes neither path nor physical edge. */
 export function readyAnimalHaulDoorEntry282(world:World,a:WildAnimal,next:Cell):boolean {
+  const now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
   if(!isSchema282OrLater(world.schemaVersion)||!a.domestic||a.state==='dead'||a.shipCryptosleepHeldAt277!==undefined)return false;
   const s=doorAt(world,next);if(!s)return true;
-  if(world.wildlife?.animals.find(value=>value.id===a.id)!==a||Math.max(Math.abs(next.x-a.x),Math.abs(next.z-a.z))!==1||(a.motion?.end??0)>world.tick)return false;
+  if(world.wildlife?.animals.find(value=>value.id===a.id)!==a||Math.max(Math.abs(next.x-a.x),Math.abs(next.z-a.z))!==1||(a.motion?.end??0)>now)return false;
   const permission=animalHaulDoorCanOpen282(world,a,s);
-  if(!permission){const passable=animalHaulDoorPassable282(world,a,s);if(passable)rememberExplorationApproacher256(world,s.door!,a.id,false);return passable;}
+  if(!permission){const passable=animalHaulDoorPassable282(world,a,s,false,now);if(passable)rememberExplorationApproacher256(world,s.door!,a.id,false);return passable;}
   rememberExplorationApproacher256(world,s.door!,a.id,true);
-  const d=s.door!;d.lastTouch=world.tick;
+  const d=s.door!;d.lastTouch=now;
   if(!d.open)openDoor(world,s);
-  if(doorOpenness(s,world.tick)<1-1e-9)return false;
-  d.closeAt=world.tick+DOOR_CLOSE_DELAY;return true;
+  if(doorOpenness(s,now)<1-1e-9)return false;
+  d.closeAt=now+DOOR_CLOSE_DELAY;return true;
 }
 /** Notify a powered, quick autodoor when a friendly pawn commits the preceding
  * edge. The normal threshold check remains authoritative if the path or power

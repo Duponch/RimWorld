@@ -21,7 +21,7 @@ export function animalHaulDoorCanOpen282(w:DoorWorld282,a:WildAnimal,s:Structure
  * Physical traversal always requires its completed real opening segment.
  * A foreign hostile door already open may be crossed without operating it;
  * forbidden policy remains a refusal in both modes. */
-export function animalHaulDoorPassable282(w:DoorWorld282,a:WildAnimal,s:Structure,allowOpening=false):boolean {
+export function animalHaulDoorPassable282(w:DoorWorld282,a:WildAnimal,s:Structure,allowOpening=false,at=w.tick):boolean {
  if(!actualPlayerAnimal(w,a)||!isPassageDoor(s.kind)||!s.door||s.door.forbidden)return false;
- return s.door.open&&doorOpenness(s,w.tick)>=1-1e-9||allowOpening&&animalHaulDoorCanOpen282(w,a,s);
+ return s.door.open&&doorOpenness(s,at)>=1-1e-9||allowOpening&&animalHaulDoorCanOpen282(w,a,s);
 }

@@ -1,3 +1,4 @@
+import {animalMoveEncodingBounds297} from './animal-move-cost-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import {validCapturedCoreMove297} from './core-move-save-297.ts';
 import {validAnimalThermalRefugeField288} from './animal-thermal-refuge-save-288.ts';
@@ -59,7 +60,7 @@ const capturedWeatherMin256=Math.min(1,...capturedWeatherMoves256),capturedWeath
  * so its existing producer range is [.16,1]. The seven tracked originals use
  * Baby/Juvenile/Adult exactly as trackedAnimalLifeStage256; explicit species
  * use their own stage definitions. No animal, clock or RNG is modified. */
-export function validWildlifeMotionTiming(tick:number,version:number,a:Pick<WildAnimal,'species'|'growthTracker'>,m:TravelSegment,coreNow297?:number):boolean {
+function validLegacyWildlifeMotionTiming297(tick:number,version:number,a:Pick<WildAnimal,'species'|'growthTracker'>,m:TravelSegment,coreNow297?:number):boolean {
   const physicalLocalNow297=version===297?validationCore297(version,tick,coreNow297)/10:tick;if(version===297&&!Number.isFinite(physicalLocalNow297))return false;
   if(!validCapturedCoreMove297(m,version,false))return false;
   if(Object.hasOwn(m,'animalFlight')&&(version<256||a.species!=='duck'||m.animalFlight!==true))return false;
@@ -84,6 +85,59 @@ export function validWildlifeMotionTiming(tick:number,version:number,a:Pick<Wild
     endLimit=physicalLocalNow297+9.5+3*Math.SQRT2/m.speedFactor!+50;
   }else if(!(version>=77?finite(m.speedFactor,version>=87?.096*.8:.096,3):[3,.6].includes(m.speedFactor!)))return false;
   return finite(m.end,0,endLimit)&&m.end>m.start&&Math.abs(m.end-travelEnd(m))<=1e-7;
+}
+/** Union of the unchanged historical captured envelope and the current297
+ * species-derived codec. The prospective lane carries no new metadata and
+ * never derives the paid edge from present health, age, job or weather. */
+/** Same producer ceiling as validStunShape(a.stun,...,420,Core) below.
+ * Only297 admits these current physical impacts; legacy clocks remain literal. */
+const animalStunMaximumCore297=420;
+function validAnimalStunIntervals297(value:unknown,start:number,now:number):boolean {
+ if(value===undefined)return true;
+ if(!Array.isArray(value)||!value.length||value.length>451)return false;
+ let previous=start-1;
+ return value.every(s=>{
+  if(!s||typeof s!=='object'||Object.keys(s).some(k=>k!=='start'&&k!=='end')||!Number.isFinite(s.start)||!Number.isFinite(s.end)||s.start<start||s.start>now||s.end<=s.start||s.start<=previous||!Number.isSafeInteger(s.end*10)||s.end>now+animalStunMaximumCore297/10)return false;
+  previous=s.end;return true;
+ });
+}
+const animalEncodingBounds297=new WeakMap<ReturnType<typeof actualAnimalProfile256>,Map<number,{minimum:number;maximum:number}>>();
+function prospectiveAnimalBounds297(a:Pick<WildAnimal,'species'|'growthTracker'>,m:TravelSegment):{minimum:number;maximum:number} {
+ const profile=actualAnimalProfile256(a),flight=m.animalFlight===true?animalCore256('duck').race.flightSpeedFactor:1;
+ let byFlight=animalEncodingBounds297.get(profile);const held=byFlight?.get(flight);if(held)return held;
+ const stages:readonly (keyof typeof CORE_ANIMAL_LIFE_STAGES_256)[]=isAnimalSpecies256(a.species)
+  ?animalCore256(a.species).lifeStages.map(row=>row.defId):a.growthTracker?['AnimalBaby','AnimalJuvenile','AnimalAdult']:[];
+ const stageFactors=stages.length?stages.map(id=>(CORE_ANIMAL_LIFE_STAGES_256[id].statFactors as Readonly<Record<string,number>>).MoveSpeed??1):[1];
+ const bounds=animalMoveEncodingBounds297({speed:6/profile.moveTicks,stageFactors,weatherMinimum:capturedWeatherMin256,weatherMaximum:capturedWeatherMax256,flight});
+ // These keys and inputs are immutable species definitions, never a World,
+ // original actor, mutable stage, present weather or an ownership permission.
+ if(!byFlight){byFlight=new Map();animalEncodingBounds297.set(profile,byFlight);}byFlight.set(flight,bounds);return bounds;
+}
+export function validWildlifeMotionTiming(tick:number,version:number,a:Pick<WildAnimal,'species'|'growthTracker'>,m:TravelSegment,coreNow297?:number):boolean {
+ if(validLegacyWildlifeMotionTiming297(tick,version,a,m,coreNow297))return true;
+ if(version!==297||!validCapturedCoreMove297(m,version,false))return false;
+ const now=validationCore297(version,tick,coreNow297)/10;
+ if(!Number.isFinite(now)||!finite(m.start,0,now)
+  ||Object.hasOwn(m,'animalFlight')&&(a.species!=='duck'||m.animalFlight!==true)
+  ||!validSlowIntervals(m.stagger,version,m.start,tick,coreNow297)||!validAnimalStunIntervals297(m.stuns,m.start,now))return false;
+ const ordinaryStuns=validSlowIntervals(m.stuns,version,m.start,tick,coreNow297);
+ let historicalCost=false;
+ if(!ordinaryStuns){
+  // Prove the literal historical COST from the same captured numbers. This
+  // validation-only copy removes just the long stun and derives its curve;
+  // neither the real edge nor its saved price/terrain/coordinates are changed.
+  const proof={...m,stuns:undefined};proof.end=travelEnd(proof);
+  historicalCost=validLegacyWildlifeMotionTiming297(tick,version,a,proof,coreNow297);
+ }
+ if(!historicalCost){
+  if(m.terrainDelay!==0)return false;
+  const bounds=prospectiveAnimalBounds297(a,m);if(!finite(m.speedFactor,bounds.minimum,bounds.maximum))return false;
+ }
+ const neutral=3*Math.hypot(m.to.x-m.from.x,m.to.z-m.from.z)/m.speedFactor!+(m.terrainDelay??0);
+ // Stagger remains bounded at9.5. Only a genuine long-stun lane gets the
+ // animal producer's420Core horizon before its already-captured neutral tail.
+ const horizon=ordinaryStuns?9.5:animalStunMaximumCore297/10;
+ return finite(m.end,0,now+horizon+neutral)&&m.end>m.start&&Math.abs(m.end-travelEnd(m))<=1e-7;
 }
 /** Cheap transport/save check; no route search or mutable World reference. */
 export function validAnimalExit(w:Pick<World,'width'|'height'|'tick'>,version:number,a:WildAnimal):boolean {
@@ -212,8 +266,12 @@ export function validateWildlife(w:World,version:number,ids:Set<number>):string[
         // The actual256 runtime lets non-roaming native species cross fences.
         // Historical seven-species rules and captured Duck flight stay literal.
         const fencePassable=version>=256&&isAnimalSpecies256(a.species)?animalCore256(a.species).race.roamMtbDays===null:a.species==='hare'||a.species==='snow-hare'||animalSpecies(a.species).predator;
-        const pathNavigation=version>=256&&a.species==='duck'?animalNavigation(w,false,true,a,m.animalFlight===true):fencePassable
-          ?(hareNavigation??=animalNavigation(w,false,true)):(navigation??=animalNavigation(w));
+        const pathNavigation=version===297
+          ?a.species==='duck'?animalNavigation(w,false,true,a,m.animalFlight===true,undefined,undefined,()=>effectiveLocal297(w)):fencePassable
+            ?(hareNavigation??=animalNavigation(w,false,true,undefined,false,undefined,undefined,()=>effectiveLocal297(w)))
+            :(navigation??=animalNavigation(w,false,false,undefined,false,undefined,undefined,()=>effectiveLocal297(w)))
+          :version>=256&&a.species==='duck'?animalNavigation(w,false,true,a,m.animalFlight===true):fencePassable
+            ?(hareNavigation??=animalNavigation(w,false,true)):(navigation??=animalNavigation(w));
         if(!pathNavigation.step(m.from,m.to))errors.push('Wildlife edge crosses a solid obstacle.');
       }
     }
