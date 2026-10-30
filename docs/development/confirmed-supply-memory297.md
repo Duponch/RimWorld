@@ -49,3 +49,8 @@ La source observée progresse à19,63 ticks locaux/s pour36 nominaux, avec cinq 
 Les sorties, caches et fichiers temporaires de ce Native totalisent22,4Mo ; C est passé de8,034 à2,052Gio libres pendant l’essai, sans attribution de toute cette variation au test. Prévoir davantage de marge avant un autre Native, notamment sous League ; ne pas refaire un nettoyage global. L’état final conservé et rechargé exactement est RAW16458800d8ae6bcda1732e104bb61772c3c94d35a49a01bf8b8f32cdae8ce14f / gzipfb43fc3511277a56249280bdb36d2e8255d6a780e8ce1839801439c86f960057, Core113150/RNG1875334416/id29622.
 
 Preuves privées supplémentaires : confirmed-supply-memory-native-author-v1/native-confirmed-supply-memory-v1/report.json ; confirmed-supply-memory-offline-author-v1/result/analysis.json et remaining-root.json. Deux avertissements aTo absents ont une couture statique préexistante possible sur le masque de cargo partiel ; aucune attribution runtime au corps n’est établie. Cette dette est distincte du défaut d’horloge.
+
+
+## Diagnostic de livraison suivant
+
+La continuation instrumentée suivante est conservée dans [le diagnostic du31octobre](delivery-frontier297.md). Elle remplace l’autorité164588 par c3263b27/Core113418. Ses retards avant publication et dans le traitement Full sont détaillés séparément ; la fluidité générale reste ouverte.
