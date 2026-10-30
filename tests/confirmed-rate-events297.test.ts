@@ -38,7 +38,11 @@ test('duplicate receipts never renew a genuine no-progress silence or invent a C
  expect((104-t.tick)/36).toBeCloseTo(.036,12);
  const joined=t.tick;
  t.adopt(104.72,6,[],320,false,true,true);expect(t.tick).toBe(joined);
- expect(t.advance(320)-joined).toBeCloseTo(.72,12);
+ // A short nominal receipt must not erase the slower supply observed before
+ // this late join. It can advance confirmed history, without forcing36/s.
+ const shown=t.advance(320),delta=shown-joined,nominalDelta=36*.020;
+ expect(delta).toBeGreaterThan(0);expect(shown).toBeLessThanOrEqual(104.72);
+ expect(delta).toBeLessThan(nominalDelta);expect(delta).not.toBeCloseTo(nominalDelta,12);
  t.adopt(104.72,0,[],321,false,true,true);
  expect(t.advance(100000)).toBe(104.72);
 });

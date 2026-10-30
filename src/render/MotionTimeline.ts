@@ -59,7 +59,7 @@ export class MotionTimeline {
     const sample=compatible?rate:Math.max(0,Math.min(rate,progress*1000/span));
     const alpha=elapsed/(FINE_RATE_FILTER_MS297+elapsed);
     this.fineEstimatedRate297+=(sample-this.fineEstimatedRate297)*alpha;
-    this.fineEstimateAt297=now;this.fineNominalCompatible297=compatible;
+    this.fineEstimateAt297=now;if(!compatible||span>=FINE_RATE_WINDOW_MAX_MS297)this.fineNominalCompatible297=compatible;
     if(span>=FINE_RATE_WINDOW_MAX_MS297){this.fineWindowAt297=now;this.fineWindowTick297=tick;}
   }
   private chooseFineRate297():void {
@@ -108,13 +108,13 @@ export class MotionTimeline {
       this.speed=speed;
     }
     this.latest=Math.max(this.latest,tick);
-    if(fineCore297&&!resetFine297&&!lateFine297)this.observeFineRate297(this.latest,now);
+    if(fineCore297&&!resetFine297)this.observeFineRate297(this.latest,now);
     // Only a true >100ms advancing-front gap seeks toward confirmed history.
     // Keep the normal reserve directly, so the next receipt needs no refill.
     if(lateFine297){
       this.tick=Math.max(this.tick,this.latest-this.reserve);
       this.buffering=false;this.ready=now;
-      this.resetFineRate297(this.latest,now,this.rate);this.fineFrameRate297=this.rate;
+      this.chooseFineRate297();
     }
     // Fine297 starts/resumes with bounded wall-time history at its current rate.
     // Historical mode retains two local ticks and its original rate-change policy.
