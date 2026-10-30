@@ -186,6 +186,7 @@ export class PawnLayer {
   private partialCargoMesh: THREE.Mesh | null = null;
   private fireMesh: THREE.Mesh | null = null;
   private readonly targetPoses = new Map<number,THREE.Vector4>();
+  private targetOffsets297 = new Float64Array(0);
   private readonly pawnIndices = new Map<number,number>();
   private readonly headings = new Map<number,TurnHeading>();
   private readonly workPoses = new Map<number,number>();
@@ -933,6 +934,7 @@ export class PawnLayer {
     if (!this.pawnMesh) this.createPawnMesh(Math.max(1,world.pawns.length));
     else if(this.pawnMesh.geometry.getAttribute('aFrom').count<world.pawns.length)growPawnBuffers([this.pawnMesh,this.cargoMesh!,this.selectionMesh!,this.fireMesh!,this.partialCargoMesh!],world.pawns.length);
     const geometry = this.pawnMesh!.geometry as THREE.InstancedBufferGeometry;
+    if(this.targetOffsets297.length<world.pawns.length*3)this.targetOffsets297=new Float64Array(world.pawns.length*3);
     const flames=geometry.getAttribute('aFire') as THREE.InstancedBufferAttribute;
     const burning=new Map((world.fires?.items??[]).filter(f=>f.attachedPawnId!==undefined).map(f=>[f.attachedPawnId!,f.size]));
     let fireCount=0;
@@ -1032,6 +1034,7 @@ export class PawnLayer {
       const to = new THREE.Vector4(px, py, pz, yaw);
       if (!previous||hiddenBody||previous.to.y< -100) from.copy(to);
       this.targetPoses.set(pawn.id,to.clone());
+      const anchor=3*index;this.targetOffsets297[anchor]=to.x-pawn.x;this.targetOffsets297[anchor+1]=to.y-(this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0);this.targetOffsets297[anchor+2]=to.z-pawn.z;
       this.visuals.set(pawn.id, { from, to });
       fromAttribute.setXYZW(index, from.x, from.y, from.z, from.w);
       toAttribute.setXYZW(index, to.x, to.y, to.z, to.w);
@@ -1096,8 +1099,9 @@ export class PawnLayer {
     const changed=[...dirty];
     this.playback435.adoptPhase297(world,humans,changed);
     for(const i of changed){const pawn=humans[i]!,target=this.targetPoses.get(pawn.id);if(!target)throw Error('Missing resident pawn pose');
-      const reach=this.workOffsets.get(pawn.id)??{x:0,z:0};target.x=pawn.x+reach.x;target.z=pawn.z+reach.z;
-      target.y=this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0;
+      // Full owns interaction anchors; a dirty phase only moves their cell basis.
+      const anchor=3*i;target.x=pawn.x+this.targetOffsets297[anchor]!;target.z=pawn.z+this.targetOffsets297[anchor+2]!;
+      target.y=(this.travelSurfaces.get(pawn.z*world.width+pawn.x)??0)+this.targetOffsets297[anchor+1]!;
       const melee=pawn.melee?.strike,shot=pawn.shooting?.stance?pawn.shooting.order?.targetId??(pawn.shooting.stance.phase==='cooldown'?pawn.lastAttack?.targetId:undefined):undefined;
       const id=melee?.targetId??shot,aim=melee?.structure??(id===undefined||id===null?undefined:(actorScene&&id!==undefined?actorScene.byId[id]?.actor:undefined)??world.pawns.find(p=>p.id===id)??world.wildlife?.animals.find(a=>a.id===id)??world.raids?.departed.find(d=>d.pawnId===id)?.cell);
       if(aim)target.w=Math.atan2(aim.x-pawn.x,aim.z-pawn.z);
