@@ -46,6 +46,7 @@ export class MotionTimeline {
   private fineFrameRate297=0;
   private fineNominalCompatible297=true;
   private fineOverfull297=false;
+  private fineStartupProgressPending297=false;
   private resetFineRate297(tick:number,now:number,rate:number):void {
     this.fineWindowAt297=this.fineEstimateAt297=now;this.fineWindowTick297=tick;
     this.fineEstimatedRate297=rate;this.fineNominalCompatible297=true;this.fineOverfull297=false;
@@ -77,12 +78,13 @@ export class MotionTimeline {
   }
   adopt(tick:number,speed:number,tracks:PawnTrack[],now:number,reset=false,closed435=false,fineCore297=false):void {
     const wasFine297=this.fineCore297;
+    const advancingFine297=fineCore297&&tick>this.latest;
     const resetFine297=fineCore297&&(reset||!wasFine297||speed!==this.speed);
     const lateFine297=fineCore297&&!resetFine297&&this.lastFineReceipt297!==undefined&&now-this.lastFineReceipt297>FINE_LATE_RECEIPT_MS297&&tick>this.latest;
     if(!fineCore297)this.lastFineReceipt297=undefined;
     else if(resetFine297||tick>this.latest)this.lastFineReceipt297=now;
     this.fineCore297=fineCore297;
-    if(resetFine297)this.resetFineRate297(tick,now,speed*LOCAL_TICKS_PER_SECOND);
+    if(resetFine297){this.resetFineRate297(tick,now,speed*LOCAL_TICKS_PER_SECOND);this.fineStartupProgressPending297=true;}
     if(fineCore297&&!wasFine297)this.fineFrameRate297=this.frameRate;
     this.reserve=fineCore297 ? speed*LOCAL_TICKS_PER_SECOND*FINE_BUFFER_MS297/1000 : MOTION_BUFFER_TICKS;
     this.playbackCursor435.configure(closed435,reset);
@@ -108,7 +110,12 @@ export class MotionTimeline {
       this.speed=speed;
     }
     this.latest=Math.max(this.latest,tick);
-    if(fineCore297&&!resetFine297)this.observeFineRate297(this.latest,now);
+    if(fineCore297&&!resetFine297){
+      if(this.buffering&&this.fineStartupProgressPending297){
+        // Startup delay before the first real Core is not a supply sample.
+        if(advancingFine297){this.resetFineRate297(this.latest,now,this.rate);this.fineStartupProgressPending297=false;}
+      }else this.observeFineRate297(this.latest,now);
+    }
     // Only a true >100ms advancing-front gap seeks toward confirmed history.
     // Keep the normal reserve directly, so the next receipt needs no refill.
     if(lateFine297){
@@ -121,9 +128,10 @@ export class MotionTimeline {
     if(this.buffering&&(this.latest-this.tick>=this.reserve-1e-10||speed===0&&this.latest>this.tick)) {
       if(fineCore297){
         this.tick=Math.max(this.tick,this.latest-this.reserve);
-        // Measure actual running supply after startup/resume history is ready.
-        // The unplayed initial wait is not evidence of producer under-supply.
-        this.resetFineRate297(this.latest,now,this.rate);
+        // Keep slower supply observed BETWEEN real progress receipts here.
+        // Regular startup still begins its normal window at readiness.
+        if(this.fineNominalCompatible297)this.resetFineRate297(this.latest,now,this.rate);
+        this.fineStartupProgressPending297=false;
       }
       this.buffering=false;this.ready=now;
     }

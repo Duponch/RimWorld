@@ -1,5 +1,7 @@
 # Fluidité : trois vitesses vérifiées le 31 octobre
 
+**Historique :** les mesures ci-dessous précèdent les optimisations RPA et la correction de démarrage. Lire [l’état corrigé et sa nouvelle observation](startup-confirmed-supply297.md) pour la reprise actuelle ; les anciens ACTUAL ci-dessous ne sont plus des parents de continuation.
+
 La priorité de fluidité reste **ouverte**. Les positions des trois humains observés sont continues après le démarrage, et les données du dormeur restent stables ; des intervalles trop longs entre soumissions visuelles persistent. Lors de cette mesure, aucun candidat de performance n'était installé. Le [correctif de reconstruction croissance](resident-growth-only297.md) a ensuite été intégré ; sa mesure en jeu reste distincte. Le produit conserve ses2 080sources, carte070e03e8, schéma297 et dernier codea8e02fd4. CloudflareV491 reste la dernière publication attestée.
 
 ## Observation sans League et sans profilage CPU
