@@ -1,3 +1,5 @@
+import {isShipComputerSensorsKind298} from './sim/ship-computer-sensors-content-298';
+import {isCorePhysicalSchema297} from './sim/physical-schema-297.ts';
 import {updateShipAssemblyInspection276} from './ui/ship-assembly-inspection-276';
 import {NativeStage} from './ui3d/NativeStage';
 import {nativeTextEntitiesFor} from './ui3d/native-text-entities';
@@ -8,6 +10,7 @@ import {nativeOrderPage,cancelNativeOrderPage} from './ui3d/native-orders';
 import {nativeHelpPage} from './ui3d/native-help';
 import {createNativeSaveManager} from './ui3d/native-saves';
 import {createNativeLocalTrade} from './ui3d/native-local-trade';
+import {createNativeFactionComms298} from './ui3d/native-faction-comms-298';
 import {buildNativeArrivals} from './ui3d/native-arrivals';
 import type {NativeDomainAlert} from './ui3d/native-domain-alerts';
 import {buildNativeInspector,setNativeInspectorTab} from './ui3d/native-inspector';
@@ -16,6 +19,7 @@ import type {NativeHudViewAction} from './ui3d/native-hud';
 import {NATIVE_DOCK_PREFERENCE_KEY,parseNativeDockPreferences,NATIVE_UI_SCALE_PREFERENCE_KEY,parseNativeUiScale,normalizeNativeUiScale,type NativeDockPreferences} from './ui3d/native-preferences';
 import {installNativeCardboardCursors} from './ui/native-cardboard-cursors';
 import type {NativeUiState,NativeUiActions,NativePage} from './ui3d/native-contract';
+import {createNativeShipTerminal298,readAdoptedShipCredits298} from './ui3d/native-ship-terminal-298';
 import type {ConstructionMaterial} from './sim/construction-materials';
 import type {CampEntryProgressMessage256,CaravanEncounterProgressMessage261} from './bridge/protocol';
 import {isShipPartKind276,SHIP_PART_DEFAULT_ORIENTATION_276} from './sim/ship-part-content-276';
@@ -270,7 +274,7 @@ import './ui/architect-workbench.css';
 import './ui/time-controls.css';
 import './ui/first-day-guide.css';
 import './ui/first-gestures-guide.css';
-const jobLabels: Record<JobKind, string> = { 'firefoam-popper':'Construction du diffuseur de mousse', 'ship-cryptosleep-casket':'Construction du caisson spatial','ship-beam':'Construction de la poutre structurelle de vaisseau','ship-engine':'Construction du moteur Johnson–Tanaka', 'ship-reactor':'Construction du réacteur stellaire', 'cryptosleep-casket':'Construction du caisson de cryptosommeil', 'fueled-smithy':'Construction de la forge à combustible','electric-smithy':'Construction de la forge électrique', brewery:'Construction de la brasserie','fermenting-barrel':'Construction du fût de fermentation', 'geothermal-generator':'Construction de la centrale géothermique', column:'Construction de la colonne',urn:'Construction de l’urne','stele-large':'Construction de la grande stèle','stele-grand':'Construction de la stèle monumentale',sarcophagus:'Construction du sarcophage', 'torch-lamp':'Construction de la lampe-torche', 'build-bridge':'Construction du pont','remove-bridge':'Retrait du pont', vent:'Construction de la bouche d’aération', 'extract-tree':'Déracinement de l’arbre','replant-tree':'Replantation de l’arbre', 'sleeping-spot':'Couchage au sol', shelf:'Construction de l’étagère', 'small-shelf':'Construction de la petite étagère', 'spike-trap':'Construction du piège à pointes', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'Construction de fonderie électrique','animal-sleeping-spot':'Emplacement de couchage animal', 'biofuel-refinery':'Construction de la raffinerie de biocarburant','chemfuel-generator':'Construction du générateur à biocarburant', 'nutrient-paste-dispenser':'Construction du distributeur de pâte nutritive',hopper:'Construction de la trémie', 'orbital-beacon':'Construction de la balise orbitale','comms-console':'Construction de la console de communication', 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','smooth-floor':'Lissage du sol','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', 'double-bed':'Construction du lit double', bedroll:'Construction du sac de couchage', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
+const jobLabels: Record<JobKind, string> = { 'ship-computer':'Construction de l’ordinateur de vaisseau','ship-sensors':'Construction des capteurs de vaisseau', 'firefoam-popper':'Construction du diffuseur de mousse', 'ship-cryptosleep-casket':'Construction du caisson spatial','ship-beam':'Construction de la poutre structurelle de vaisseau','ship-engine':'Construction du moteur Johnson–Tanaka', 'ship-reactor':'Construction du réacteur stellaire', 'cryptosleep-casket':'Construction du caisson de cryptosommeil', 'fueled-smithy':'Construction de la forge à combustible','electric-smithy':'Construction de la forge électrique', brewery:'Construction de la brasserie','fermenting-barrel':'Construction du fût de fermentation', 'geothermal-generator':'Construction de la centrale géothermique', column:'Construction de la colonne',urn:'Construction de l’urne','stele-large':'Construction de la grande stèle','stele-grand':'Construction de la stèle monumentale',sarcophagus:'Construction du sarcophage', 'torch-lamp':'Construction de la lampe-torche', 'build-bridge':'Construction du pont','remove-bridge':'Retrait du pont', vent:'Construction de la bouche d’aération', 'extract-tree':'Déracinement de l’arbre','replant-tree':'Replantation de l’arbre', 'sleeping-spot':'Couchage au sol', shelf:'Construction de l’étagère', 'small-shelf':'Construction de la petite étagère', 'spike-trap':'Construction du piège à pointes', 'electric-crematorium':'Construction du crématorium électrique','electric-smelter':'Construction de fonderie électrique','animal-sleeping-spot':'Emplacement de couchage animal', 'biofuel-refinery':'Construction de la raffinerie de biocarburant','chemfuel-generator':'Construction du générateur à biocarburant', 'nutrient-paste-dispenser':'Construction du distributeur de pâte nutritive',hopper:'Construction de la trémie', 'orbital-beacon':'Construction de la balise orbitale','comms-console':'Construction de la console de communication', 'deep-drill':'Construction de foreuse profonde','ground-scanner':'Construction du scanner souterrain', 'vitals-monitor':'Construction du moniteur vital', 'drug-lab':'Construction du laboratoire de chimie', 'hydroponics-basin':'Construction du bac hydroponique', 'mini-turret':'Construction de mini-tourelle automatique', 'tube-television':'Construction de télévision cathodique', sandbags: 'sacs de sable', fence:'Clôture','fence-gate':'Portillon',autodoor:'Porte automatique','pen-marker':'Marqueur d’enclos', 'art-bench':'Atelier de sculpture','small-sculpture':'Petite sculpture','large-sculpture':'Grande sculpture', 'machining-table':'Atelier d’usinage','fabrication-bench':'Établi de fabrication','hi-tech-research-bench':'Bureau de recherche haute technologie','multi-analyzer':'Multi-analyseur', grave:'Creuser une tombe','smooth-floor':'Lissage du sol','lay-floor':'Pose de sol','remove-floor':'Retrait de sol', heater:'Radiateur','wind-turbine':'Éolienne',flick:'Actionner un interrupteur', 'power-conduit':'Construction du câble', 'power-switch':'Construction de l’interrupteur', battery:'Construction de la batterie', 'solar-generator':'Construction du générateur solaire', 'fueled-stove':'Cuisinière à bois','electric-stove':'Cuisinière électrique','butcher-table':'Table de boucherie', 'butcher-spot':'Emplacement de boucherie', cooler:'Climatiseur', 'research-bench':'Bureau de recherche','tailor-bench':'Établi de tailleur','electric-tailor-bench':'Établi de tailleur électrique', 'crafting-spot':'Emplacement d’artisanat', repair:'Réparation', 'fix-breakdown':'Remplacement du composant', 'wood-generator':'Construction du générateur à bois', 'sun-lamp':'Construction de la lampe horticole', 'standing-lamp':'Construction de la lampe', 'passive-cooler':'Construction du refroidisseur passif', 'build-roof':'Pose de toit', 'remove-roof':'Retrait de toit', door:'Construction de la porte', stonecutter:'Construction de la table de taille', mine:'Minage', uninstall:'Désinstallation',install:'Réinstallation', deconstruct: 'Déconstruction', chop: 'Abattage', harvest: 'Récolte', cut: 'Coupe de plante', sow: 'Semis', wall: 'Construction du mur', 'double-bed':'Construction du lit double', bedroll:'Construction du sac de couchage', bed: 'Construction du lit', 'hospital-bed':'Construction du lit d’hôpital', table: 'Construction de la table','table-square':'Construction de la table carrée','table-long':'Construction de la table longue', stool: 'Construction du tabouret','dining-chair':'Construction de la chaise',armchair:'Construction du fauteuil','end-table':'Construction de la table de chevet',dresser:'Construction de la commode','flower-pot':'Construction du pot de fleurs', horseshoes: 'Construction du piquet de fers à cheval', 'chess-table': 'Construction de la table d’échecs', campfire: 'Construction du feu de camp' };
 const stateLabels: Record<Pawn['state'], string> = { resting:'Au lit pour soins', downed:'À terre', dead:'Décédé', idle: 'Disponible', moving: 'En chemin', working: 'Au travail', sleeping: 'Se repose', hungry: 'Cherche à manger', eating: 'Mange', recreating: 'Se divertit' };
 const rotatableTools=new Set<Tool>(['ship-cryptosleep-casket','ship-beam','ship-engine','ship-reactor','cryptosleep-casket','fueled-smithy','electric-smithy','brewery','fermenting-barrel','vent','sleeping-spot','shelf','small-shelf','electric-crematorium','electric-smelter','biofuel-refinery','nutrient-paste-dispenser','hopper','comms-console','deep-drill','ground-scanner','vitals-monitor','drug-lab','hydroponics-basin','tube-television','art-bench','machining-table','hi-tech-research-bench','fabrication-bench','grave','wind-turbine','battery','fueled-stove','electric-stove','butcher-table','install','bedroll','bed','double-bed','hospital-bed','table','table-square','table-long','dining-chair','armchair','end-table','dresser','campfire','stonecutter','butcher-spot','crafting-spot','research-bench','tailor-bench','electric-tailor-bench','cooler']);
 const resourceLabels = { hops:'Houblon', 'wild-plant':'Plante sauvage', healroot:'Racine médicinale', haygrass:'Herbe à foin', potato:'Plant de pommes de terre',corn:'Plant de maïs', tree: 'Arbre', berries: 'Buisson de baies', rock: 'Pierre au sol', rice: 'Plant de riz', cotton: 'Cotonnier' };
@@ -278,6 +282,7 @@ const params = new URLSearchParams(location.search);
 const nativeMode=!(import.meta.env.DEV&&params.get('ui')==='legacy');
 if(nativeMode)installNativeCardboardCursors(document.documentElement);
 let nativeUi:NativeStage|undefined;
+let nativeShipTerminal298:ReturnType<typeof createNativeShipTerminal298>|undefined;
 let nativeHud:NativeHudCards|undefined;
 let nativeCustomPage:NativePage|undefined;
 let nativeHudHiddenInspectorKey:string|undefined;
@@ -355,6 +360,7 @@ const client = (() => {
   let onCampProgress:SimulationClient['onCampProgress']=()=>{};
   let onCaravanEncounterProgress:SimulationClient['onCaravanEncounterProgress']=()=>{};
   let onCaravanTradeArrival:SimulationClient['onCaravanTradeArrival']=()=>{};
+  let onShipCountdownState298:SimulationClient['onShipCountdownState298']=()=>{};
   // Invoke facade listeners as plain functions so their `this` cannot expose
   // the private client through the base client's method-style notification.
   native.onError = message => onError(message);
@@ -363,6 +369,7 @@ const client = (() => {
   native.onCampProgress=message=>onCampProgress(message);
   native.onCaravanEncounterProgress=message=>onCaravanEncounterProgress(message);
   native.onCaravanTradeArrival=message=>onCaravanTradeArrival(message);
+  native.onShipCountdownState298=state=>onShipCountdownState298(state);
   return {
     generateWorldDraft256:(...args:Parameters<SimulationClient['generateWorldDraft256']>)=>native.generateWorldDraft256(...args),
     confirmWorldDraftSite256:(...args:Parameters<SimulationClient['confirmWorldDraftSite256']>)=>native.confirmWorldDraftSite256(...args),
@@ -377,6 +384,13 @@ const client = (() => {
     },
     cancelCampEntry256:(...args:Parameters<SimulationClient['cancelCampEntry256']>)=>native.cancelCampEntry256(...args),
     get hasCampPreparation(){return native.hasCampPreparation;},
+    get hasWorldCreationPreparation(){return native.hasWorldCreationPreparation;},
+    get shipCountdownActive298(){return native.shipCountdownActive298;},
+    launchShip298:(...args:Parameters<SimulationClient['launchShip298']>)=>native.launchShip298(...args),
+    continueShipCredits298:(...args:Parameters<SimulationClient['continueShipCredits298']>)=>native.continueShipCredits298(...args),
+    feedShipFrame298:(delta:number)=>native.feedShipFrame298(delta),
+    cancelShipCountdown298:(reason:'menu'|'front')=>native.cancelShipCountdown298(reason),
+    resumeShipFramesAfterPreparation298:()=>native.resumeShipFramesAfterPreparation298(),
     get hasPendingPresentationRequests(){return native.hasPendingPresentationRequests;},
     orderOptions: (...args: Parameters<SimulationClient['orderOptions']>) => native.orderOptions(...args),
     billWorkerOptions: (...args: Parameters<SimulationClient['billWorkerOptions']>) => native.billWorkerOptions(...args),
@@ -403,6 +417,8 @@ const client = (() => {
     set onCaravanEncounterProgress(callback:SimulationClient['onCaravanEncounterProgress']){onCaravanEncounterProgress=callback;},
     get onCampProgress(){return onCampProgress;},
     set onCampProgress(callback:SimulationClient['onCampProgress']){onCampProgress=callback;},
+    get onShipCountdownState298(){return onShipCountdownState298;},
+    set onShipCountdownState298(callback:SimulationClient['onShipCountdownState298']){onShipCountdownState298=callback;},
   };
 })();
 const audio = new AudioDirector();
@@ -410,7 +426,8 @@ const music = new MusicDirector();
 let snapshot: World | undefined;
 let campaignOnly:CampaignSummary|undefined;
 const caravanEncounterDialog261=new CaravanEncounterDialog261(c=>client.command(c));
-client.onCaravanEncounterProgress=message=>{if(nativeUi){nativeCaravanProgress=message;refreshNativeUi();}else caravanEncounterDialog261.progress(message);};
+client.onCaravanEncounterProgress=message=>{if(nativeUi){nativeCaravanProgress=message;refreshNativeUi();}else caravanEncounterDialog261.progress(message);if(message.phase==='complete'||message.phase==='refused')resumeNativeShipPreparation298();};
+client.onShipCountdownState298=()=>nativeUi?.notifyCountdownFrameEligibility298();
 const campaignState=():CampaignUIState|undefined=>snapshot??campaignOnly;
 let latestFoodReadability:FoodReadability|undefined;
 function confirmedFoodReadability():FoodReadability|undefined {
@@ -489,7 +506,7 @@ const groupUI=createGroupPanel(el('group-content'),createGroupAdapters({
   inspectPresentPawn:id=>{if(snapshot?.pawns.some(p=>p.id===id))selectPawn(id);},
 }));
 const campPreparationUI256=createCampPreparationView256(el('group-content'),(id,groupId)=>client.cancelCampEntry256(id,groupId));
-client.onCampProgress=message=>{if(nativeUi){nativeCampProgress=message;refreshNativeUi();}else campPreparationUI256.update(message);};
+client.onCampProgress=message=>{if(nativeUi){nativeCampProgress=message;refreshNativeUi();}else campPreparationUI256.update(message);if(!message)resumeNativeShipPreparation298();};
 function groupCommandsBlocked():string|undefined {
  if(client.hasCampPreparation)return 'La pr\u00e9paration du camp attend encore sa d\u00e9cision.';
   if(simulationStopped)return 'La simulation est arrêtée. Chargez ou créez une colonie pour reprendre.';
@@ -561,6 +578,22 @@ const deferredResumeGuard=createDeferredResumeGuard();
 let wallCutaway = false, foliageVisible = true, replacingWorld = false;
 let simulationStopped = false, graphicsFault = false, graphicsRecovering = false;
 let presentationPreparation: Promise<void> | undefined;
+function nativeShipPresentationEligible298():boolean {
+  return session.hasWorld&&!replacingWorld&&!presentationPreparation&&!simulationStopped&&!graphicsFault&&!graphicsRecovering
+    &&!client.hasCampPreparation&&!client.hasWorldCreationPreparation;
+}
+function nativeShipFrameEligible298():boolean {
+  // Preserve the inactive primitive guard. Options and speed0 remain separate.
+  return (client.shipCountdownActive298||nativeShipTerminal298?.closing===true&&!frontMenu.isOpen()&&!waitingRequests.size)
+    &&!document.hidden&&nativeShipPresentationEligible298();
+}
+function nativeShipCurtainEligible298():boolean {
+  return nativeShipPresentationEligible298()&&!frontMenu.isOpen()&&!waitingRequests.size;
+}
+function resumeNativeShipPreparation298():void {
+  if(client.hasCampPreparation||client.hasWorldCreationPreparation)return;
+  client.resumeShipFramesAfterPreparation298();nativeUi?.notifyCountdownFrameEligibility298();
+}
 let graphicsMessage = '', incidentPanel: HTMLElement | undefined;
 const waitingRequests = new Map<number, string>();
 // This instance never escapes MAIN. All Worlds come from the private client,
@@ -575,7 +608,7 @@ class MainColonyRenderer extends ColonyRenderer {
   protected override cameraOnlyInput():boolean{return nativeUi?.hasOpenGamePage(true)??false;}
   protected override createSelectionRectanglePort(){return nativeUi?(bounds:{left:number;top:number;width:number;height:number}|null)=>nativeUi!.setSelectionRectangle(bounds):undefined;}
   get admissionFrameReady():boolean {return !this.disposed&&!this.preparing&&!this.fatalError;}
-  protected override frame(now:number):void {this.beginPresentationFrame297();drainMainAdmissionsBeforeFrame();const frameNow=Math.max(now,this.hostPort.now());try{super.frame(frameNow);}finally{notifyMainAdmissionAvailability();}}
+  protected override frame(now:number):void {this.beginPresentationFrame297();drainMainAdmissionsBeforeFrame();const frameNow=Math.max(now,this.hostPort.now());let ready=false;try{super.frame(frameNow);ready=this.admissionFrameReady;}finally{try{if(renderer===this)nativeUi?.gameCountdownFrame298(now,ready);}finally{notifyMainAdmissionAvailability();}}}
   protected override createApplicationContext():SceneApplicationContext{return new SceneApplicationContext();}
   protected override createEnvironmentLighting():EnvironmentLighting {const context=this.applicationContext!;return new EnvironmentLighting(new EnvironmentLightField(context.topology,world=>context.read(world)?.lighting));}
   protected override createIntentReader(){return createClosedMainMapIntentReader();}
@@ -854,10 +887,10 @@ const session = new GameSession(client, saveRepository, prepareWorld, () => {
   if(campaignOnly){worldTab='maps';refreshWorldPanels(campaignOnly);}
   if(snapshot){worldTab=snapshot.scout||snapshot.commercialTrip?'individual':snapshot.planet||snapshot.group?'group':'individual';refreshWorldPanels(snapshot);}
   updateIncident(); syncStorageButtons();
-});
+},()=>{queueMicrotask(()=>snapshotHud.request(true));});
 const frontHost = document.createElement('div'); document.querySelector('#app')!.append(frontHost);
 if(nativeMode){
-  nativeUi=new NativeStage({onTools:showNativeToolPalette,onViewport:(w,h,k,bottom,left)=>nativeHud?.setViewport(w,h,k,bottom??96,left),onWindowLayout:bounds=>nativeHud?.setWindowBounds(bounds)??false,onPointer:updateNativeDockPointer,onAnimate:dt=>nativeHud?.animate(dt)??false,onPanel:id=>{
+  nativeUi=new NativeStage({onTools:showNativeToolPalette,onViewport:(w,h,k,bottom,left)=>nativeHud?.setViewport(w,h,k,bottom??96,left),onWindowLayout:bounds=>nativeHud?.setWindowBounds(bounds)??false,onPointer:updateNativeDockPointer,onAnimate:dt=>nativeHud?.animate(dt)??false,countdownFrame298:{canFeed:nativeShipFrameEligible298,canPresent:nativeShipCurtainEligible298,feed:delta=>{client.feedShipFrame298(delta);nativeShipTerminal298?.frame(delta);}},onPanel:id=>{
     nativeCustomPage=undefined;nativeToolPalette=undefined;
     if(id==='factions'){nativeCustomPage=buildNativeFactions(readNativeState(),nativeActions());nativeUi!.showPage(nativeCustomPage);return;}
     void attempt(()=>switchPanel(currentPanel===id?null:id));
@@ -866,6 +899,15 @@ if(nativeMode){
     onGesture:()=>{unlockAudioFromGesture();music.unlock();},
     onActivate:id=>audio.playInterface(id.startsWith('tab:')||id.includes('back')?'ui.panel':'ui.click'),
     onCancelWorldInteraction:()=>{renderer?.cancelSelection();renderer?.cancelDesignation();},
+  });
+  nativeShipTerminal298=createNativeShipTerminal298({readState:readNativeState,
+    readEpoch:()=>session.generation,readCredits:()=>readAdoptedShipCredits298(snapshot,campaignOnly,session.hasWorld),
+    canPresent:nativeShipCurtainEligible298,
+    isPageCurrent:id=>nativeCustomPage?.id===id,show:page=>{nativeCustomPage=page;nativeUi!.showPage(page);},
+    close:id=>{if(nativeCustomPage?.id!==id)return;nativeCustomPage=undefined;renderState();},
+    launch:id=>client.launchShip298(id),continueCredits:id=>client.continueShipCredits298(id),
+    onFrameDemandChanged:()=>nativeUi?.notifyCountdownFrameEligibility298(),
+    onPresentation:(ownerId,phase,fraction)=>nativeUi?.presentShipCurtain298(ownerId,phase,fraction),
   });
   nativeUi.setTextFont(UI_FONT_CHOICES.find(choice=>choice.id===uiFont)!.family);
   nativeHud=new NativeHudCards(nativeUi.art,nativeUi.anchors,{selectPawn,focus:(target,tab)=>{nativeCustomPage=undefined;focusNotification(target);if(tab)setNativeInspectorTab(tab);refreshNativeUi();},
@@ -1055,14 +1097,15 @@ function nativeActions():NativeUiActions {
       renderState();return result;
     },
     panel:panel=>switchPanel(panel),category:setCategory,tool:setTool,selectPawn,
-    speed:value=>{const token=client.getThreatPauseToken();return changeSpeed(value,token);},rotate:direction=>{placementOrientation=((placementOrientation+direction+4)%4) as Orientation;renderer?.setPlacementRotation(placementOrientation);refreshNativeUi();},
-    material:material=>{nativeConstructionMaterial=material;renderer?.setConstructionMaterial(material);refreshNativeUi();},
+    speed:value=>{const token=client.getThreatPauseToken();return changeSpeed(value,token);},rotate:direction=>{if(isShipComputerSensorsKind298(currentTool))return;placementOrientation=((placementOrientation+direction+4)%4) as Orientation;renderer?.setPlacementRotation(placementOrientation);refreshNativeUi();},
+    material:material=>{if(isShipComputerSensorsKind298(currentTool))return;nativeConstructionMaterial=material;renderer?.setConstructionMaterial(material);refreshNativeUi();},
     creationStorage:settings=>{nativeCreationStorage=structuredClone(settings);refreshNativeUi();},
     front:openFront,save,exportSave:exportCurrentColony,
     showPage:page=>{nativeCustomPage=page;nativeUi?.showPage(page);},refresh:()=>renderState(),clearSelection,
     readState:readNativeState,closePage:()=>{nativeToolPalette=undefined;nativeCustomPage=undefined;renderState();},
     pawnActivity:id=>{const pawn=snapshot?.pawns.find(p=>p.id===id);return pawn&&snapshot?actionLabel(pawn,carriedPatientsOf(snapshot)):'';},
-    openVisitorTrade:()=>nativeLocalTrade?.openVisitors(),openOrbitalTrade:id=>nativeLocalTrade?.openOrbital(id),
+    openVisitorTrade:()=>nativeLocalTrade?.openVisitors(),openOrbitalTrade:id=>nativeLocalTrade?.openOrbital(id),openFactionComms298:id=>{void attempt(async()=>nativeFactionComms298?.open(id));},
+    launchShip298:id=>nativeShipTerminal298?.openLaunch(id),
     resizeZone:(kind,id,shrink)=>{nativeCustomPage=undefined;editZone(kind,id,shrink);},
     paintAllowedArea:(id,enabled)=>{if(!snapshot?.allowedAreas?.some(area=>area.id===id))return;nativeCustomPage=undefined;setPanel(null);applyTool(enabled?'allowed-expand':'allowed-shrink');allowedAreaEditId=id;renderer?.setAllowedAreaTarget(id);},
     selectObject:object=>selectObjects([object]),
@@ -1080,11 +1123,14 @@ function refreshNativeUi():void {
   nativeUi.setWorldVisible(!!snapshot&&!!renderer);nativeHud?.setVisible(!!snapshot&&!frontMenu.isOpen());
   if(snapshot){nativeHud?.setSelection([...selection.ids]);nativeHud?.update(snapshot,currentSpeed,renderer?.stats.fps??0);}
   nativeHud?.setViewState({walls:wallCutaway?'coupés':'hauts',roofs:nativeRoofsVisible,foliage:foliageVisible,zones:nativeZonesVisible,camera:nativePerspective?'perspective':'iso'});
+  const state=readNativeState(),actions=nativeActions(),terminalPage=nativeShipTerminal298?.update(state);
   if(frontMenu.isOpen())return;
-  const state=readNativeState(),actions=nativeActions();
+  if(state.fault||waitingRequests.size){updateIncident();return;}
+  if(terminalPage){nativeCustomPage=terminalPage;nativeUi.showPage(terminalPage);return;}
+  if(nativeShipTerminal298?.ownsPage(nativeCustomPage?.id))nativeCustomPage=undefined;
   syncNativePanelState(state,actions);
   if(nativeToolPalette&&nativeCustomPage?.id==='map-tools-'+nativeToolPalette)nativeCustomPage=buildNativeToolPalette(state,actions,nativeToolPalette);
-  nativeLocalTrade?.update();
+  nativeLocalTrade?.update();nativeFactionComms298?.update();
   const encounter=buildNativeEncounter(state,actions);
   if(encounter){
     if(nativeEncounterKey!==encounter.id){nativeEncounterKey=encounter.id;nativeCustomPage=undefined;}
@@ -1099,6 +1145,7 @@ function refreshNativeUi():void {
   if(page?.id==='menu')page.rows.push({id:'native-menu-trade',label:'Échanges',controls:[
     {id:'native-visitor-trade',label:'Visiteurs et commerce',onActivate:()=>nativeLocalTrade?.openVisitors()},
     {id:'native-orbital-trade',label:'Commerce orbital',onActivate:()=>nativeLocalTrade?.openOrbital()},
+    ...(Number(state.world?.schemaVersion)===298?[{id:'native-faction-comms298',label:'Communications de faction',onActivate:()=>{void attempt(async()=>nativeFactionComms298?.open());}}]:[]),
   ]});
   if(page&&!page.onClose)page.onClose=()=>setPanel(null);
   nativeUi.showPage(page);
@@ -1114,6 +1161,7 @@ async function pauseForMenu(): Promise<void> {
 }
 async function openFront(page: 'home' | 'create' | 'load'): Promise<void> {
   if (session.busy || replacingWorld) return;
+  client.cancelShipCountdown298('front');
   await pauseForMenu();
   if(page==='load')await session.refreshSaves();
   frontMenu.setHasGame(session.hasWorld);
@@ -1123,7 +1171,7 @@ async function openFront(page: 'home' | 'create' | 'load'): Promise<void> {
   setPanel(null); syncStorageButtons();
 }
 async function switchPanel(panel: Panel, preserveTool = false): Promise<void> {
-  if (panel === 'menu') { await pauseForMenu();await session.refreshSaves();saveManager?.refresh(); }
+  if (panel === 'menu') { client.cancelShipCountdown298('menu');await pauseForMenu();await session.refreshSaves();saveManager?.refresh(); }
   setPanel(panel, preserveTool);
 }
 async function replaceColony(action: () => Promise<void>,confirmedDraft?:WorldCreationTicket256): Promise<void> {
@@ -1271,11 +1319,12 @@ function applyTool(tool: Tool) {
     zoneEditTarget=undefined;renderer?.setZoneTarget(undefined);allowedAreaEditId=undefined;renderer?.setAllowedAreaTarget(undefined);shootingControls.cancel();
     if(tool==='ship-cryptosleep-casket'&&currentTool!==tool){placementOrientation=2;renderer?.setPlacementRotation(placementOrientation);}
     if(isShipPartKind276(tool)&&currentTool!==tool){placementOrientation=SHIP_PART_DEFAULT_ORIENTATION_276[tool];renderer?.setPlacementRotation(placementOrientation);}
+    if(isShipComputerSensorsKind298(tool)){placementOrientation=0;renderer?.setPlacementRotation(0);}
     currentTool=tool;syncToolCursor(el('viewport'),tool);
     if(tool!=='install'){installationId=undefined;renderer?.setFurniturePlacement(undefined);}
     if(tool!=='replant-tree'){replantPileId=undefined;renderer?.setTreePlacement(undefined);}
     renderer?.setFloorSelection(isBuildableFloor(tool)?tool:undefined);renderer?.setTool(isBuildableFloor(tool)?'lay-floor':tool);
-    renderer?.setRoofAreasVisible(isRoofArea(tool));const material=placementMaterial(tool,nativeConstructionMaterial);
+    renderer?.setRoofAreasVisible(isRoofArea(tool));const material=isShipComputerSensorsKind298(tool)?'steel':placementMaterial(tool,nativeConstructionMaterial);
     if(material)nativeConstructionMaterial=material;renderer?.setConstructionMaterial(material);
     refreshNativeUi();return;
   }
@@ -1287,6 +1336,7 @@ function applyTool(tool: Tool) {
   if(tool!=='replant-tree'){replantPileId=undefined;renderer?.setTreePlacement(undefined);}
   if(tool==='ship-cryptosleep-casket'&&currentTool!==tool){placementOrientation=2;renderer?.setPlacementRotation(placementOrientation);}
   if(isShipPartKind276(tool)&&currentTool!==tool){placementOrientation=SHIP_PART_DEFAULT_ORIENTATION_276[tool];renderer?.setPlacementRotation(placementOrientation);}
+  if(isShipComputerSensorsKind298(tool)){placementOrientation=0;renderer?.setPlacementRotation(0);}
   currentTool = tool;
   syncToolCursor(el('viewport'), tool);
   renderer?.setFloorSelection(isBuildableFloor(tool)?tool:undefined);renderer?.setTool(isBuildableFloor(tool)?'lay-floor':tool);
@@ -1297,7 +1347,7 @@ function applyTool(tool: Tool) {
     button.setAttribute('aria-pressed', String(active));
   }
   el('tool-instruction').textContent = constructionUI.update(tool, tool==='replant-tree'?'Choisissez un sol fertile, sans toit pour replanter cet arbre. Échap ou clic droit : annuler.':tool==='allowed-expand'||tool==='allowed-shrink'?'Tracer un rectangle pour modifier la zone autorisée. Échap ou clic droit : quitter.':toolDefinitions.find(item => item.id === tool)?.hint??'Choisissez le nouvel emplacement du meuble. Q/E : rotation. Échap : annuler.');
-  renderer?.setConstructionMaterial(constructionUI.material(tool));
+  renderer?.setConstructionMaterial(isShipComputerSensorsKind298(tool)?'steel':constructionUI.material(tool));
   el('placement-controls').hidden = !rotatableTools.has(tool);
   el('storage-options').hidden = tool !== 'stockpile';
   updateMapHover(true);
@@ -1411,8 +1461,8 @@ function pickCell(x: number, z: number) {
       if (tool==='stockpile'||tool==='remove-stockpile')return client.command({type:'area',action:tool,from:{x,z},to:{x,z},...(zoneEditTarget===undefined?{}:{targetZoneId:zoneEditTarget}),...(tool==='stockpile'?readStorageSettings('stockpile'):{})});
       const objects = tool==='deconstruct'||tool==='uninstall' ? snapshot?.structures.filter(s=>footprintCells(s).some(c=>c.x===x&&c.z===z))??[] : [];
       const target = objects.find(s=>s.kind!=='power-conduit')??objects[0];
-      const material=nativeUi?placementMaterial(tool,nativeConstructionMaterial):constructionUI.material(tool);
-      return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool as JobKind, ...(target?{targetId:target.id}:{}), orientation: tool==='geothermal-generator'||tool==='mini-turret'||tool==='sandbags'||tool==='solar-generator'||tool==='power-conduit'||tool==='power-switch'||tool==='wood-generator'||tool==='chemfuel-generator'||tool==='sun-lamp'||tool==='standing-lamp'||tool==='door'||tool==='autodoor'||tool==='passive-cooler'?0:placementOrientation, x, z, ...(material ? {material} : {}) });
+      const material=isShipComputerSensorsKind298(tool)?'steel':nativeUi?placementMaterial(tool,nativeConstructionMaterial):constructionUI.material(tool);
+      return client.command(tool === 'cancel' ? { type: 'cancel', x, z } : { type: 'designate', kind: tool as JobKind, ...(target?{targetId:target.id}:{}), orientation: isShipComputerSensorsKind298(tool)||tool==='geothermal-generator'||tool==='mini-turret'||tool==='sandbags'||tool==='solar-generator'||tool==='power-conduit'||tool==='power-switch'||tool==='wood-generator'||tool==='chemfuel-generator'||tool==='sun-lamp'||tool==='standing-lamp'||tool==='door'||tool==='autodoor'||tool==='passive-cooler'?0:placementOrientation, x, z, ...(material ? {material} : {}) });
     });
     return;
   }
@@ -1493,6 +1543,7 @@ function zoneActions(kind:'stockpile'|'growing',id:number):HTMLElement {
 }
 
 function rotatePlacement(direction = 1) {
+  if(isShipComputerSensorsKind298(currentTool))return;
   if(currentTool==='install'&&snapshot&&installationId!==undefined&&furnitureObject(snapshot,installationId)?.kind==='firefoam-popper')return;
   placementOrientation = ((placementOrientation + direction + 4) % 4) as Orientation;
   renderer?.setPlacementRotation(placementOrientation);
@@ -1690,6 +1741,7 @@ function actionLabel(pawn: Pawn, carriedPatients: ReadonlySet<number>) {
   if(pawn.brewing)return pawn.path.length||pawn.moveCooldown>0?'Rejoint le fût de fermentation':'Extrait la bière du fût';
   if (pawn.need) return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
   if(pawn.recreation.task)return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
+  const comms298=(pawn as import('./sim/faction-comms-state-298').FactionCommsPawn298).factionComms298;if(comms298)return comms298.phase==='ready'?'Communication de faction · au contact de la console':'Communication de faction · rejoint la console';
   if(pawn.orbitalTrade)return pawn.orbitalTrade.phase==='ready'?'Commerce orbital · au contact de la console':'Commerce orbital · rejoint la console';
   if(pawn.visitor)return pawn.visitor.phase==='leaving'?'Visiteur · quitte la carte':pawn.visitor.phase==='arriving'?'Visiteur · rejoint la colonie':pawn.visitor.role==='trader'?'Marchand · séjourne dans la colonie':'Visiteur · séjourne dans la colonie';
   if(pawn.haul?.destination.type==='fuel'||pawn.haul?.destination.type==='turret')return queryPawnStatus(snapshot!,pawn,confirmedFoodReadability()).reason;
@@ -2163,9 +2215,17 @@ const nativeLocalTrade:ReturnType<typeof createNativeLocalTrade>|undefined=nativ
   show:page=>{nativeCustomPage=page;nativeUi!.showPage(page);},close:()=>{nativeCustomPage=undefined;refreshNativeUi();},
   isCurrent:()=>!!nativeLocalTrade?.ownsPage(nativeCustomPage?.id),focusPawn:id=>renderer?.focusPawn(id),focusCell:cell=>renderer?.focusCell(cell),
 }):undefined;
+let nativeFactionResumeRevision298=0;
+const nativeFactionComms298:ReturnType<typeof createNativeFactionComms298>|undefined=nativeUi?createNativeFactionComms298({
+  readState:readNativeState,command:command=>{nativeFactionResumeRevision298=deferredResumeGuard.capture();return client.command(command);},
+  pause:()=>client.setSpeed(0),resume:async()=>{if(currentSpeed===0&&deferredResumeGuard.allows(nativeFactionResumeRevision298))await client.setSpeed(1);},
+  show:page=>{nativeCustomPage=page;nativeUi!.showPage(page);},close:()=>{nativeCustomPage=undefined;refreshNativeUi();},
+  isCurrent:()=>!!nativeFactionComms298?.ownsPage(nativeCustomPage?.id),focusPawn:id=>renderer?.focusPawn(id),focusCell:cell=>renderer?.focusCell(cell),
+}):undefined;
 const arrivalUI=createArrivalUI(command=>client.command(command));
 const questUI=createQuestUI(command=>client.command(command));
 function syncStorageButtons() {
+  nativeUi?.notifyCountdownFrameEligibility298();
   if(nativeUi){shell.inert=replacingWorld||frontMenu.isOpen()||!campaignState()||simulationStopped||graphicsFault||graphicsRecovering||waitingRequests.size>0;return;}
   syncFirstDayGuide();
   for(const button of document.querySelectorAll<HTMLButtonElement>('[data-panel]')){if(button.dataset.mapOriginalDisabled===undefined){button.dataset.mapOriginalDisabled=String(button.disabled);button.dataset.mapOriginalTitle=button.title;}const local=!['world','menu','quests'].includes(button.dataset.panel??'');button.disabled=button.dataset.mapOriginalDisabled==='true'||local&&!snapshot;button.title=local&&!snapshot?'Affichez une carte locale pour ouvrir ce panneau.':button.dataset.mapOriginalTitle??'';}
@@ -2371,6 +2431,7 @@ client.onError = message => notify(message, true);
 client.onRequestStatus = status => {
   if (status.state === 'waiting') waitingRequests.set(status.id, status.message ?? 'La simulation tarde à répondre.');
   else waitingRequests.delete(status.id);
+  if(status.state==='settled'&&['world-draft-generate','world-draft-start','world-draft-cancel'].includes(status.type))resumeNativeShipPreparation298();
   groupUI.setRequestStatus(status);
   updateIncident(); syncStorageButtons();
 };
@@ -2416,7 +2477,7 @@ function receiveMainSnapshot(world: World, cost: number, speed: number, replaced
   const changed=replaced||[...selection.ids].some(id=>!world.pawns.some(p=>p.id===id)&&!world.wildlife?.animals.some(a=>a.id===id)&&!world.mechanoids?.some(m=>m.id===id))||!!selectedObject&&!mapObjectExists(world,selectedObject);
   if(changed){selection.clear();selectedPawn=undefined;selectedCell=undefined;selectedObject=undefined;selectedObjects=[];renderer?.setSelectedObject(undefined);orderMenu.close();rebuildInspector();}
   else if(roleChanged||zoneAnchorChanged||objectGroupChanged){orderMenu.close();rebuildInspector();}
-  const deferCalmFull297=Number(world.schemaVersion)===297&&!replaced&&!speedChanged&&speed>0&&!client.hasPendingPresentationRequests;
+  const deferCalmFull297=isCorePhysicalSchema297(Number(world.schemaVersion))&&!replaced&&!speedChanged&&speed>0&&!client.hasPendingPresentationRequests;
   renderer?.setWorld(world,replaced,speed,motion,true,coreInput297,deferCalmFull297);
   syncAudioSources(world);
   if(changed)renderer?.setSelectedPawns(selection.ids);
@@ -2504,7 +2565,8 @@ async function handleGraphicsFailure(message: string): Promise<void> {
 }
 
 function prepareWorld(): Promise<void> {
-  return presentationPreparation ??= prepareWorldSafely().finally(() => { presentationPreparation = undefined; });
+  if(!presentationPreparation){presentationPreparation=prepareWorldSafely().finally(()=>{presentationPreparation=undefined;nativeUi?.notifyCountdownFrameEligibility298();});nativeUi?.notifyCountdownFrameEligibility298();}
+  return presentationPreparation;
 }
 async function prepareWorldSafely(): Promise<void> {
  for(;;){
@@ -2659,7 +2721,7 @@ const metricsInterval = setInterval(() => {
     el('metrics').textContent = `${renderer.backend} · ${renderer.stats.frameMs.toFixed(1)} ms/image · p95 ${renderer.stats.frameP95.toFixed(1)} ms · simulation ${stepMs.toFixed(2)} ms/tick · son ${soundState}, ${sound.loaded} MP3, ${sound.playedOneShots} effets, dernier ${sound.lastKind ?? '—'} · musique ${song.state}${song.track ? ` (${song.track})` : ''}`;
   }
 }, 1000);
-window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval);nativeLocalTrade?.dispose();nativeSaveManager?.dispose();nativeHud?.dispose();nativeUi?.dispose(); client.dispose(); audio.dispose(); music.dispose(); renderer?.dispose(); saveRepository.close(); });
+window.addEventListener('pagehide', event => { if (event.persisted) return; clearInterval(metricsInterval);nativeLocalTrade?.dispose();nativeFactionComms298?.dispose();nativeSaveManager?.dispose();nativeHud?.dispose();nativeShipTerminal298?.dispose();nativeUi?.dispose(); client.dispose(); audio.dispose(); music.dispose(); renderer?.dispose(); saveRepository.close(); });
 mainAdmissionCanFrame=()=>renderer instanceof MainColonyRenderer&&renderer.admissionFrameReady&&!presentationPreparation&&!replacingWorld&&!simulationStopped&&!graphicsFault&&!graphicsRecovering&&!frontMenu.isOpen()&&!document.hidden;
 if(nativeMode){
   // Compatibility bookkeeping is detached after bootstrap. No legacy control

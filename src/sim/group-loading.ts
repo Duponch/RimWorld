@@ -1,4 +1,5 @@
 import {regularGroupFreight258} from './group-freight-contract-258.ts';
+import {setMaterialForbidden256} from './material-permission-256.ts';
 import {groupHumanHandler257} from './group-human-admission-257.ts';
 import {groupCaravanPileMass256} from './group-caravan-mass-256.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
@@ -42,7 +43,7 @@ export function previewGroupLoading(world:World,memberIds:readonly number[],line
     const source=capture.sources.get(line.pileId);
     if(!source||source.owner.type!=='ground'||!(regularGroupFreight258(source,world.schemaVersion)||loadItem(source.item,world.schemaVersion>=GROUP_PROVISIONS_SCHEMA,freight)||world.schemaVersion>=256&&ITEM_DEFINITIONS[source.item].nutrition>0)||source.foodPoison||source.item==='pemmican'&&!freshGroupProvision(source,world.tick))return fail('source');
     const unit=world.schemaVersion>=256?groupCaravanPileMass256(source,freight,world.schemaVersion):groupItemMassGrams(source.item,freight,world.schemaVersion),reserved=authority.reservedQuantity(world,source.id);
-    if(unit===undefined||!Number.isSafeInteger(reserved)||reserved<0||source.quantity-reserved<line.quantity)return fail('source-reserved');
+    if(unit===undefined||!Number.isSafeInteger(reserved)||reserved<0||Number(world.schemaVersion)>=298&&reserved!==0||source.quantity-reserved<line.quantity)return fail('source-reserved');
     remainingBySource.set(source.id,source.quantity);let remaining=line.quantity;
     while(remaining){
       const ranked=[...carriers].filter(c=>c.capacityGrams-c.grams>=unit&&(world.schemaVersion<257||!capture.members.some(p=>p.id===c.pawnId)||capture.members.some(p=>p.id===c.pawnId&&groupHumanHandler257(p)))).sort((a,b)=>Number(capture.members.some(p=>p.id===a.pawnId))-Number(capture.members.some(p=>p.id===b.pawnId))||a.grams-b.grams||a.pawnId-b.pawnId);
@@ -119,7 +120,7 @@ export function prepareGroupPickup(world:World,group:PreparingGroup,authority:Gr
     ||pawn.motion&&pawn.motion.end>world.tick||pawn.moveCooldown>0)return fail('physical-contact');
   const policy=authority.sourceReason(world,source,pawn);if(policy)return fail(policy);
   const reserved=authority.reservedQuantity(world,source.id,group.id),future=groupReservedSources(group).get(source.id)??0;
-  if(!Number.isSafeInteger(reserved)||reserved<0||future<line.quantity||source.quantity-reserved<future)return fail('reservation');
+  if(!Number.isSafeInteger(reserved)||reserved<0||Number(world.schemaVersion)>=298&&reserved!==0||future<line.quantity||source.quantity-reserved<future)return fail('reservation');
   const unit=world.schemaVersion>=256?groupCaravanPileMass256(source,freightGroup(group),world.schemaVersion):groupItemMassGrams(source.item,freightGroup(group),world.schemaVersion),carrier=capture.mass.carriers.find(c=>c.pawnId===pawn.id)!;
   if(unit===undefined||carrier.grams+line.quantity*unit>carrier.capacityGrams)return fail('mass');
   const transfer=planInventoryPickup(world,source,pawn.id,line.quantity);if(!transfer)return fail('transfer');
@@ -146,7 +147,18 @@ export function commitGroupPickup(world:World,activeGroup:GroupState,plan:GroupP
     ||!world.pawns.includes(plan.carrier)||JSON.stringify(plan.carrier)!==plan.expectedCarrier||!inventoryPickupCurrent(world,plan.transfer))return false;
   const actual=world.piles.filter(p=>'pawnId' in p.owner&&p.owner.pawnId===plan.carrier.id);
   if(actual.length!==plan.possessions.length||!plan.possessions.every((p,i)=>actual.includes(p)&&JSON.stringify(p)===plan.possessionSignatures[i]))return false;
+  if(Number(world.schemaVersion)>=298){
+    // Descriptor changes need not change JSON signatures. Reject before the
+    // inventory transfer if the permission deletion could no longer commit.
+    const carried=plan.transfer.carried;
+    for(const holder of [carried,carried.apparel,carried.weapon])if(holder)for(const key of ['forbidden','eggForbidden']){
+      const descriptor=Object.getOwnPropertyDescriptor(holder,key);if(descriptor&&!descriptor.configurable)return false;
+    }
+  }
   if(!commitInventoryPickup(world,plan.transfer))return false;
+  // Only the actual transferred object becomes available. A split's original
+  // remainder and an unconsumed/stale plan retain their permission.
+  if(Number(world.schemaVersion)>=298)setMaterialForbidden256(plan.transfer.carried,false);
   plan.group.manifest[plan.cursor]!.carriedPileId=plan.transfer.carried.id;
   plan.group.ledger=plan.nextLedger;if(plan.nextProvisions)plan.group.provisions=plan.nextProvisions;
   if(plan.nextFreight)plan.group.freight=plan.nextFreight;plan.group.cursor++;refreshStock(world);

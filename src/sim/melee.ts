@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import { combatCell297,combatTarget,isAnimalTarget,meleeThreatTarget,retaliationPermission,type LivingTarget } from './combat-target.ts';
 import { violentWorkRefusal } from './colonist-backgrounds.ts';
@@ -78,7 +79,7 @@ export function applyMeleeCommand(world:World,command:MeleeCommand):CommandResul
 /** Fixed sentry only: counter an adjacent enemy, no implicit raid pursuit. */
 export function startSentryMelee(world:World,pawn:Pawn):boolean {
   if(isColonist(pawn)||!canFight(world,pawn))return false;
-  const core=Number(world.schemaVersion)===297?effectiveCore297(world):0,source=combatCell297(Number(world.schemaVersion),pawn,core);
+  const core=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):0,source=combatCell297(Number(world.schemaVersion),pawn,core);
   const nearby=world.pawns.filter(p=>{if(!hostileTo(pawn,p)||!assaultTarget(pawn,p))return false;const cell=combatCell297(Number(world.schemaVersion),p,core);return Math.abs(cell.x-source.x)<=1&&Math.abs(cell.z-source.z)<=1;});
   if(!nearby.length)return false;
   const blocked=blockedCells(world,true);
@@ -149,7 +150,7 @@ export function processMelee(world:World,pawn:Pawn,getBlocked:NavigationGrid,bud
   const m=pawn.melee!,target=m.order?.structure?structureTarget(world,pawn):targetFor(world,pawn);if(pawn.draft)pawn.draft.lastActiveTick=world.tick;
   if(m.order?.auto==='social'&&(!activeSocialFight(world,pawn,m.order.targetId)||!target||!canFight(world,pawn))){finishSocialFight(world,pawn);return;}
   if(!target||!canFight(world,pawn)){cancelMelee(pawn);pawn.path=[];return;}
-  if(m.strike||pawn.shooting?.stance?.phase==='cooldown'||isStunned(pawn,Number(world.schemaVersion)===297?effectiveCore297(world):world.tick*10)){pawn.path=[];pawn.state='idle';return;}
+  if(m.strike||pawn.shooting?.stance?.phase==='cooldown'||isStunned(pawn,isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):world.tick*10)){pawn.path=[];pawn.state='idle';return;}
   if(meleeTargetContact(world,pawn,target,getBlocked())){pawn.path=[];pawn.state='idle';return;}
   if(!isColonist(pawn)&&!pawn.tactics&&!pawn.raid&&!(m.order&&prisonBreakMeleeOwned(world,pawn,m.order))||m.order?.auto==='draft'){cancelMelee(pawn);return;}
   const blocked=getBlocked(),end=pawn.path.at(-1),next=pawn.path[0];

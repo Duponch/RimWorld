@@ -9,6 +9,7 @@ import type { ArchitectCategory, Tool } from './layout';
 /** Research requirements for ordinary construction, without installation's
  * exemptions. Furniture and floors keep their delivered definition as owner. */
 const BUILD_RESEARCH:Readonly<Partial<Record<Tool,ResearchProject>>>=Object.freeze({
+  'ship-computer':'ship-computer','ship-sensors':'ship-sensors',
   'firefoam-popper':'firefoam','ship-cryptosleep-casket':'ship-cryptosleep','ship-beam':'ship-basics','ship-engine':'ship-engine',
   'ship-reactor':'ship-reactor','cryptosleep-casket':'cryptosleep',vent:'complex-furniture',autodoor:'autodoors','mini-turret':'gun-turrets','vitals-monitor':'vitals-monitor',
   'tube-television':'tube-television',cooler:'air-conditioning',battery:'batteries',
@@ -25,6 +26,7 @@ const BUILD_RESEARCH:Readonly<Partial<Record<Tool,ResearchProject>>>=Object.free
 /** Existing command/material compatibility boundaries. These describe the
  * format, never the colony's stock, selected material, workers or terrain. */
 const MIN_SCHEMA:Readonly<Partial<Record<Tool,number>>>=Object.freeze({
+  'ship-computer':298,'ship-sensors':298,
   'ship-cryptosleep-casket':277,'ship-beam':276,'ship-engine':276,
   'ship-reactor':275,'cryptosleep-casket':271,'fueled-smithy':267,'electric-smithy':267,brewery:265,'fermenting-barrel':265,'geothermal-generator':264,bedroll:256,'torch-lamp':249,'build-bridge':247,'remove-bridge':247,vent:244,'sleeping-spot':232,shelf:229,'small-shelf':229,'spike-trap':226,
   'electric-crematorium':225,'double-bed':224,'electric-smelter':222,
@@ -57,7 +59,7 @@ export const architectCategoryAvailable=(world:World,category:ArchitectCategory)
 /** Catalogue visibility only. Placement still has its own shared simulation
  * validation; an occupied cell or an empty stock never removes an icon. */
 export function architectToolAvailable(world:World,tool:Tool):boolean {
-  if(tool==='firefoam-popper'&&![290,291,292,293,294,295,296,297].includes(world.schemaVersion))return false;
+  if(tool==='firefoam-popper'&&![290,291,292,293,294,295,296,297,298].includes(world.schemaVersion))return false;
   if(tool==='smooth-floor'&&!isSchema281OrLater(world.schemaVersion))return false;
   if(tool==='ship-cryptosleep-casket'&&!isSchema277OrLater(world.schemaVersion))return false;
   if(isShipAddedKind276(tool)&&!isSchema276OrLater(world.schemaVersion))return false;

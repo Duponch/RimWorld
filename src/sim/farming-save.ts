@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import type { PowerParentReader } from './power-parent-validation.ts';
 import type { StagingGeometryReader } from './staging-validation.ts';
 import type { ValidationIdentityContext,ValidationIdentityMembership } from './validation-identities.ts';
@@ -153,7 +154,7 @@ export function validateFarming(input: Record<string, unknown>, size: number, id
     if (!int(zone.id, 1, (input.nextId as number) - 1) || ids.has(zone.id)) errors.push('Invalid or duplicate growing zone ID.');
     else { ids.add(zone.id); zoneIds.add(zone.id); }
     if (!isGrowingPlantInVersion291(zone.plant, Number(input.schemaVersion)) || typeof zone.allowSow !== 'boolean' || typeof zone.allowCut !== 'boolean' || !Array.isArray(zone.cells) || !zone.cells.length || zone.cells.length > size) { errors.push('Invalid growing policy or cells.'); continue; }
-    if(isForestrySpecies291(zone.plant)&&((Number(input.schemaVersion)!==291&&(Number(input.schemaVersion)!==292&&(Number(input.schemaVersion)!==293&&(Number(input.schemaVersion)!==294&&(Number(input.schemaVersion)!==295&&(Number(input.schemaVersion)!==296&&Number(input.schemaVersion)!==297))))))||zone.basinId!==undefined||!treeSowingUnlocked291(input as unknown as World)||!forestNativeSpecies291(input as unknown as World).includes(zone.plant)))errors.push('Locked or non-indigenous forest growing policy.');
+    if(isForestrySpecies291(zone.plant)&&((Number(input.schemaVersion)!==291&&(Number(input.schemaVersion)!==292&&(Number(input.schemaVersion)!==293&&(Number(input.schemaVersion)!==294&&(Number(input.schemaVersion)!==295&&(Number(input.schemaVersion)!==296&&!isCorePhysicalSchema297(Number(input.schemaVersion))))))))||zone.basinId!==undefined||!treeSowingUnlocked291(input as unknown as World)||!forestNativeSpecies291(input as unknown as World).includes(zone.plant)))errors.push('Locked or non-indigenous forest growing policy.');
     let previous = -1;
     for (const cell of zone.cells) {
       if (!int(cell, 0, size - 1) || cell <= previous || occupied.has(cell)) errors.push('Unordered, overlapping or invalid growing cell.');
@@ -171,7 +172,7 @@ export function validateFarming(input: Record<string, unknown>, size: number, id
     if (value.growingZoneId !== undefined && zoneIds.has(value.growingZoneId as number)) {
       const zone = (input.growingZones as {id:number;cells:number[]}[]).find(z=>z.id===value.growingZoneId)!;
       const cell = (value.z as number) * (input.width as number) + (value.x as number);
-      if (!zone.cells.includes(cell) && !((Number(input.schemaVersion)===291||(Number(input.schemaVersion)===292||(Number(input.schemaVersion)===293||(Number(input.schemaVersion)===294||(Number(input.schemaVersion)===295||(Number(input.schemaVersion)===296||Number(input.schemaVersion)===297))))))&&(value.kind==='cut'||value.kind==='chop')?zone.cells.some(c=>Math.max(Math.abs(c%(input.width as number)-(value.x as number)),Math.abs(Math.floor(c/(input.width as number))-(value.z as number)))===1):value.kind === 'chop' && zone.cells.some(c => Math.abs(c % (input.width as number) - (value.x as number)) + Math.abs(Math.floor(c / (input.width as number)) - (value.z as number)) === 1))) errors.push('Growing job outside its zone.');
+      if (!zone.cells.includes(cell) && !((Number(input.schemaVersion)===291||(Number(input.schemaVersion)===292||(Number(input.schemaVersion)===293||(Number(input.schemaVersion)===294||(Number(input.schemaVersion)===295||(Number(input.schemaVersion)===296||isCorePhysicalSchema297(Number(input.schemaVersion))))))))&&(value.kind==='cut'||value.kind==='chop')?zone.cells.some(c=>Math.max(Math.abs(c%(input.width as number)-(value.x as number)),Math.abs(Math.floor(c/(input.width as number))-(value.z as number)))===1):value.kind === 'chop' && zone.cells.some(c => Math.abs(c % (input.width as number) - (value.x as number)) + Math.abs(Math.floor(c / (input.width as number)) - (value.z as number)) === 1))) errors.push('Growing job outside its zone.');
     }
   }
   for (const value of input.stockpiles as Record<string, unknown>[]) if (occupied.has((value.z as number) * (input.width as number) + (value.x as number))) errors.push('Storage overlaps growing zone.');

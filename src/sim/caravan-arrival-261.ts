@@ -9,7 +9,7 @@ import {planetCostContext,planetQueryBudget} from './planet-navigation.ts';
 import {captureGroupMass} from './group-capture.ts';
 import {freightGroup} from './group-freight.ts';
 import {validRetainedArrivalShape261} from './caravan-encounter-save-261.ts';
-import {worldTargetAccess263,queueWorldTargetEntry263,pendingWorldTargetOrder263} from './world-target-access-263.ts';
+import {worldTargetAccess263,queueWorldTargetEntry263,queueWorldTargetEntryAtTile298,pendingWorldTargetOrder263} from './world-target-access-263.ts';
 import type {RetainedArrival261} from './caravan-encounter-state-261.ts';
 import type {CampaignState} from './world-map-state.ts';
 import type {CommandResult} from './types.ts';
@@ -31,6 +31,13 @@ export function applyCaravanArrivalCommand261(root:CampaignState,c:CaravanArriva
  if(a?.kind==='trade'){
   const access=root.worldFactions&&worldSettlementAccess256(root.worldFactions,a.settlementId);
   if(!access?.ok||!access.canTrade||access.settlement.tile!==c.destination||access.settlement.factionId!==a.factionId||access.settlement.postId!==a.postId)return fail('L’établissement, sa faction ou son stock ne correspond plus à cet ordre.');
+ }
+ // StartPath at the real destination invokes VisitSite immediately in Core1.6.
+ // This request creates no map and plays no tick; the existing cooperative
+ // generator still owns every physical adoption, allocation and placement.
+ if(Number(root.schemaVersion)===298&&a?.kind==='visit-site'&&g.tile===c.destination){
+  if(!captureGroupMass(g.members,g.items,freightGroup(g),root.schemaVersion,g.packed,g.animalOwners?.members))return fail('La masse actuelle est invalide.');
+  return queueWorldTargetEntryAtTile298(root,r,a)?{ok:true}:fail('La vraie entrée immédiate du Site ne peut pas être engagée.');
  }
  return withWorldGroup(root,g.id,view=>{const mass=captureGroupMass(g.members,g.items,freightGroup(g),root.schemaVersion,g.packed,g.animalOwners?.members);if(!mass)return fail('La masse actuelle est invalide.');const plan=prepareGroupRedirection(planet,g,c.destination,planetCostContext(view,mass),planetQueryBudget(planet));if(plan.kind!=='ready')return fail(plan.kind==='deferred'?'Le calcul de route doit être réessayé.':plan.reason);
   view.group={...plan.state,paused:false};if(a)r.arrival261={tile:c.destination,action:{...a}};else delete r.arrival261;return {ok:true};})??fail('Le contexte de la caravane a disparu.');

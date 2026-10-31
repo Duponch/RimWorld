@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import {findShipCasketActor277} from './ship-casket-state-277.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
@@ -19,7 +20,7 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const keys=(v:Record<string,unknown>,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
 export function validMeleeShape(value:unknown,version:number,tick:number,coreNow297?:number):boolean {
- const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return false;
+ const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(physicalCoreNow297))return false;
   if(value===undefined)return true;
   if(version<59||!object(value)||!keys(value,['order','strike'])||value.order===null&&value.strike===null)return false;
   const o=value.order,s=value.strike;
@@ -28,7 +29,7 @@ export function validMeleeShape(value:unknown,version:number,tick:number,coreNow
   return object(s)&&keys(s,['targetId','atCore','untilCore','tool','outcome',...(version>=67?['structure']:[]),...(isSchema277OrLater(version)?['suspendedCore277']:[])])&&(!Object.hasOwn(s,'suspendedCore277')||isSchema277OrLater(version)&&integer(s.suspendedCore277,1,physicalCoreNow297-Number(s.atCore)))&&(s.structure===undefined||object(s.structure)&&keys(s.structure,['x','z'])&&integer(s.structure.x,0)&&integer(s.structure.z,0)&&s.outcome==='hit')&&(integer(s.targetId,1)||version>=256&&s.targetId===null&&s.structure===undefined)&&integer(s.atCore,0,physicalCoreNow297)&&integer(s.untilCore,physicalCoreNow297+1)&&s.untilCore-s.atCore===meleeRecoveryCore(s.tool as MeleeToolId)+Number(s.suspendedCore277??0)&&(isSchema272OrLater(version)&&isSpearToolId272(s.tool)||version>=270&&isLongswordToolId270(s.tool)||version>=269&&isMaceToolId269(s.tool)||['left-fist','right-fist','head','teeth','grip','barrel','barrel-poke',...(version>=88?['knife-handle','knife-blade','knife-point']:[])].includes(String(s.tool)))&&['hit','miss','dodge'].includes(String(s.outcome));
 }
 export function validStunShape(value:unknown,version:number,tick:number,maxDuration=45,coreNow297?:number):boolean {
- const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return false;
+ const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(physicalCoreNow297))return false;
   if(value===undefined)return true;
   return version>=59&&object(value)&&keys(value,['sinceCore','untilCore'])&&integer(value.sinceCore,0,physicalCoreNow297)&&integer(value.untilCore,physicalCoreNow297+1,physicalCoreNow297+maxDuration)&&value.untilCore-value.sinceCore>=45;
 }
@@ -64,7 +65,7 @@ export function validateMelee(world:World):string[] {
       const s=world.structures.find(s=>s.id===m.strike!.targetId),c=m.strike.structure;
       if(s&&(world.schemaVersion>=192?structureMaxHp(s)<=0||!footprintCells(s).some(cell=>cell.x===c.x&&cell.z===c.z):!isBarrier(s)||s.x!==c.x||s.z!==c.z)||[world.pawns,world.jobs,world.piles,world.resources,world.mechanoids??[]].some(items=>items.some(item=>item.id===m.strike!.targetId))||world.packed.some(p=>p.building.id===m.strike!.targetId))errors.push('Barrier recovery conflicts with a live entity.');
     }
-    if(m.strike&&(!(world.schemaVersion>=256&&m.strike.targetId===null)&&!m.strike.structure&&!world.pawns.some(t=>t.id===m.strike!.targetId&&t.id!==p.id)&&!findShipCasketActor277(world,{kind:'human',id:m.strike!.targetId!})&&!findShipCasketActor277(world,{kind:'animal',id:m.strike!.targetId!})&&!findShipCasketActor277(world,{kind:'mechanical',id:m.strike!.targetId!})&&!world.raids?.departed.some(d=>d.pawnId===m.strike!.targetId)&&!(world.schemaVersion>=204&&world.prisonDepartures?.some(d=>d.pawnId===m.strike!.targetId))&&!(world.schemaVersion>=78&&world.wildlife?.animals.some(a=>a.id===m.strike!.targetId))&&!(world.schemaVersion>=79&&world.piles.some(p=>p.corpse?.animalId===m.strike!.targetId))&&!(world.schemaVersion>=194&&(world.mechanoids?.some(t=>t.id===m.strike!.targetId)||world.piles.some(p=>p.id===m.strike!.targetId&&p.mechCorpse)))||(p.motion?.end??0)>(Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick)||p.shooting?.stance?.phase==='aim'))errors.push('Invalid melee recovery.');
+    if(m.strike&&(!(world.schemaVersion>=256&&m.strike.targetId===null)&&!m.strike.structure&&!world.pawns.some(t=>t.id===m.strike!.targetId&&t.id!==p.id)&&!findShipCasketActor277(world,{kind:'human',id:m.strike!.targetId!})&&!findShipCasketActor277(world,{kind:'animal',id:m.strike!.targetId!})&&!findShipCasketActor277(world,{kind:'mechanical',id:m.strike!.targetId!})&&!world.raids?.departed.some(d=>d.pawnId===m.strike!.targetId)&&!(world.schemaVersion>=204&&world.prisonDepartures?.some(d=>d.pawnId===m.strike!.targetId))&&!(world.schemaVersion>=78&&world.wildlife?.animals.some(a=>a.id===m.strike!.targetId))&&!(world.schemaVersion>=79&&world.piles.some(p=>p.corpse?.animalId===m.strike!.targetId))&&!(world.schemaVersion>=194&&(world.mechanoids?.some(t=>t.id===m.strike!.targetId)||world.piles.some(p=>p.id===m.strike!.targetId&&p.mechCorpse)))||(p.motion?.end??0)>(isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick)||p.shooting?.stance?.phase==='aim'))errors.push('Invalid melee recovery.');
   }
   return errors;
 }

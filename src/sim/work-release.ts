@@ -1,3 +1,5 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
+import type {FactionCommsPawn298} from './faction-comms-state-298.ts';
 import {preparePartyRelease292} from './party-release-292.ts';
 import { wallDoorImplicitOrphan296 } from './wall-door-state-296.ts';
 import {isSchema285OrLater} from './schema-compatibility-257.ts';
@@ -49,7 +51,7 @@ export function planCommandDrops(world:World,command:Command|import('./cave-glow
   if(command.type==='designate'&&(command.kind==='sleeping-spot'||command.kind==='animal-sleeping-spot'))return new Map();
   const jobs=new Set<number>(),zones=new Set<number>(),pawns=new Set<number>();
   let retiringGrowingActors:Set<number>|undefined;
-  if(command.type==='order-enter-ship-casket'||command.type==='order-carry-ship-casket'||command.type==='order-enter-cryptosleep'||command.type==='order-carry-cryptosleep'||command.type==='order-open-cryptosleep'||command.type==='order-bury'||command.type==='clean-room'||command.type==='order-orbital-trade'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-drafted-tend'||command.type==='order-consume'||command.type==='order-animal-rescue'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
+  if(command.type==='order-enter-ship-casket'||command.type==='order-carry-ship-casket'||command.type==='order-enter-cryptosleep'||command.type==='order-carry-cryptosleep'||command.type==='order-open-cryptosleep'||command.type==='order-bury'||command.type==='clean-room'||command.type==='order-faction-comms'||command.type==='order-orbital-trade'||command.type==='order-trade'||command.type==='order-extinguish'||command.type==='order-capture'||command.type==='order-arrest'||command.type==='order-equipment'||command.type==='order-feed'||command.type==='order-tend'||command.type==='order-drafted-tend'||command.type==='order-consume'||command.type==='order-animal-rescue'||command.type==='order-rescue'||command.type==='order-job'||command.type==='order-cook'||command.type==='order-haul'||command.type==='clear-orders') {
     pawns.add(command.pawnId);
   } else if(command.type==='designate') {
     const affected=zonesUnderPlan(world,command);for(const id of affected.deliveries)zones.add(id);
@@ -180,7 +182,7 @@ export function commitDrop(world:World,pile:MaterialPile,origin:Cell,plan?:Reado
 }
 export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan,ownerLoss=false):boolean {
   // Refuse an immutable collective issue before any furniture/cargo drop.
-  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294||Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297)))&&(world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id)){try{if(!preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).current())return false;}catch{return false;}}
+  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294||Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion)))))&&(world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id)){try{if(!preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).current())return false;}catch{return false;}}
   if(!releaseFurniture(world,pawn,plan))return false;
   const held=world.piles.find(p=>p.owner.type==='pawn'&&p.owner.pawnId===pawn.id);
   if(held&&!commitDrop(world,held,pawn,plan))return false;
@@ -191,7 +193,7 @@ export function releaseWork(world:World,pawn:Pawn,plan?:DropPlan,ownerLoss=false
 /** Release task/service claims independently of ownership. Only involuntary or tactical
  * interruption may use this while an object is still carried. */
 export function releaseAssignments(world:World,pawn:Pawn,despawning=false,ownerLoss=despawning):void {
-  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294||Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297)))&&(pawn.recreation.task?.activity==='party'||world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id))preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).commit();
+  if((Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||Number(world.schemaVersion)===294||Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion)))))&&(pawn.recreation.task?.activity==='party'||world.party292?.active?.members.some(m=>m.pawnId===pawn.id)||ownerLoss&&world.party292?.active?.organizerId===pawn.id))preparePartyRelease292(world,new Set([pawn.id]),{death:!!pawn.health?.death,finish:ownerLoss&&world.party292?.active?.organizerId===pawn.id}).commit();
   if(isSchema285OrLater(world.schemaVersion)&&pawn.coupleTask285)prepareCoupleRelease285(world,new Set([pawn.id])).commit();
   releaseAllowedAreaReturn(pawn);
   releaseAnimalRescue(world,pawn);
@@ -223,6 +225,7 @@ export function releaseAssignments(world:World,pawn:Pawn,despawning=false,ownerL
  * this half only after checking that it has no cross-actor notifier. */
 export function clearReleasedPawnAssignments259(pawn:Pawn):void {
   if(pawn.coupleTask285)throw Error('Entered couple stage requires its actual pair release before own-record cleanup');
+  delete (pawn as FactionCommsPawn298).factionComms298;
   delete pawn.brewing;delete pawn.orbitalTrade;delete pawn.deepWork;delete pawn.animalHandling;delete pawn.animalCare;delete pawn.animalFeed;delete pawn.burial;delete pawn.cleaning;delete pawn.trade;delete pawn.firefighting;delete pawn.ward;delete pawn.heatRefuge;delete pawn.research;delete pawn.tend;delete pawn.feed;delete pawn.medicalSleep;delete pawn.equipmentTask;
   delete pawn.shipCasketTask277;delete pawn.cryptosleepTask;delete pawn.rescue;delete pawn.animalRescue;delete pawn.surgery;delete pawn.hunting;delete pawn.openCasket;delete pawn.firefoamTask290;
   delete pawn.transitExit;

@@ -7,6 +7,8 @@ export const START_STRUCTURE_PHYSICS_256={
  // V290 local edifice ownership; native PassThroughOnly and fill .25.
  'firefoam-popper':{defId:'FirefoamPopper',passability:1,edifice:true,door:false,fence:false,fullFill:false},
  'ship-cryptosleep-casket':{defId:'Ship_CryptosleepCasket',passability:1,edifice:true,door:false,fence:false,fullFill:false},
+ 'ship-computer':{defId:'Ship_ComputerCore',passability:2,edifice:true,door:false,fence:false,fullFill:true},
+ 'ship-sensors':{defId:'Ship_SensorCluster',passability:2,edifice:true,door:false,fence:false,fullFill:true},
  'ship-beam':{defId:'Ship_Beam',passability:2,edifice:true,door:false,fence:false,fullFill:true},
  'ship-engine':{defId:'Ship_Engine',passability:2,edifice:true,door:false,fence:false,fullFill:true},
  'ship-reactor':{defId:'Ship_Reactor',passability:2,edifice:true,door:false,fence:false,fullFill:true},

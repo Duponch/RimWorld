@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,validationCore297} from './core-phase-297.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {actualMechanicalBirthFaction259} from './mechanoid-world-faction-259.ts';
@@ -112,7 +113,7 @@ export function constructDirectSiteSleepingMechanoids263(w:World,site:ItemStash2
 
 function plain(v:unknown,names:readonly string[]):v is Record<string,unknown>{return !!v&&typeof v==='object'&&Object.getPrototypeOf(v)===Object.prototype&&Reflect.ownKeys(v).length===names.length&&names.every(k=>{const d=Object.getOwnPropertyDescriptor(v,k);return !!d?.enumerable&&Object.hasOwn(d,'value');});}
 export function validSiteMechField263(v:unknown,version:number,tick:number,coreNow297?:number):boolean {
- const core=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(core))return false;
+ const core=validationCore297(version,tick,coreNow297);if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(core))return false;
  if(!v||typeof v!=='object')return false;const property=Object.getOwnPropertyDescriptor(v,'site263');if(!property)return !('site263'in v);
  if(!isSchema263OrLater(version)||!property.enumerable||!Object.hasOwn(property,'value')||!plain(property.value,['revision','siteId','bornAtCore','releaseAtCore','awakeAtCore','wakeIfClose','goal']))return false;
  const d=property.value,m=v as Mechanoid;if(d.revision!==1||!int(d.siteId,1)||!int(d.bornAtCore,0,core)||!int(d.releaseAtCore,d.bornAtCore)||d.releaseAtCore!==d.bornAtCore&&d.releaseAtCore!==d.bornAtCore+120||typeof d.wakeIfClose!=='boolean'||!(d.awakeAtCore===null||int(d.awakeAtCore,d.bornAtCore,core))||'raid'in v||'temple'in v)return false;
@@ -121,7 +122,7 @@ export function validSiteMechField263(v:unknown,version:number,tick:number,coreN
 }
 export function validateSiteMechGroups263(w:World):string[]{
  const groups=new Map<number,SiteMechDuty263>();
- for(const m of w.mechanoids??[]){if(!validSiteMechField263(m,w.schemaVersion,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined))return ['Invalid actual Site mechanical mandate'];const d=m.site263;if(!d)continue;
+ for(const m of w.mechanoids??[]){if(!validSiteMechField263(m,w.schemaVersion,w.tick,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined))return ['Invalid actual Site mechanical mandate'];const d=m.site263;if(!d)continue;
   const site=w.worldSites263?.entries.find(s=>s.id===d.siteId);if(!site||site.kind!=='item-stash'||w.site?.revision!==3||site.tile!==w.site.tileId||d.goal&&(d.goal.x>=w.width||d.goal.z>=w.height))return ['Invalid actual Site mechanical binding'];
   const prior=groups.get(d.siteId);if(prior&&(prior.bornAtCore!==d.bornAtCore||prior.releaseAtCore!==d.releaseAtCore||prior.awakeAtCore!==d.awakeAtCore||prior.wakeIfClose!==d.wakeIfClose))return ['Inconsistent actual Site mechanical group'];groups.set(d.siteId,d);
  }return [];

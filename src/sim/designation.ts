@@ -3,7 +3,7 @@ import {naturalTerrainWalkable256} from './natural-terrain-movement-256.ts';
 import {foggedCell256} from './exploration-state-256.ts';
 import {canDesignateBridge} from './bridge.ts';
 import {isPlantDesignationJob} from './tree-transfer.ts';
-import { validStorageItems,validNovelStorageFilters295 } from './storage-filters.ts';
+import { validStorageItems,validNovelStorageFilters295,validAiCoreStorageFilters298 } from './storage-filters.ts';
 import { validStorageConditions } from './storage-condition.ts';
 import { connectedZoneCells,stockpileCellsByZoneId,stockpileZoneId } from './stockpile-zones.ts';
 import { isRoofArea, isRoofJob } from './roof-rules.ts';
@@ -30,7 +30,7 @@ export function validStorageSettings(settings: StorageSettings,version:number=SC
   if(!settings||typeof settings!=='object'||Array.isArray(settings))return false;
   const filters=Object.getOwnPropertyDescriptor(settings,'filters');
   if(filters?filters.enumerable!==true||!Object.hasOwn(filters,'value'):'filters'in settings)return false;
-  if(!validNovelStorageFilters295(filters?.value,version))return false;
+  if(!validNovelStorageFilters295(filters?.value,version)||!validAiCoreStorageFilters298(filters?.value,version))return false;
   if(settings.filters&&Object.hasOwn(settings.filters,'prosthesis')&&(!isSchema273OrLater(version)||typeof settings.filters.prosthesis!=='boolean'))return false;
   if(settings.filters&&Object.hasOwn(settings.filters,'jade')&&(version<256||typeof settings.filters.jade!=='boolean'))return false;
   if(settings.filters&&Object.hasOwn(settings.filters,'plant')&&(version<235||typeof settings.filters.plant!=='boolean'))return false;

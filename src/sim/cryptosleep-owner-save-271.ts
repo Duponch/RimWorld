@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {heldCore297,effectiveCore297} from './core-phase-297.ts';
 import {hasPartyMemoryField292} from './party-memories-292.ts';
 import {hasCoupleFields285} from './couple-owner-save-285.ts';
@@ -88,7 +89,7 @@ function validateCryptosleepContents271(s:PlayerCasket271,context:RetainedCrypto
  if(p.cryptosleepHeldAt271!==h.heldAt)errors.push('Player-casket human suspension marker differs from its actual holder.');
  if(!inactiveHuman271(p))errors.push('Player-casket human retains an active task, route or work cargo.');
  if(p.health&&medicalCivilTick271(p.health)!==h.heldAt)errors.push('Player-casket human civil clinical frontier differs from its holder.');
- errors.push(...(local?validatePawnRecordShape(p as unknown as Record<string,unknown>,local,version,h.heldAt,{casketId:s.id,heldAt:h.heldAt},version===297?heldCore297(h,version,h.heldAt):undefined):validateRetainedPlayerCasketPawnShape271(p as unknown as Record<string,unknown>,context,version,h.heldAt,{casketId:s.id,heldAt:h.heldAt},version===297?heldCore297(h,version,h.heldAt):undefined)));
+ errors.push(...(local?validatePawnRecordShape(p as unknown as Record<string,unknown>,local,version,h.heldAt,{casketId:s.id,heldAt:h.heldAt},isCorePhysicalSchema297(version)?heldCore297(h,version,h.heldAt):undefined):validateRetainedPlayerCasketPawnShape271(p as unknown as Record<string,unknown>,context,version,h.heldAt,{casketId:s.id,heldAt:h.heldAt},isCorePhysicalSchema297(version)?heldCore297(h,version,h.heldAt):undefined)));
  if(!local&&(p.bedId!==null||Object.hasOwn(p,'bedSlot')||Object.hasOwn(p,'mapBed')||Object.hasOwn(p,'allowedAreaId')||Object.hasOwn(p,'allowedAreaReturn')))errors.push('Removed-map player-casket human retains local bed or area authority.');
  errors.push(...validatePawnHealthRecord(p,{tick:h.heldAt,width:context.width,height:context.height,schemaVersion:version},true));
  if(p.filthFeet!==undefined&&!validFilthFeet(p.filthFeet,version))errors.push('Invalid held human filth tracker.');
@@ -104,7 +105,7 @@ function validateCryptosleepContents271(s:PlayerCasket271,context:RetainedCrypto
   if(!validHeldRot271(pile,h.heldAt))errors.push('Invalid held personal food age.');
  }
  errors.push(...validateEquipmentOwners259([p],h.items),...validateApparelOwners259([p],h.items,version));
- errors.push(...validatePackedFurnitureRecords(h.packed,{width:context.width,height:context.height,nextId:context.nextId,tick:h.heldAt},version,new Set(),false),...validateGroupPackedComponents258(context,h.packed,version,h.heldAt,version===297?heldCore297(h,version,h.heldAt):undefined));
+ errors.push(...validatePackedFurnitureRecords(h.packed,{width:context.width,height:context.height,nextId:context.nextId,tick:h.heldAt},version,new Set(),false),...validateGroupPackedComponents258(context,h.packed,version,h.heldAt,isCorePhysicalSchema297(version)?heldCore297(h,version,h.heldAt):undefined));
  for(const pack of h.packed)if(pack.owner.type!=='inventory'||pack.owner.pawnId!==p.id)errors.push('Player-casket furniture lost its original personal inventory owner.');
  return errors;
 }
@@ -135,7 +136,7 @@ export function validateCryptosleepOwners271(w:World,version:number=w.schemaVers
   let identitiesLoaded=existingIds!==undefined;
   const add=(id:number)=>{if(!integer(id,1,w.nextId-1)||heldIds.has(id)||localIds.has(id))errors.push('Duplicate or invalid player-casket original Thing identity.');heldIds.add(id);};
   for(const s of candidates){
-   if(!validCryptosleepBuilding271(s,version,w,w.tick,version===297?effectiveCore297(w):undefined)){errors.push('Invalid player-casket physical header or holder.');continue;}
+   if(!validCryptosleepBuilding271(s,version,w,w.tick,isCorePhysicalSchema297(version)?effectiveCore297(w):undefined)){errors.push('Invalid player-casket physical header or holder.');continue;}
    if(!isPlayerCasket271(s))continue;
    if(cryptosleepCells271(s,s.orientation).some(c=>{const t=w.tiles[c.z*w.width+c.x];return !t||['rock','water'].includes(t.terrain)||!terrainSupportsAffordance256(t,'Medium',w);}))errors.push('Player casket lacks actual Medium support.');
    const h=s.cryptosleep,p=h.human;

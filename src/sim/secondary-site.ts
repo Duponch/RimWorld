@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {newCorePathBudget297} from './core-path-budget-297.ts';
 import {createDeteriorationState} from './deterioration-content.ts';
 import { campaignAuthority,captureSecondaryMap,flushSecondaryContext,isSecondaryContext,secondaryContext } from './secondary-site-context.ts';
@@ -41,7 +42,7 @@ export function draftSite(root:World,tileId:number,kind:'camp'|'settlement'='cam
   initializeSnowSurface(generated);
   const homeLongitude=tileCoordinates(planet.tiles[planet.homeTile]!).longitude;
   const calendarOffset=(longitudeOffsetCore(tileCoordinates(tile).longitude)-longitudeOffsetCore(homeLongitude))/10;
-  generated.tick=root.tick;if(Number(root.schemaVersion)===297)generated.corePathBudget297=newCorePathBudget297(root.tick);else delete generated.corePathBudget297;generated.site=site;generated.expeditionSite={tile:tileId,createdAt:root.tick,calendarOffset};
+  generated.tick=root.tick;if(isCorePhysicalSchema297(Number(root.schemaVersion)))generated.corePathBudget297=newCorePathBudget297(root.tick);else delete generated.corePathBudget297;generated.site=site;generated.expeditionSite={tile:tileId,createdAt:root.tick,calendarOffset};
   generated.snow!.adoptedAt=root.tick;generated.snow!.lastTick=root.tick;
   generated.deterioration=createDeteriorationState(seed,root.tick);
   for(const collection of [generated.resources,generated.piles])for(const item of collection)item.id+=offset;

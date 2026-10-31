@@ -1,3 +1,5 @@
+import {shipComputerSensorsPlacementRefusal298} from './ship-computer-sensors-placement-298.ts';
+import {isShipComputerSensorsKind298} from './ship-computer-sensors-content-298.ts';
 import {isShipCasketKind277} from './ship-casket-content-277.ts';
 import {shipCasketPlacementRefusal277} from './ship-casket-placement-277.ts';
 import {isShipPartKind276} from './ship-part-content-276.ts';
@@ -57,6 +59,7 @@ export function constructionObstruction(world: World, job: Job):ConstructionObst
  * a person, an active edge (including its diagonal corner), or a service. */
 export function constructionSiteFree(world: World, job: Job, workerId?: number, obstacle=constructionObstruction(world,job)): boolean {
   if(isShipCasketKind277(job.kind)&&shipCasketPlacementRefusal277(world,{...job,kind:job.kind},job.id))return false;
+  if(isShipComputerSensorsKind298(job.kind)&&shipComputerSensorsPlacementRefusal298(world,{...job,kind:job.kind},job.id))return false;
   if(isShipPartKind276(job.kind)&&shipPartPlacementRefusal276(world,{...job,kind:job.kind},job.id))return false;
   if(job.kind==='geothermal-generator'&&geothermalPlacementRefusal264(world,job,job.id))return false;
   if(obstacle.plant||obstacle.pile||obstacle.pack||job.kind!=='build-bridge'&&!marshSupportsFootprint(world,footprintCells(job),job.kind==='install'?{kind:job.furniture?.kind??'install',material:world.packed.find(p=>p.building.id===job.furniture?.structureId)?.building.material??world.structures.find(s=>s.id===job.furniture?.structureId)?.material}:job))return false;

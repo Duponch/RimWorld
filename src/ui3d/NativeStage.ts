@@ -3,7 +3,7 @@ import {PrototypeCardboardArt,MANAGEMENT_BUTTONS,PALETTE,drawHandBlob,drawHandRe
 import {drawNativeActionIcon} from './native-action-icons';
 import {applyNativeHudButtonPose} from './native-hud-art';
 import {createNativeTextLexicon,tokenizeNativeText,NATIVE_TEXT_STYLES,type NativeTextLexicon,type NativeTextEntity,type NativeTextSpan} from './native-rich-text';
-import type {NativeControl,NativeControlStyle,NativePage,NativeRow} from './native-contract';
+import type {NativeControl,NativeControlStyle,NativePage,NativeRow,NativeShipCurtainPhase298} from './native-contract';
 import {NativeGlobe} from './NativeGlobe';
 import {NativeOverlayCache} from './NativeOverlayCache';
 import {NativeDamageTracker} from './NativeDamageTracker';
@@ -11,6 +11,7 @@ import {NativeRendererStandby} from './NativeRendererStandby';
 import {normalizeNativeUiScale} from './native-preferences';
 import {NativeHitPose} from './NativeHitPose';
 import {setNativeCursor} from '../ui/native-cardboard-cursors';
+import {SHIP_FRAME_MAXIMUM_DELTA_298} from '../bridge/ship-countdown-wire-298';
 import {NATIVE_UI,NATIVE_RIGHT_DOCK_WIDTH,layoutNativePage,nativeVisualWidth,nativeMatrixColumns,nativeMatrixHeadingLines,wrapNativeText,nativeCardInk,type NativePageBox,type NativeRowBox,type NativeRect,type NativeRegion,type NativeRegionBox} from './native-layout';
 
 const HUD_DISTANCE=7.5;
@@ -31,6 +32,7 @@ export interface NativeStageOptions {
   onWindowLayout?:(bounds:NativeRect|null)=>boolean;
   onPointer?:(x:number,y:number)=>void;
   onAnimate?:(dtSeconds:number)=>boolean;
+  countdownFrame298?:{canFeed:()=>boolean;canPresent?:()=>boolean;feed:(rawDeltaSeconds:number)=>void};
 }
 
 /** Camera-fixed native scene. Browser DOM is only the graphics surface and the
@@ -91,6 +93,21 @@ export class NativeStage {
   private textEntityRevision=0;
   private readonly semanticInk=new Map<string,NativeTextSpan[]>();
   private lastTime=0;
+  private countdownFrameAt298:number|undefined;
+  private countdownFrameDriver298:'game'|'standalone'|undefined;
+  private countdownFrameEligible298=false;
+  private countdownFeedEligible298=false;
+  // Separate from the retained UI scene: opacity never invalidates its cache.
+  private readonly shipCurtainScene298=new THREE.Scene();
+  private readonly shipCurtainMaterial298=new THREE.MeshBasicNodeMaterial({color:0x000000,transparent:true,opacity:0,depthTest:false,depthWrite:false,toneMapped:false});
+  private readonly shipCurtainMesh298=new THREE.Mesh(new THREE.PlaneGeometry(1,1),this.shipCurtainMaterial298);
+  private shipCurtainOwner298:string|undefined;
+  private shipCurtainPage298:string|undefined;
+  private shipCurtainPhase298:NativeShipCurtainPhase298|'idle'='idle';
+  private shipCurtainRemaining298=0;
+  private shipCurtainPageHandoff298=false;
+  private shipCurtainDisplayDirty298=false;
+  private standaloneNeedsRender298=true;
   private frameId=0;
   private closed=false;
   private initialized=false;
@@ -159,6 +176,8 @@ export class NativeStage {
   private readonly stats={renders:0,overlayRenders:0,rebuilds:0,raycasts:0,activeAnimations:0,uiObjects:0,drawCalls:0,renderMs:0,backend:'',error:null as string|null};
   constructor(private readonly options:NativeStageOptions){
     this.raycaster.layers.enable(31);
+    this.shipCurtainMesh298.position.z=-.2;this.shipCurtainMesh298.frustumCulled=false;this.shipCurtainMesh298.visible=false;
+    this.shipCurtainScene298.add(this.shipCurtainMesh298);
     this.hudRoot.position.set(0,0,-HUD_DISTANCE);this.camera.add(this.hudRoot);this.scene.add(this.camera);
     Object.values(this.anchors).forEach(group=>this.hudRoot.add(group));
     this.selectionBox.add(this.selectionFill,this.selectionOutline);this.selectionBox.visible=false;this.selectionBox.position.z=.5;this.hudRoot.add(this.selectionBox);
@@ -197,7 +216,7 @@ export class NativeStage {
     this.listen(document,'keydown',event=>this.keyDown(event as KeyboardEvent),true);
     this.listen(document,'wheel',event=>this.wheel(event as WheelEvent),{capture:true,passive:false});
     this.listen(document,'contextmenu',event=>{const mouse=event as MouseEvent;if(this.frontVisible||this.page?.modal||this.hit(mouse.clientX,mouse.clientY))this.swallow(event);},true);
-    this.listen(document,'visibilitychange',()=>{if(document.hidden){this.cancelPress();this.hover(null);}else this.invalidate();});
+    this.listen(document,'visibilitychange',()=>{this.resetCountdownFrame298();if(document.hidden){this.cancelPress();this.hover(null);}else this.invalidate();});
     this.resize();this.ready=this.ownRenderer.init().then(()=>{
       if(this.closed)return;this.initialized=true;this.standby.setActive(this.frontVisible||this.standalone);this.stats.backend=this.ownRenderer.getContext() instanceof WebGL2RenderingContext?'WebGL 2':'WebGPU';this.invalidate();
     }).catch(error=>{this.stats.error=String(error);this.options.onError(String(error));});
@@ -246,10 +265,11 @@ export class NativeStage {
   }
   setFrontVisible(visible:boolean):void{
     if(this.frontVisible===visible)return;this.sceneRevision++;
-    this.frontVisible=visible;this.updateOwnSurface();
+    this.frontVisible=visible;if(visible)this.resetShipCurtain298(false);this.updateOwnSurface();
     this.anchors.bottomCenter.visible=!visible;this.toolsDock.visible=this.worldVisible&&!visible;this.resize();this.rebuildPage(true);this.updateWorldReadoutVisibility();this.invalidate();
   }
   private updateOwnSurface():void{
+    this.resetCountdownFrame298();
     const active=this.frontVisible||this.standalone;
     if(active){this.standby.setActive(true);this.ownRenderer.domElement.style.display='block';}
     else{this.ownRenderer.domElement.style.display='none';if(this.frameId){cancelAnimationFrame(this.frameId);this.frameId=0;}this.standby.setActive(false);}
@@ -281,6 +301,12 @@ export class NativeStage {
   setAutoHideBottom(enabled:boolean):void{this.autoHideBottom=enabled;this.bottomOpen=!enabled||this.lastPointer.y>=this.height-14;this.extraAnimating=true;this.invalidate();}
   showPage(page:NativePage|null):void{
     if(this.closed)return;
+    if(this.shipCurtainOwner298!==undefined&&page?.id!==this.shipCurtainPage298){
+      // One handoff is expected when adopted credits disappear. Further page
+      // changes cancel the visual transition instead of covering another UI.
+      if(this.shipCurtainPhase298==='clear'&&this.shipCurtainPageHandoff298){this.shipCurtainPageHandoff298=false;this.shipCurtainPage298=page?.id;}
+      else this.resetShipCurtain298();
+    }
     const same=page?.id===this.page?.id,ownerChanged=page?.visual?.surface!==this.page?.visual?.surface||page?.visual?.roads!==this.page?.visual?.roads;
     this.page=page;if(!same){this.cancelPress();this.scroll=0;this.regionOffsets.navigation=this.regionOffsets.details=this.regionOffsets.graph=this.graphX=this.paletteX=0;this.closeDropdown();}
     this.toolsDock.children.forEach((object,index)=>{const piece=object as CardboardPiece,active=page?.palette===(index===0?'orders':'zones');if(piece.userData.active!==active)piece.setActive(active,active?PALETTE.ochre:PALETTE.sageMountain);});
@@ -369,6 +395,8 @@ export class NativeStage {
     this.sceneRevision++;
     this.width=innerWidth/this.displayScale;this.height=innerHeight/this.displayScale;
     this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();
+    const curtainHeight=2*Math.tan(THREE.MathUtils.degToRad(this.camera.fov)/2)*.2;
+    this.shipCurtainMesh298.scale.set(curtainHeight*this.camera.aspect,curtainHeight,1);
     this.standby.resize(innerWidth,innerHeight,Math.min(devicePixelRatio||1,2));
     this.visH=2*Math.tan(THREE.MathUtils.degToRad(this.camera.fov)/2)*HUD_DISTANCE;this.visW=this.visH*this.camera.aspect;
     this.uiScale=this.visH/this.height*100;
@@ -402,13 +430,60 @@ export class NativeStage {
     this.refreshWorldReadout();
     this.notifyViewport();
   }
+  /** Only presentation primitives are accepted; this is not a launch service. */
+  presentShipCurtain298(ownerId:string,phase:NativeShipCurtainPhase298,fraction:number):void{
+    if(this.closed)return;
+    if(phase==='reset'){if(this.shipCurtainOwner298===ownerId)this.resetShipCurtain298();return;}
+    if(this.frontVisible||this.page?.id!==ownerId)return;
+    if(phase==='clear'){
+      if(this.shipCurtainOwner298!==ownerId||this.shipCurtainPhase298!=='held')return;
+      this.shipCurtainPhase298='clear';this.shipCurtainRemaining298=Math.fround(3);this.shipCurtainPageHandoff298=true;
+      // Adoption begins a fresh visual interval; pre-adoption time is discarded.
+      this.countdownFrameAt298=undefined;this.countdownFrameDriver298=undefined;
+      this.setShipCurtainAlpha298(this.reducedMotion.matches?0:1);this.notifyCountdownFrameEligibility298();return;
+    }
+    if(phase!=='closing'&&phase!=='held'||!Number.isFinite(fraction))return;
+    if(this.shipCurtainOwner298!==undefined&&this.shipCurtainOwner298!==ownerId)this.resetShipCurtain298(false);
+    this.shipCurtainOwner298=ownerId;this.shipCurtainPage298=ownerId;this.shipCurtainPhase298=phase;this.shipCurtainPageHandoff298=false;
+    this.setShipCurtainAlpha298(phase==='held'||this.reducedMotion.matches?1:Math.max(0,Math.min(1,fraction)));
+  }
+  private setShipCurtainAlpha298(alpha:number):void{
+    if(this.shipCurtainMaterial298.opacity===alpha)return;
+    this.shipCurtainMaterial298.opacity=alpha;this.shipCurtainMesh298.visible=alpha>0;
+    this.shipCurtainDisplayDirty298=true;this.invalidate();
+  }
+  private resetShipCurtain298(wake=true):void{
+    if(this.shipCurtainOwner298===undefined)return;
+    this.shipCurtainOwner298=undefined;this.shipCurtainPage298=undefined;this.shipCurtainPhase298='idle';
+    this.shipCurtainRemaining298=0;this.shipCurtainPageHandoff298=false;
+    this.countdownFrameAt298=undefined;this.countdownFrameDriver298=undefined;this.setShipCurtainAlpha298(0);
+    if(wake)this.notifyCountdownFrameEligibility298();
+  }
+  private advanceShipCurtain298(deltaSeconds:number,ownerId:string):void{
+    if(this.shipCurtainOwner298!==ownerId||this.shipCurtainPhase298!=='clear')return;
+    const delta=Math.fround(Math.min(deltaSeconds,SHIP_FRAME_MAXIMUM_DELTA_298));
+    this.shipCurtainRemaining298=Math.fround(this.shipCurtainRemaining298-delta);
+    if(this.shipCurtainRemaining298<=0){this.resetShipCurtain298();return;}
+    this.setShipCurtainAlpha298(this.reducedMotion.matches?0:this.shipCurtainRemaining298/3);
+  }
+  private renderShipCurtain298(renderer:THREE.WebGPURenderer):void{
+    if(!this.shipCurtainMesh298.visible)return;
+    const target=renderer.getRenderTarget(),face=renderer.getActiveCubeFace(),mip=renderer.getActiveMipmapLevel(),auto=renderer.autoClear;
+    const mrt=renderer.getMRT(),renderObject=renderer.getRenderObjectFunction(),xr=renderer.xr.enabled;
+    try{
+      renderer.autoClear=false;renderer.setMRT(null);renderer.setRenderObjectFunction(null);renderer.xr.enabled=false;
+      renderer.render(this.shipCurtainScene298,this.camera);
+    }finally{
+      renderer.setRenderTarget(target,face,mip);renderer.autoClear=auto;renderer.setMRT(mrt);renderer.setRenderObjectFunction(renderObject);renderer.xr.enabled=xr;
+    }
+  }
   /** Called by the existing game renderer, using its device and frame loop. */
   renderOverlay(renderer:THREE.WebGPURenderer,now=performance.now()):void{
     if(this.closed||this.frontVisible||!this.worldVisible)return;
     const animated=this.moving.size>0||this.extraAnimating;
     this.animate(now);
     if(this.cacheEnabled){
-      const start=performance.now();
+      const start=performance.now(),draws=renderer.info.render.drawCalls;
       let damage;
       if(animated||this.lastArtRevision!==this.art.revision||this.lastSceneRevision!==this.sceneRevision){
         renderer.getDrawingBufferSize(this.overlaySize);
@@ -417,18 +492,67 @@ export class NativeStage {
         if(damage)this.cacheRevision++;
       }
       this.overlayCache.draw(renderer,this.scene,this.camera,this.cacheRevision,false,damage??undefined);
-      this.stats.renderMs=performance.now()-start;this.stats.overlayRenders++;return;
+      this.renderShipCurtain298(renderer);this.shipCurtainDisplayDirty298=false;
+      this.stats.renderMs=performance.now()-start;this.stats.drawCalls=renderer.info.render.drawCalls-draws;this.stats.overlayRenders++;return;
     }
     const auto=renderer.autoClear,target=renderer.getRenderTarget();renderer.autoClear=false;
-    try{renderer.clearDepth();const start=performance.now();renderer.render(this.scene,this.camera);this.stats.renderMs=performance.now()-start;this.stats.overlayRenders++;}
-    finally{renderer.autoClear=auto;renderer.setRenderTarget(target);}
+    try{
+      renderer.clearDepth();const start=performance.now(),draws=renderer.info.render.drawCalls;renderer.render(this.scene,this.camera);
+      this.renderShipCurtain298(renderer);this.shipCurtainDisplayDirty298=false;
+      this.stats.renderMs=performance.now()-start;this.stats.drawCalls=renderer.info.render.drawCalls-draws;this.stats.overlayRenders++;
+    }finally{renderer.autoClear=auto;renderer.setRenderTarget(target);}
   }
-  invalidate():void{
+  /** No World or admission capability: this is only the existing RAF source. */
+  private countdownDriver298():'game'|'standalone'|undefined{return this.frontVisible||this.standalone?'standalone':this.worldVisible?'game':undefined;}
+  private syncCountdownFrameEligibility298(wake:boolean):void{
+    const present=this.shipCurtainOwner298===undefined||!this.frontVisible&&(this.options.countdownFrame298?.canPresent?.()??true);
+    if(this.shipCurtainOwner298!==undefined&&!present)this.resetShipCurtain298(false);
+    const available=!this.closed&&!document.hidden,feed=available&&this.options.countdownFrame298?.canFeed()===true;
+    const eligible=feed||available&&present&&this.shipCurtainPhase298==='clear';
+    // A new external countdown gets a fresh anchor even during a local clear.
+    if(eligible!==this.countdownFrameEligible298||feed!==this.countdownFeedEligible298){
+      this.countdownFrameEligible298=eligible;this.countdownFeedEligible298=feed;this.countdownFrameAt298=undefined;this.countdownFrameDriver298=undefined;
+    }
+    if(wake&&eligible&&this.countdownDriver298()==='standalone')this.scheduleStandaloneFrame298(false);
+  }
+  notifyCountdownFrameEligibility298():void{this.syncCountdownFrameEligibility298(true);}
+  private resetCountdownFrame298():void{this.countdownFrameAt298=undefined;this.countdownFrameDriver298=undefined;this.notifyCountdownFrameEligibility298();}
+  private sampleCountdownFrame298(driver:'game'|'standalone',now:number,ready=true):void{
+    // Non-elected/manual sources neither finance nor reset the elected clock.
+    if(driver!==this.countdownDriver298())return;
+    this.syncCountdownFrameEligibility298(false);
+    if(!ready||!this.countdownFrameEligible298||!Number.isFinite(now)){
+      this.countdownFrameAt298=undefined;this.countdownFrameDriver298=undefined;return;
+    }
+    const before=this.countdownFrameAt298;
+    if(this.countdownFrameDriver298!==driver||before===undefined||now<before){this.countdownFrameDriver298=driver;this.countdownFrameAt298=now;return;}
+    this.countdownFrameAt298=now;if(now===before)return;
+    const clearOwner=this.shipCurtainPhase298==='clear'?this.shipCurtainOwner298:undefined,delta=(now-before)/1000;
+    if(this.countdownFeedEligible298)this.options.countdownFrame298!.feed(delta);
+    if(clearOwner!==undefined)this.advanceShipCurtain298(delta,clearOwner);
+  }
+  /** MAIN invokes this only after its actual game frame/guards, never renderScene. */
+  gameCountdownFrame298(now:number,ready:boolean):void{this.sampleCountdownFrame298('game',now,ready);}
+  invalidate():void{this.scheduleStandaloneFrame298(true);}
+  private scheduleStandaloneFrame298(needsRender:boolean):void{
+    if(needsRender)this.standaloneNeedsRender298=true;
     if(this.closed||!this.initialized||!this.frontVisible&&!this.standalone||this.frameId||document.hidden)return;
-    this.frameId=requestAnimationFrame(now=>{this.frameId=0;if(this.closed)return;this.animate(now);
-      const start=performance.now();this.ownRenderer.render(this.scene,this.camera);this.stats.renderMs=performance.now()-start;
-      this.stats.renders++;this.stats.drawCalls=this.ownRenderer.info.render.calls;
-      if(this.moving.size||this.extraAnimating)this.invalidate();});
+    this.frameId=requestAnimationFrame(now=>{this.frameId=0;if(this.closed||!this.initialized||!this.frontVisible&&!this.standalone||document.hidden)return;
+      try{
+        const requested=this.standaloneNeedsRender298,animated=this.moving.size>0||this.extraAnimating,art=this.art.revision,scene=this.sceneRevision;this.standaloneNeedsRender298=false;this.animate(now);
+        // Clock-only continuation keeps the static canvas. Dirty opacity, even
+        // its final zero, requests one last display without dirtying UI textures.
+        if(requested||this.shipCurtainDisplayDirty298||animated||this.moving.size||this.extraAnimating||art!==this.art.revision||scene!==this.sceneRevision){
+          const start=performance.now(),draws=this.ownRenderer.info.render.drawCalls;this.ownRenderer.render(this.scene,this.camera);
+          this.renderShipCurtain298(this.ownRenderer);this.shipCurtainDisplayDirty298=false;
+          this.stats.renderMs=performance.now()-start;this.stats.renders++;this.stats.drawCalls=this.ownRenderer.info.render.drawCalls-draws;
+        }
+        this.sampleCountdownFrame298('standalone',now);
+        if(this.moving.size||this.extraAnimating||this.countdownFrameEligible298&&this.countdownDriver298()==='standalone')this.scheduleStandaloneFrame298(false);
+      }catch(error){
+        this.countdownFrameAt298=undefined;this.countdownFrameDriver298=undefined;throw error;
+      }
+    });
   }
   private animate(now:number):void{
     const dt=this.lastTime?Math.min(.05,(now-this.lastTime)/1000):1/60;this.lastTime=now;
@@ -688,7 +812,9 @@ export class NativeStage {
     if(this.dropdown){if(event.key==='Escape'||event.key==='Tab'){this.swallow(event);this.closeDropdown();return;}if(['ArrowDown','ArrowUp','Home','End','Enter',' '].includes(event.key)){this.swallow(event);this.dropdownKey(event.key);return;}}
     if(event.key==='Escape'){
       this.activationSerial++;if(this.paintDrag||this.scrollbarDrag||this.regionDrag){this.cancelPress();this.swallow(event);return;}
-      this.swallow(event);if(this.page?.closable===false)return;
+      this.swallow(event);const cancel=this.page?.onCancel;
+      if(cancel){if(!event.repeat){this.gesture();this.options.onActivate?.('page:cancel');cancel();}return;}
+      if(this.page?.closable===false)return;
       if(!event.repeat){this.gesture();this.options.onActivate?.('page:close');}
       if(this.page?.onClose)this.page.onClose();else this.options.onEscape();return;
     }
@@ -1189,8 +1315,8 @@ export class NativeStage {
     return task;
   }
   dispose():void{
-    if(this.closed)return;this.closed=true;this.fontRequest++;this.clearHint();clearTimeout(this.noticeTimer);this.finishEdit(false,false);cancelAnimationFrame(this.frameId);
+    if(this.closed)return;this.closed=true;this.resetShipCurtain298(false);this.countdownFrameAt298=undefined;this.countdownFrameDriver298=undefined;this.countdownFrameEligible298=false;this.countdownFeedEligible298=false;this.fontRequest++;this.clearHint();clearTimeout(this.noticeTimer);this.finishEdit(false,false);cancelAnimationFrame(this.frameId);
     setNativeCursor(document.documentElement,undefined);
-    for(const dispose of this.disposers)dispose();this.disposers.length=0;this.overlayCache.dispose();for(const image of this.portraitImages.values()){image.onload=null;image.onerror=null;}this.portraitImages.clear();this.globe?.dispose();this.selectionFill.geometry.dispose();this.selectionFill.material.dispose();this.selectionOutline.geometry.dispose();this.selectionOutline.material.dispose();this.art.dispose();this.ownRenderer.domElement.remove();void this.ownRenderer.dispose();this.hits.clear();this.moving.clear();this.retainedPagePieces.clear();
+    for(const dispose of this.disposers)dispose();this.disposers.length=0;this.overlayCache.dispose();for(const image of this.portraitImages.values()){image.onload=null;image.onerror=null;}this.portraitImages.clear();this.globe?.dispose();this.selectionFill.geometry.dispose();this.selectionFill.material.dispose();this.selectionOutline.geometry.dispose();this.selectionOutline.material.dispose();this.shipCurtainMesh298.geometry.dispose();this.shipCurtainMaterial298.dispose();this.shipCurtainScene298.clear();this.art.dispose();this.ownRenderer.domElement.remove();void this.ownRenderer.dispose();this.hits.clear();this.moving.clear();this.retainedPagePieces.clear();
   }
 }

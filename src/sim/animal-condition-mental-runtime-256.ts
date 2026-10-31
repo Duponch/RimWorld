@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {cancelToxicVomit256} from './toxic-buildup-256.ts';
 import {groupPawnInterval256} from './group-core-cadence-256.ts';
@@ -23,7 +24,7 @@ export function interruptAnimalConditionJob256(a:ActualAnimalMind256,ownerTick:n
 export function tryStartAnimalConfusionLocal256(w:World,a:ActualAnimalMind256,atCore:number):boolean {
  if(w.schemaVersion<256||!w.wildlife?.animals.includes(a)||animalCarrier(w,a.id)||a.state==='dead'||a.state==='downed'||a.state==='sleeping'||a.manhunter||a.confusion)return false;
  if(!a.wander)throw Error('Actual animal mind was not constructed');
- if(!Number.isSafeInteger(atCore)||(Number(w.schemaVersion)===297?atCore!==effectiveCore297(w):atCore<=(w.tick-1)*10||atCore>w.tick*10))throw Error('Mental event is outside the actual owner frontier');
+ if(!Number.isSafeInteger(atCore)||(isCorePhysicalSchema297(Number(w.schemaVersion))?atCore!==effectiveCore297(w):atCore<=(w.tick-1)*10||atCore>w.tick*10))throw Error('Mental event is outside the actual owner frontier');
  cancelAnimalLocalGroupIntents256(w,a.id);interruptAnimalConditionJob256(a,w.tick);a.confusion={revision:1,ageCore:0};a.nextDecision=w.tick;return true;
 }
 export function tryStartAnimalConfusionCaravan256(a:ActualAnimalMind256):boolean {

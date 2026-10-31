@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {newCorePathBudget297} from './core-path-budget-297.ts';
 import {validateCapturedGeographicMapInit256,type CapturedGeographicMapInit256} from './geographic-map-init-context-256.ts';
 import {createMineableGenerationRecorder256} from './local-mineable-generation-256.ts';
@@ -39,7 +40,7 @@ export function prepareGeographicPhysicalMap256(input:GeographicPhysicalMapInput
  if(input.init!==undefined)validateCapturedGeographicMapInit256(input.init,description.mapSeed,width,height);
  const init=input.init??localMapInit256(description.mapSeed,width,height);
  const world:World=emptyGeographicLandscape256(description.mapSeed,width,height);
- world.tick=tick;if(Number(input.schemaVersion??world.schemaVersion)===297)world.corePathBudget297=newCorePathBudget297(tick);else delete world.corePathBudget297;world.rng=rng;world.planet=planet;world.worldFactions=factions;world.site=site;
+ world.tick=tick;if(isCorePhysicalSchema297(Number(input.schemaVersion??world.schemaVersion)))world.corePathBudget297=newCorePathBudget297(tick);else delete world.corePathBudget297;world.rng=rng;world.planet=planet;world.worldFactions=factions;world.site=site;
  world.climate=createGeographicSiteClimate256(planet,tile,{tick,calendarOrigin,schemaVersion:input.schemaVersion});
  const mineables=createMineableGenerationRecorder256(width,height,nextId);
  const composition=composeLocalSurface256({width,height,site:description,rules,mutatorCode:site.mutatorCode,mineableOwner:mineables,

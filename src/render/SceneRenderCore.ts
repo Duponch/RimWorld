@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {readNativeCorePhaseInput297} from '../bridge/native-clone-resident';
 import type {CorePhaseTypedProjection297,CorePhaseAnchor297,CoreActorScene297} from '../bridge/core-phase-projection-297';
 import {OwnedOpaqueRevisions435} from './OwnedOpaqueRevisions435';
@@ -550,7 +551,7 @@ export class SceneRenderCore {
     try {
     const coreInput=readNativeCorePhaseInput297(coreInput297);
     if(coreInput297&&(!coreInput||coreInput.kind!=='full'||coreInput.world!==world))throw Error('Invalid Native Full phase owner');
-    if(Number(world.schemaVersion)===297&&!coreInput)throw Error('Current297 renderer requires its Native Full owner');
+    if(isCorePhysicalSchema297(Number(world.schemaVersion))&&!coreInput)throw Error('Current297 renderer requires its Native Full owner');
     if(coreInput)this.coreFullInputs297.set(world,coreInput);
     const at=coreInput?coreInput.core/10:world.tick;
     const previous=this.received?.world;

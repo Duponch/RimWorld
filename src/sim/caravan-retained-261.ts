@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {resumedSegmentRemainder} from './caravan-demand-selection-261.ts';
 import type {CampaignState} from './world-map-state.ts';
 import type {World} from './types.ts';
@@ -57,7 +58,7 @@ export function prepareRetainedReform261(root:CampaignState,site:EncounterMap261
    &&(action?.kind!=='trade'||root.worldFactions!.settlements.some(s=>s.id===action.settlementId&&s.tile===d.tile))
    // This is the new reform draft, not yet a registered group. Validate only
    // its retained target here; the real arrival rechecks the actual owners.
-   &&(action?.kind!=='peace-talks'||(Number(root.schemaVersion)===293||(Number(root.schemaVersion)===294||(Number(root.schemaVersion)===295||(Number(root.schemaVersion)===296||Number(root.schemaVersion)===297))))&&!!root.worldSites263?.entries.some(s=>s.kind==='peace-talks'&&s.id===action.siteId&&s.tile===d.tile&&!s.closed&&root.tick*10<s.expiresAtCore))
+   &&(action?.kind!=='peace-talks'||(Number(root.schemaVersion)===293||(Number(root.schemaVersion)===294||(Number(root.schemaVersion)===295||(Number(root.schemaVersion)===296||isCorePhysicalSchema297(Number(root.schemaVersion))))))&&!!root.worldSites263?.entries.some(s=>s.kind==='peace-talks'&&s.id===action.siteId&&s.tile===d.tile&&!s.closed&&root.tick*10<s.expiresAtCore))
    &&(action?.kind!=='attack-settlement'&&action?.kind!=='visit-site'||worldTargetActions263(root,action,d.tile).ok);
   retained.destination=null;
   // Native StartPath resets pause before checking the action/route, even when

@@ -25,6 +25,8 @@ import {quoteTradeRequestFulfill284} from '../sim/trade-request-fulfill-284';
 import {quoteMeetingTrade261,type MeetingTradeLine261} from '../sim/caravan-meeting-trade-261';
 import {previewGroupItinerary,previewGenericItinerary261,type GroupTravelEstimateResult} from '../sim/group-travel-estimate';
 import {worldTargetChoices263,worldSiteLabel263} from '../ui/world-target-ui-263';
+import {effectiveCore297} from '../sim/core-phase-297';
+import type {WorldSite263} from '../sim/world-sites-state-263';
 import {worldSettlementAccess256} from '../sim/world-faction-access';
 import {settlementProximityWarning263} from '../sim/world-settlement-proximity-263';
 import {settlementProximityText263} from '../ui/settlement-proximity-263';
@@ -346,6 +348,24 @@ function individualRows():NativeRow[]{
  return rows;
 }
 
+/** Confirmed scalar presentation only. Paid information is never a delivered
+ * reward; hidden ambush tickets, points and held contents are not displayed. */
+export function nativePaidAiSiteFacts298(site:WorldSite263,atCore:number):{title:string;status:string;deadline:string;detail:string;risk:string}|undefined {
+ if(site.kind!=='item-stash'||!site.aiCoreInformation298)return;
+ const remaining=site.expiresAtCore===null?undefined:Math.max(0,site.expiresAtCore-atCore),closed=site.closed;
+ const status=closed?(closed.reason==='expired'?'Expirée':'Site clos'):site.mapId!==null?'Carte locale ouverte':remaining===0?'Délai écoulé':'Cache signalée';
+ const deadline=closed?'Dossier conservé':site.mapId!==null?'La carte locale conserve les objets restants':remaining===undefined?'Délai indisponible':`Expire dans ${days(remaining)}`;
+ return {title:'Cache de cœur d’IA',status,deadline,detail:closed?'Ce dossier ne garantit plus un objet disponible.': 'L’information a été payée. Il faut encore atteindre le site, récupérer le cœur physique et le rapporter ; le paiement n’a livré aucun objet.',risk:'Non vérifié : des dangers peuvent se révéler sur place.'};
+}
+function nativeWorldSiteLabel263(site:WorldSite263,atCore:number):string {const paid=nativePaidAiSiteFacts298(site,atCore);return paid?`${paid.title} · ${paid.status} · ${paid.deadline}`:worldSiteLabel263(site,atCore);}
+/** View-only focus: resolve the same live Site, show the actual maps tab and
+ * selected tile. This emits no travel, formation, entry or reward command. */
+export function focusNativePaidAiSite298(siteId:number):void {
+ const input=source(),site=input.worldSites263?.entries.find(s=>s.id===siteId);
+ if(!site||!nativePaidAiSiteFacts298(site,effectiveCore297(input)))throw Error('La cache de cœur d’IA n’est plus dans ce dossier.');
+ if(!input.planet||!planetTile(input.planet,site.tile))throw Error('La case réelle de cette cache est indisponible.');
+ tab='maps';selectedTile=site.tile;rootPage();
+}
 function mapRows():NativeRow[]{
  const input=source(),registry=readMapRegistryState(input),rows:NativeRow[]=[];
  if(registry){rows.push(r('world-map-count','Cartes',`${registry.settlements} colonie(s) · plafond ${registry.maxSettlements}`,`${registry.maps.length} cartes conservées. Afficher une carte ne déplace personne.`));for(const map of registry.maps)rows.push(r(`map-${map.id}`,map.name,`${map.people} personnes · ${map.kind}`,map.campPressure?`Prochain raid du camp dans ${days(map.campPressure.raidAtCore-input.tick*10)} · ${map.campPressure.raidsSent} raids déjà envoyés${map.campPressure.alert?' · alerte active':''}`:undefined,[
@@ -358,7 +378,7 @@ function mapRows():NativeRow[]{
  rows.push(numberRow('world-tile','Numéro de case à inspecter',selectedTile??planet.homeTile,n=>{selectedTile=n;rootPage();},0,planetTileCount(planet)-1));
  const tile=selectedTile??planet.homeTile,value=planetTile(planet,tile);if(value)rows.push(r('world-selected-tile',tileLabel(tile),'meanTemperature'in value?`${value.meanTemperature.toFixed(1)} °C`:'',`Voisines : ${value.neighbours.join(', ')}`,[b('world-plan-generic','Estimer un trajet',()=>itinerary()),...campaignUIFacts(input)?.groups.filter(g=>'members'in g.state).map(g=>b(`world-route-group-${g.id}`,`Destination caravane ${g.id}`,()=>routeEditor(g.id,tile)))??[]]));
  for(const settlement of input.worldFactions?.settlements??[])rows.push(r(`world-settlement-${settlement.id}`,settlement.name,tileLabel(settlement.tile),input.worldFactions?.factions.find(f=>f.id===settlement.factionId)?.name,[b(`world-settlement-${settlement.id}-inspect`,'Inspecter la case',()=>{selectedTile=settlement.tile;rootPage();})]));
- for(const site of input.worldSites263?.entries??[])rows.push(r(`world-site-${site.id}`,worldSiteLabel263(site,input.tick*10),tileLabel(site.tile),'closed'in site&&site.closed?'Site clos':undefined,[b(`world-site-${site.id}-inspect`,'Inspecter la case',()=>{selectedTile=site.tile;rootPage();})]));
+ for(const site of input.worldSites263?.entries??[])rows.push(r(`world-site-${site.id}`,nativeWorldSiteLabel263(site,effectiveCore297(input)),tileLabel(site.tile),'closed'in site&&site.closed?'Site clos':undefined,[b(`world-site-${site.id}-inspect`,'Inspecter la case',()=>{selectedTile=site.tile;rootPage();})]));
  return rows;
 }
 function groupRows():NativeRow[]{
@@ -407,7 +427,7 @@ export function buildNativeWorld(next:NativeUiState,callbacks:NativeUiActions):N
    ...(campaign?.maps??[]).flatMap(map=>map.tile===null?[]:[{tile:map.tile,label:mapDisplayName(map),color:map.selected?0xe5cc94:0x71958b}]),
    ...(campaign?.groups??[]).flatMap(group=>group.tile===null?[]:[{tile:group.tile,label:groupDisplayLabel(group),color:campaign?.selectedGroupId===group.id?0xe5bc72:0xa66f5d}]),
    ...(factions?.settlements??[]).filter(settlement=>factions?.factions.some(faction=>faction.id===settlement.factionId&&!faction.hidden)).map(settlement=>({tile:settlement.tile,label:settlement.name,color:0x8d7e9c})),
-   ...(input.worldSites263?.entries??[]).filter(site=>!('closed'in site)||!site.closed).map(site=>({tile:site.tile,label:worldSiteLabel263(site,input.tick*10),color:0xbb8792})),
+   ...(input.worldSites263?.entries??[]).filter(site=>!('closed'in site)||!site.closed).map(site=>({tile:site.tile,label:nativeWorldSiteLabel263(site,effectiveCore297(input)),color:0xbb8792})),
   ];
   visual={kind:'planet',surface:geography.surface,roads:geography.roads,selected:selectedTile??planet.homeTile,markers,onSelect:nativeWorldChooseTile};
  }

@@ -1,3 +1,6 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
+import {createShipCountdownRuntime298} from './ship-countdown-runtime-298.ts';
+import type {ShipRuntimeRequest298,ShipRuntimeResponse298,ShipOwnerReplyMetadata298} from './ship-countdown-wire-298.ts';
 import {advanceWorldCore297} from '../sim/engine';
 import {effectiveCore297} from '../sim/core-phase-297';
 import {FixedCoreClock297} from './fixed-core-clock-297';
@@ -58,8 +61,9 @@ import { AudioCueRecorder } from './audio-cues';
 /** Both fixed entrypoints execute this identical authoritative engine. The
  * closed entry supplies its concrete transport encoder; public default stays
  * complete. Request ordering, clocks, ACK and SAVE never select that boundary. */
-export function startSimulationWorker(scope:DedicatedWorkerGlobalScope,send:(message:Response)=>void,snapshots:SnapshotEncoder<true>=new SnapshotEncoder({structureDelta:true,minimumStructures:1000}),publishLocal?:(world:World,publication:SnapshotMessage<true>,originalPacket:SnapshotMessage<true>)=>void,createMotionRecorder:()=>MotionRecorder=()=>new MotionRecorder(),publishPhaseLocal?:(world:World,phase:CorePhaseEnvelope297)=>void):void {
+export function startSimulationWorker(scope:DedicatedWorkerGlobalScope,send:(message:(Response&ShipOwnerReplyMetadata298)|ShipRuntimeResponse298)=>void,snapshots:SnapshotEncoder<true>=new SnapshotEncoder({structureDelta:true,minimumStructures:1000}),publishLocal?:(world:World,publication:SnapshotMessage<true>,originalPacket:SnapshotMessage<true>)=>void,createMotionRecorder:()=>MotionRecorder=()=>new MotionRecorder(),publishPhaseLocal?:(world:World,phase:CorePhaseEnvelope297)=>void):void {
 let world: CampaignState | undefined;
+const shipCountdown298=createShipCountdownRuntime298();
 let caravans:GroupCampaignRuntime256|undefined;
 /** Build on the validated replacement BEFORE changing the active owner. The
  * immutable geometry scan belongs to this cold boundary, never a tick/RAF. */
@@ -89,6 +93,26 @@ function cancelUnplayedSimulation(now:number):void {
 // Core forcePause is a modal overlay, not an explicit player Pause. This
 // bridge-only intent is never a saved World field or a permission to advance.
 let neutralResume261:{root:CampaignState;pending:object;speed:number}|undefined;
+/** WindowStack forcePause adaptation, distinct from a player speed request.
+ * Created only at accepted owner/final boundaries; current uses one scalar ID. */
+let shipCreditsHold298:{root:CampaignState;departureId:number}|undefined;
+function shipCreditsHeld298():boolean {
+  const held=shipCreditsHold298;return !!held&&held.root===world&&world?.escapedShips298?.credits===held.departureId;
+}
+function syncShipCreditsHold298(now:number):void {
+  const root=world,id=root?.schemaVersion===298?root.escapedShips298?.credits:undefined;
+  shipCreditsHold298=root&&typeof id==='number'?{root,departureId:id}:undefined;
+  if(shipCreditsHold298){speed=0;resetSimulationClock(now);}
+}
+function resumeAfterShipCredits298(now:number):void {
+  shipCreditsHold298=undefined;
+  // Native credits close chooses Normal, never the pre-credits speed. A neutral
+  // encounter may still own forcePause and must later resume that same Normal.
+  if(neutralResume261&&neutralResume261.root===world)neutralResume261.speed=1;
+  const blocked=!world||!!fault||urgentThreats.snapshot().urgentHeld||!!pendingCaravan261(world)||!!pendingWorldEntry263(world)
+    ||!!activeEncounter261||!!activeWorldEntry263||!!activeCamp256||!!creatingDraftColony||!!preparingWorldDraft;
+  speed=blocked?0:1;resetSimulationClock(now);
+}
 function holdEncounterPause261(now:number):void {
  const root=world,pending=root&&pendingCaravan261(root)?.pending261;if(!root||!pending)return;
  if((pending.kind==='meeting'||pending.kind==='demand')&&pending.decision==='open'){
@@ -98,7 +122,7 @@ function holdEncounterPause261(now:number):void {
 }
 function resumeNeutralEncounter261(previous:object|undefined):void {
  const held=neutralResume261;if(!held||!world||held.root!==world||held.pending!==previous||pendingCaravan261(world))return;
- neutralResume261=undefined;speed=urgentThreats.snapshot().urgentHeld?0:held.speed;resetSimulationClock(performance.now());
+  neutralResume261=undefined;speed=shipCreditsHeld298()||urgentThreats.snapshot().urgentHeld?0:held.speed;resetSimulationClock(performance.now());
 }
 let lastPublishedTick=-1;
 let stepMs = 0;
@@ -121,7 +145,7 @@ const publishCapturedTick = (checkpoint = false) => {
     const audioPublication297=audioCues.preparePublication297(),cues=audioPublication297.cues;
     const packet = snapshots.encode(visible, stepMs, speed, checkpoint);
     const recordedMotion=motion.snapshot();
-    const physicalFull297=Number(visible.schemaVersion)===297?phasePublisher297.prepareFull(visible,packet.epoch,packet.revision,recordedMotion,coreMapId297(physicalVisibleWorld297()!),'frontier'):undefined;
+    const physicalFull297=isCorePhysicalSchema297(Number(visible.schemaVersion))?phasePublisher297.prepareFull(visible,packet.epoch,packet.revision,recordedMotion,coreMapId297(physicalVisibleWorld297()!),'frontier'):undefined;
     const publication={...packet,urgentThreats:urgentThreats.snapshot(),motion:recordedMotion,...physicalFull297?{corePhase297:physicalFull297.metadata}:{},...cues.length?{audioCues:cues}:{}};
     // The fixed resident entry observes this exact confirmed World synchronously.
     // Commands, ACK, public snapshots and SAVE retain their existing path.
@@ -141,6 +165,8 @@ const publish = (checkpoint = false) => {
 
 function stopFatal(error: unknown): void {
   if (fault) return;
+  shipCountdown298.cleanup();
+  shipCreditsHold298=undefined;
   neutralResume261=undefined;
   speed = 0;
   resetSimulationClock(performance.now());
@@ -332,40 +358,74 @@ async function handleWorldDraft256(request:DraftRequest256):Promise<void> {
   configureSettlementLimit(created,request.maxSettlements);const errors=validateWorld(created);if(errors.length)throw Error(`La colonie produite est invalide : ${errors[0]}`);
   // Sole authoritative replacement boundary. No old colony, clock or RNG was
   // touched before the complete local World and every owner passed validation.
-  const createdCaravans=prepareCaravans(created);
-  snapshots.authorizeDraftPreview(owner,d.geographyId);world=created;caravans=createdCaravans;neutralResume261=undefined;committed=true;maxSettlements=request.maxSettlements;threatPauseMode=request.threatPauseMode;speed=0;urgentThreats.bootstrap(world);motion.reset();phasePublisher297.reset();audioCues.reset();fault=undefined;resetSimulationClock(performance.now());
+  const createdCaravans=prepareCaravans(created),shipBinding298=shipCountdown298.prepareAcceptedOwner(created);
+  snapshots.authorizeDraftPreview(owner,d.geographyId);world=created;caravans=createdCaravans;committed=true;shipBinding298.commit();neutralResume261=undefined;maxSettlements=request.maxSettlements;threatPauseMode=request.threatPauseMode;speed=0;urgentThreats.bootstrap(world);motion.reset();phasePublisher297.reset();audioCues.reset();fault=undefined;resetSimulationClock(performance.now());syncShipCreditsHold298(performance.now());
   const checkpoint=publish(true);if(!checkpoint)throw Error('Le checkpoint initial n’a pas été publié.');heldWorldDraft=undefined;
-  send({type:'reply',id:request.id,ok:true,checkpoint});
+  send({type:'reply',id:request.id,ok:true,checkpoint,...shipCountdown298.replyMetadata(world)});
  }catch(error){
   if(request.type==='world-draft-generate'&&heldWorldDraft?.generation===request.generation)discardWorldDraft256();
   if(committed)stopFatal(error);
-  send({type:'reply',id:request.id,ok:false,outcome:committed||fault?'unknown':'refused',...(ownedCreation?.cancelled?{data:JSON.stringify({worldCreation:'cancelled'})}:{}),reason:error instanceof Error?error.message:String(error)});
+  send({type:'reply',id:request.id,ok:false,outcome:committed||fault?'unknown':'refused',...shipCountdown298.replyMetadata(world),...(ownedCreation?.cancelled?{data:JSON.stringify({worldCreation:'cancelled'})}:{}),reason:error instanceof Error?error.message:String(error)});
  }finally{
   if(request.type==='world-draft-generate'&&preparingWorldDraft?.generation===request.generation){preparingWorldDraft=undefined;resetSimulationClock(performance.now());}
   if(ownedCreation&&creatingDraftColony===ownedCreation){if(heldWorldDraft===ownedCreation)discardWorldDraft256();creatingDraftColony=undefined;resetSimulationClock(performance.now());}
  }
 }
 
-scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
-  const targetOrder=worldTargetOrder263(request);
+scope.onmessage = ({ data: request }: MessageEvent<Request|ShipRuntimeRequest298>) => {
+  // This active-only channel has no Request id, pending Promise, SIM clock or
+  // periodic publication. Cancellation must survive cooperative preparations.
+  if(request.type==='ship-cancel-298'){
+    try{send(shipCountdown298.cancel(world,request));}
+    catch(error){stopFatal(error);send({type:'ship-countdown-state-298',ownerEpoch:request.ownerEpoch,generation:request.generation,active:false,outcome:'unknown',reason:shipCountdown298.failureReason(error)});}
+    return;
+  }
+  if(request.type==='ship-frame-298'){
+    try{
+      const blocked=fault?.reason??(activeCamp256||activeEncounter261||activeWorldEntry263||creatingDraftColony||preparingWorldDraft?'Une préparation réelle rend ces frames inéligibles ; aucun delta du lot n’a été consommé.':undefined);
+      const result=shipCountdown298.frame(world,request,blocked);
+      if(result.unknown)stopFatal(result.unknown);
+      if(result.departed){
+        // The physical departure opens a real forcePause before any next Core,
+        // snapshot or Main ACK. No already committed Core is rolled back.
+        syncShipCreditsHold298(performance.now());
+        // Only a true physical commit publishes, after clearing old actor tracks.
+        try{motion.reset();phasePublisher297.reset();publish(true);}
+        catch(error){stopFatal(error);send({...result.reply,outcome:'unknown',reason:shipCountdown298.failureReason(error)});return;}
+      }
+      send(result.reply);
+    }catch(error){stopFatal(error);send({type:'ship-frame-ack-298',ownerEpoch:request.ownerEpoch,generation:request.generation,sequence:request.sequence,accepted:false,active:false,outcome:'unknown',reason:shipCountdown298.failureReason(error)});}
+    return;
+  }
+  const shipLaunch298=request.type==='ship-launch-298';
+  const ordinaryRequest298=request.type==='ship-launch-298'||request.type==='ship-credits-continue-298'?undefined:request;
+  const targetOrder=ordinaryRequest298?worldTargetOrder263(ordinaryRequest298):false;
   const cancelTarget=targetOrder&&request.type==='command'&&validCaravanArrivalCommand261(request.command,world!.schemaVersion)&&request.command.action===null;
   if(activeWorldEntry263&&!['save','resync','init','load'].includes(request.type)&&!cancelTarget){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'La préparation de ce site doit se terminer ou être annulée.'});return;}
-  if(world&&pendingWorldEntry263(world)&&request.type==='command'&&!targetOrder){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'Terminez ou annulez l’entrée réelle avant un autre ordre.'});return;}
+  if(world&&pendingWorldEntry263(world)&&(request.type==='command'||shipLaunch298)&&!targetOrder){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'Terminez ou annulez l’entrée réelle avant un autre ordre.'});return;}
   if(activeEncounter261&&!['save','resync','init','load'].includes(request.type)){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'La préparation du champ de bataille doit se terminer.'});return;}
-  if(world&&pendingCaravan261(world)&&request.type==='command'&&!validCaravanCommand261(request.command)){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'Résolvez la rencontre réelle avant de donner un autre ordre.'});return;}
+  if(world&&pendingCaravan261(world)&&(shipLaunch298||request.type==='command'&&!validCaravanCommand261(request.command))){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'Résolvez la rencontre réelle avant de donner un autre ordre.'});return;}
   if(request.type==='camp-entry-cancel'){cancelCamp256(request);return;}
   if(activeCamp256&&request.type!=='resync'){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'La préparation de la carte locale doit se terminer ou être annulée.'});return;}
   if(request.type==='world-draft-cancel'){void handleWorldDraft256(request);return;}
   if((creatingDraftColony||preparingWorldDraft)&&request.type!=='resync'&&!(request.type==='world-draft-generate'&&!creatingDraftColony)){send({type:'reply',id:request.id,ok:false,outcome:'refused',reason:'La préparation de la nouvelle colonie attend encore sa décision.'});return;}
   if(request.type==='world-draft-generate'||request.type==='world-draft-confirm'||request.type==='world-draft-start'){void handleWorldDraft256(request);return;}
-  if(request.type==='command'&&newCampCommand256(request)){void handleCamp256(request);return;}
+  if(ordinaryRequest298?.type==='command'&&newCampCommand256(ordinaryRequest298)){void handleCamp256(ordinaryRequest298);return;}
   let mutating = false;
   let adoptedReplacement = false;
   try {
     if(request.type==='init'||request.type==='load')discardWorldDraft256();
     let data: string | undefined;
     if (fault && request.type !== 'init' && request.type !== 'load') throw new Error(fault.reason);
-    if(request.type==='settlement-limit'){if(!validSettlementLimit(request.maxSettlements))throw Error('Plafond de colonies invalide.');maxSettlements=request.maxSettlements;if(world?.worldMaps)configureSettlementLimit(world,maxSettlements);
+    if(request.type==='ship-launch-298'){
+      if(!world)throw Error('La simulation ne répond pas encore.');
+      const local=world.worldMaps?selectedRegisteredMap(world):selectedMap(world as World);if(!local)throw Error('Sélectionnez une vraie carte pour lancer le vaisseau.');
+      const result=shipCountdown298.launch(world,local,request);if(!result.ok)throw Error(result.reason);data=JSON.stringify(result);
+    }else if(request.type==='ship-credits-continue-298'){
+      // This request declares the END of the UI's native three-second closing
+      // transition, not its beginning. There is no Worker timer/deadline.
+      mutating=true;const result=shipCountdown298.continueCredits(world,request);if(!result.ok){mutating=false;throw Error(result.reason);}resumeAfterShipCredits298(performance.now());data=JSON.stringify(result);
+    }else if(request.type==='settlement-limit'){if(!validSettlementLimit(request.maxSettlements))throw Error('Plafond de colonies invalide.');maxSettlements=request.maxSettlements;if(world?.worldMaps)configureSettlementLimit(world,maxSettlements);
     }else if (request.type === 'threat-pause-mode') {
       if (!validThreatPauseMode(request.mode)) throw new Error('Mode de pause invalide.');
       threatPauseMode = request.mode;
@@ -374,8 +434,8 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       if(request.maxSettlements!==undefined&&!validSettlementLimit(request.maxSettlements))throw Error('Plafond de colonies invalide.');
       if (request.size !== 32 && !(MAP_SIZE_PRESETS as readonly number[]).includes(request.size)) throw new Error('Taille de carte invalide.');
       const created=createScenarioWorld(request.seed, request.size, request.scenario,request.site,request.startingParty,request.startingWorld,request.surface);
-      const createdCaravans=prepareCaravans(created);maxSettlements=request.maxSettlements??maxSettlements;configureSettlementLimit(created,maxSettlements);world=created;caravans=createdCaravans;
-      adoptedReplacement = true;neutralResume261=undefined;
+      const createdCaravans=prepareCaravans(created);maxSettlements=request.maxSettlements??maxSettlements;configureSettlementLimit(created,maxSettlements);const shipBinding298=shipCountdown298.prepareAcceptedOwner(created);world=created;caravans=createdCaravans;
+      adoptedReplacement = true;shipBinding298.commit();neutralResume261=undefined;
       threatPauseMode = request.threatPauseMode ?? threatPauseMode;
       urgentThreats.bootstrap(world);
       fault = undefined;
@@ -383,6 +443,7 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       motion.reset();phasePublisher297.reset();
       audioCues.reset();
       resetSimulationClock(performance.now());
+      syncShipCreditsHold298(performance.now());
     } else if (request.type === 'load') {
       if (request.threatPauseMode !== undefined && !validThreatPauseMode(request.threatPauseMode)) throw new Error('Mode de pause invalide.');
       // A cold load needs no temporary colony. Validate completely before the
@@ -391,14 +452,17 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
       let restored: CampaignState;
       try { restored = deserializeCampaign(request.data); }
       catch { throw new Error('Cette sauvegarde est illisible ou incompatible avec cette version. La colonie actuelle et vos sauvegardes sont conservées.'); }
-      const restoredCaravans=prepareCaravans(restored);maxSettlements=request.maxSettlements??maxSettlements;configureSettlementLimit(restored,maxSettlements);world = restored;caravans=restoredCaravans; adoptedReplacement = true;neutralResume261=undefined; speed = 0; motion.reset();phasePublisher297.reset();
+      const restoredCaravans=prepareCaravans(restored);maxSettlements=request.maxSettlements??maxSettlements;configureSettlementLimit(restored,maxSettlements);const shipBinding298=shipCountdown298.prepareAcceptedOwner(restored);world = restored;caravans=restoredCaravans; adoptedReplacement = true;shipBinding298.commit();neutralResume261=undefined; speed = 0; motion.reset();phasePublisher297.reset();
       threatPauseMode = request.threatPauseMode ?? threatPauseMode;
       urgentThreats.bootstrap(world);
       fault = undefined;
       audioCues.reset();
       resetSimulationClock(performance.now());
+      syncShipCreditsHold298(performance.now());
     } else if (request.type === 'speed') {
       if (![0, 1, 3, 6].includes(request.speed)) throw new Error('Vitesse invalide.');
+      // Even explicit speed0 cannot release the credits Window's forcePause.
+      if(shipCreditsHeld298()&&request.speed!==0)throw Error('Les crédits maintiennent la simulation en pause jusqu’à la fin de leur fermeture.');
       const beforeAdvance = urgentThreats.token();
       const now=performance.now();
       if(request.speed===0){
@@ -454,12 +518,12 @@ scope.onmessage = ({ data: request }: MessageEvent<Request>) => {
     try { if(world&&pendingCaravan261(world))holdEncounterPause261(performance.now());if(world&&pendingWorldEntry263(world))holdWorldEntry263(performance.now());if(request.type!=='order-options')publication = publish(checkpoint); }
     catch (error) { stopFatal(error); throw error; }
     if (adoptedReplacement) fault = undefined;
-    send({ type: 'reply', id: request.id, ok: true, data, ...(checkpoint && publication ? { checkpoint: publication } : {}) });
+    send({ type: 'reply', id: request.id, ok: true, data, ...shipCountdown298.replyMetadata(world), ...(checkpoint && publication ? { checkpoint: publication } : {}) });
     startEncounter261();startWorldEntry263();
   } catch (error) {
     if (mutating || adoptedReplacement) stopFatal(error);
     const unknown = adoptedReplacement || mutating || (fault && request.type !== 'init' && request.type !== 'load');
-    send({ type: 'reply', id: request.id, ok: false, outcome: unknown ? 'unknown' : 'refused', reason: error instanceof Error ? error.message : String(error) });
+    send({ type: 'reply', id: request.id, ok: false, outcome: unknown ? 'unknown' : 'refused', ...shipCountdown298.replyMetadata(world), reason: error instanceof Error ? error.message : String(error) });
   }
 };
 
@@ -499,7 +563,7 @@ function publishDuePhysical297(force=false,batchTail=false):void {
  audioCues.commitPublication297(audioPublication297);
 }
 function runCoreTask297(now:number):void {
- if(!world||Number(world.schemaVersion)!==297)throw Error('Core driver lost its current schema owner');
+ if(!world||!isCorePhysicalSchema297(Number(world.schemaVersion)))throw Error('Core driver lost its current schema owner');
  if(coreBatch297&&coreBatch297.owner!==world){resetSimulationClock(now);return;}
  if(!coreBatch297){wakeDue=false;const budget=coreClock297.reserve(now,speed);if(budget===0){publishDuePhysical297(false,true);return;}coreBatch297={owner:world,remaining:budget,completed:0,simulationMs:0};}
  const batch=coreBatch297;if((effectiveCore297(world)+1)%10===0)urgentThreats.prepareMaps(world);
@@ -546,11 +610,12 @@ function runCoreTask297(now:number):void {
 function runRegularTask():void {
   const now=performance.now();
   if(fault){resetSimulationClock(now);return;}
+  if(shipCreditsHeld298()){speed=0;resetSimulationClock(now);return;}
   if(world&&pendingCaravan261(world)){holdEncounterPause261(now);startEncounter261();return;}
   if(world&&pendingWorldEntry263(world)){holdWorldEntry263(now);startWorldEntry263();return;}
   if(!world||activeEncounter261||activeWorldEntry263||activeCamp256||creatingDraftColony||preparingWorldDraft){resetSimulationClock(now);return;}
   try {
-    if(Number(world.schemaVersion)===297){runCoreTask297(now);return;}
+    if(isCorePhysicalSchema297(Number(world.schemaVersion))){runCoreTask297(now);return;}
     if(logicalBatch&&logicalBatch.owner!==world){resetSimulationClock(now);return;}
     if(!logicalBatch){
       wakeDue=false;

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {worldPawnPhysicalCore297} from './world-pawn-physical-clock-297.ts';
 import {medicalCivilTick271,medicalElapsedTicks271} from './suspended-human-clock-271.ts';
 import {markCorpseWornApparel284} from './apparel-provenance-284.ts';
@@ -56,7 +57,7 @@ function animalAge(row:Extract<WorldPawnOwner256,{kind:'animal'}>,toCore:number,
 }
 /** Existing active-owner frontiers, also checked BEFORE a MapRemoved commit.
  * This reads actual fields; it does not run a future clinical tick or trial. */
-export function worldPawnActiveBoundary256(row:WorldPawnOwner256,version=256,atCore=version===297?worldPawnPhysicalCore297(row,version):row.clockCore):string|null {
+export function worldPawnActiveBoundary256(row:WorldPawnOwner256,version=256,atCore=isCorePhysicalSchema297(version)?worldPawnPhysicalCore297(row,version):row.clockCore):string|null {
  if(terminalWorldPawn256(row)||row.mode==='mothballed')return null;
  if(row.items.length||row.packed.length){if((version!==259&&version!==260&&(version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version))))))return 'Actual off-map item/gear ticking requires its retained-holder adapter';if(!validSuspendedWorldPawnGoods259(row,atCore,version))return 'Actual suspended item holder/frontier is not admitted';}
  if(row.kind==='mechanical')return (version===259||version===260||(version===261||(Number(version)===262||isSchema263OrLater(Number(version)))))&&row.items.length===0&&row.packed.length===0?null:'Mechanical WorldPawn owner is not admitted';
@@ -167,7 +168,7 @@ export function prepareWorldPawnLife256(state:WorldPawnsState256,atCore:number,r
  // Unsupported true hediff flags stay ACTIVE conservatively. This does not
  // certify their native mothball eligibility or silently suspend them.
  let used=false;return {ok:true,notices:Object.freeze(notices.slice()),deceasedHumanIds:Object.freeze(deceasedHumanIds),commit(){if(used||!nativeWorldPawnOrderCurrent256(state,nativeBefore)||state.atCore!==atBefore||state.owners.length!==membership.length||state.owners.some((r,i)=>r!==membership[i])||pairs.some(p=>JSON.stringify(p.row)!==p.before)||randomOwner.rng!==rngBefore||!canAdoptFree())throw Error('Stale WorldPawn life transaction');used=true;
-  for(const {row,draft:d} of pairs){if(version===297&&Object.hasOwn(row,'physicalClockCore297'))d.physicalClockCore297=d.clockCore;const prisoner=row.kind==='human'?row.actor.prisoner:undefined,history=row.kind==='human'?row.actor.prisonerHistory259:undefined;for(const k of Object.keys(row.actor))delete (row.actor as unknown as Record<string,unknown>)[k];Object.assign(row.actor,d.actor);if(row.kind==='human'){if(prisoner)row.actor.prisoner=prisoner;if(history)row.actor.prisonerHistory259=history;}row.clockCore=d.clockCore;if(version===297&&Object.hasOwn(d,'physicalClockCore297'))row.physicalClockCore297=d.physicalClockCore297;row.mode=d.mode;if(!Object.hasOwn(d,'free'))delete row.free;}
+  for(const {row,draft:d} of pairs){if(isCorePhysicalSchema297(version)&&Object.hasOwn(row,'physicalClockCore297'))d.physicalClockCore297=d.clockCore;const prisoner=row.kind==='human'?row.actor.prisoner:undefined,history=row.kind==='human'?row.actor.prisonerHistory259:undefined;for(const k of Object.keys(row.actor))delete (row.actor as unknown as Record<string,unknown>)[k];Object.assign(row.actor,d.actor);if(row.kind==='human'){if(prisoner)row.actor.prisoner=prisoner;if(history)row.actor.prisonerHistory259=history;}row.clockCore=d.clockCore;if(isCorePhysicalSchema297(version)&&Object.hasOwn(d,'physicalClockCore297'))row.physicalClockCore297=d.physicalClockCore297;row.mode=d.mode;if(!Object.hasOwn(d,'free'))delete row.free;}
   commitNativeWorldPawnOrder256(state,nativeBefore,nativeAfter);state.atCore=atCore;randomOwner.rng=randomState.rng;
  }};
 }

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {landedStartingPods256,damageStartingPod256} from './starting-pod-damage-256.ts';
 import { damageAnimalWithBullet } from './wildlife-health.ts';
 import { animalImpactNoise } from './wildlife-noise.ts';
@@ -42,7 +43,7 @@ export function coreProjectileTrace297(p:WorldProjectile):CoreProjectileTrace297
 /** Private synchronous owner. Caller invalidates after every actual movement,
  * macro/command mutation and impact. No per-Core wire copy of flight/relations. */
 export function createCoreProjectileStepper297(world:World) {
-  if(Number(world.schemaVersion)!==297)throw new RangeError('Core297 projectile owner requires schema297');
+  if(!isCorePhysicalSchema297(Number(world.schemaVersion)))throw new RangeError('Core297 projectile owner requires schema297');
   let lastCore=effectiveCore297(world),lastPruneStart=Math.floor((lastCore-1)/10)*10;
   let batch:ReturnType<typeof captureProjectileBatch>|undefined;
   let targets:ReturnType<ReturnType<typeof captureProjectileBatch>['refresh']>|undefined;
@@ -58,7 +59,7 @@ export function createCoreProjectileStepper297(world:World) {
     let s=scenes.get(p);if(!s){batch??=captureProjectileBatch(world);targets??=batch.refresh(world);const r=ownedRelations(p);s=targets(r.friends,p.relations.friendlyFireFactor,r.keys);scenes.set(p,s);}return s;
   };
   return {invalidate,advance(core:number,beforeCore?:(core:number)=>boolean|void,afterImpact?:()=>void,disturbance=disturbanceEvents(world)) {
-    if(!Number.isSafeInteger(core)||core!==lastCore+1||core!==effectiveCore297(world)||Number(world.schemaVersion)!==297)throw new RangeError('Invalid next physical projectile Core');
+    if(!Number.isSafeInteger(core)||core!==lastCore+1||core!==effectiveCore297(world)||!isCorePhysicalSchema297(Number(world.schemaVersion)))throw new RangeError('Invalid next physical projectile Core');
     const removed:number[]=[],upserted:CoreProjectileTrace297[]=[],shotAudio297:CoreShotAudio297[]=[];let requiresFull=false;
     const windowStart=Math.floor((core-1)/10)*10;
     if(windowStart!==lastPruneStart&&world.projectiles){const kept=world.projectiles.filter(p=>{const keep=!p.arrival||p.advancedAtCore>windowStart;if(!keep){removed.push(p.id);scenes.delete(p);}return keep;});

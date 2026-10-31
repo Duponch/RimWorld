@@ -22,7 +22,8 @@ import {captureGroupMass,departureBaseline,groupDestinationValid} from './group-
 import {captureHumanOwners} from './human-owners.ts';
 import {regularGroupFreight258,groupFreightUnitMass258,validGroupFreightPack258} from './group-freight-contract-258.ts';
 import {groupCaravanUnitMass256} from './group-caravan-mass-256.ts';
-import {materialAllowedForPlayer256} from './material-permission-256.ts';
+import {materialAllowedForPlayer256,setMaterialForbidden256} from './material-permission-256.ts';
+import {captureCaravanSourceAccess298} from './caravan-source-access-298.ts';
 import {freshGroupProvision,groupProvisionCounts,newGroupProvisions} from './group-provisions.ts';
 import {newGroupFreight} from './group-freight.ts';
 import {emptyGroupLedger} from './group-loading.ts';
@@ -48,7 +49,10 @@ export function reformMemberReason260(w:World,p:Pawn):string|undefined {
  if(p.surgery||p.surgeryRequest||p.rescue||p.animalRescue||p.animalHandling?.kind==='lead')return 'Terminez le soin, transport ou cordage entre originaux avant la réforme.';
  return undefined;
 }
-export function reformSourceChoices260(w:World){return w.piles.filter(p=>p.owner.type==='ground'||p.owner.type==='inventory'||p.owner.type==='equipment'&&w.pawns.some(q=>q.id===holderId(p.owner)&&autoCapturePatient259(w,q))).filter(p=>regularGroupFreight258(p,w.schemaVersion)||groupCaravanUnitMass256(p.item,true,w.schemaVersion)!==undefined).map(pile=>({pile,reserved:reservedSource(w,pile.id),available:pile.quantity,...!materialAllowedForPlayer256(pile)?{reason:'Ce bien est interdit.'}:{}}));}
+export function reformSourceChoices260(w:World){
+ const current=Number(w.schemaVersion)>=298,place=current?captureCaravanSourceAccess298(w,true):undefined;
+ return w.piles.filter(p=>p.owner.type==='ground'||p.owner.type==='inventory'||p.owner.type==='equipment'&&w.pawns.some(q=>q.id===holderId(p.owner)&&autoCapturePatient259(w,q))).filter(p=>(regularGroupFreight258(p,w.schemaVersion)||groupCaravanUnitMass256(p.item,true,w.schemaVersion)!==undefined)&&(!place||!place(p))).map(pile=>({pile,reserved:reservedSource(w,pile.id),available:pile.quantity,...!current&&!materialAllowedForPlayer256(pile)?{reason:'Ce bien est interdit.'}:{}}));
+}
 /** Canonical, bounded command fingerprint. Not saved; no ID, PRNG or ledger. */
 function fingerprint(value:unknown):string {const canonical=(v:unknown):string=>v===null||typeof v!=='object'?JSON.stringify(v)??'undefined':Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical((v as Record<string,unknown>)[k])).join(',')+'}';const s=canonical(value),h=[2166136261,0x9e3779b9,0x85ebca6b,0xc2b2ae35];for(let i=0;i<s.length;i++)for(let j=0;j<h.length;j++)h[j]=Math.imul(h[j]!^(s.charCodeAt(i)+j),16777619+j*2)>>>0;return 'reform260:'+s.length+':'+h.map(n=>n.toString(16).padStart(8,'0')).join('');}
 export interface GroupReformPlan260 {root:CampaignState;map:World;record:WorldGroupRecord;mass:NonNullable<ReturnType<typeof captureGroupMass>>;quote:string;receipts:ReformReceipt260[];commit():CommandResult}
@@ -69,9 +73,10 @@ export function prepareGroupReform260(w:World,c:GroupReformDraft260,previewOnly=
  const actualAnimals=animals as NonNullable<World['wildlife']>['animals'];for(const a of actualAnimals){const reason=groupAnimalReason256(w,a);if(reason)return fail(reason);if(!touch(a))return fail('Un animal sélectionné est inaccessible.');}
  for(const p of people)if(p.state==='downed'&&!touch(humanOrigins.get(p.id)!))return fail('Une personne à terre est inaccessible aux colons sélectionnés.');
  const captured=new Set(people.filter(p=>autoCapturePatient259(w,p)).map(p=>p.id));
+ const sourceAccess298=Number(w.schemaVersion)>=298?captureCaravanSourceAccess298(w,true):undefined;
  const sourceMap=new Map(w.piles.map(p=>[p.id,p])),chosen=new Map<number,number>();if(sourceMap.size!==w.piles.length)return fail('Une identité de pile est dupliquée.');
  for(const l of c.sources){const p=sourceMap.get(l.pileId);if(chosen.has(l.pileId)||!p||!Number.isSafeInteger(l.quantity)||l.quantity<1||l.quantity>p.quantity)return fail('Une source ou quantité sélectionnée a changé.');
-  if(!materialAllowedForPlayer256(p)||groupFreightUnitMass258(p,w.schemaVersion)===undefined||validatePileRecordShape(p as unknown as Record<string,unknown>,w,w.schemaVersion).length||p.foodPoison||p.item==='pemmican'&&!freshGroupProvision(p,w.tick))return fail('Un original sélectionné ne possède pas sa forme, ses composants ou sa permission admissible.');
+  if((sourceAccess298?!!sourceAccess298(p):!materialAllowedForPlayer256(p))||groupFreightUnitMass258(p,w.schemaVersion)===undefined||validatePileRecordShape(p as unknown as Record<string,unknown>,w,w.schemaVersion).length||p.foodPoison||p.item==='pemmican'&&!freshGroupProvision(p,w.tick))return fail('Un original sélectionné ne possède pas sa forme, ses composants ou sa permission admissible.');
   if(p.owner.type==='ground'){if(!touch(p.owner))return fail('La quantité choisie au sol n’est pas Touch-accessible.');}
   else if(p.owner.type==='inventory'){const holder=w.pawns.find(q=>q.id===holderId(p.owner))??w.wildlife?.animals.find(q=>q.id===holderId(p.owner));if(!holder||holder.state==='dead')return fail('Le vrai détenteur de cet inventaire est absent.');}
   else if(!(p.owner.type==='equipment'&&captured.has(p.owner.pawnId)))return fail('Le propriétaire de cette source ne peut pas être transféré par Reform.');
@@ -86,7 +91,7 @@ export function prepareGroupReform260(w:World,c:GroupReformDraft260,previewOnly=
  const carriers=[...people,...actualAnimals].filter(p=>!('prisoner'in p&&p.prisoner)&&p.state!=='downed');if(!carriers.length)return fail('Aucun détenteur de fret n’est disponible.');
  const choose=()=>{const m=captureGroupMass(people,staged,true,w.schemaVersion,[],actualAnimals);if(!m)throw Error('Masse réelle inconnue');return carriers.slice().sort((a,b)=>(m.carriers.find(c=>c.pawnId===a.id)!.grams-m.carriers.find(c=>c.pawnId===b.id)!.grams)||a.id-b.id)[0]!.id;};
  for(const [pileId,quantity] of [...chosen].sort((a,b)=>a[0]-b[0])){const p=sourceMap.get(pileId)!,target=choose(),next=structuredClone(p);let moved:MaterialPile;if(quantity===p.quantity){moved=next;}else {if(!Number.isSafeInteger(nextId+1))return fail('Les identités de fragments sont épuisées.');moved=structuredClone(p);moved.id=nextId++;moved.quantity=quantity;next.quantity-=quantity;}
-  moved.owner={type:'inventory',pawnId:target};staged.push(moved);transfers.push({original:p,next,...moved!==next?{fragment:moved}:{}});receipts.push({sourceId:p.id,fragmentId:moved.id,quantity,toPawnId:target});
+  moved.owner={type:'inventory',pawnId:target};if(Number(w.schemaVersion)>=298)setMaterialForbidden256(moved,false);staged.push(moved);transfers.push({original:p,next,...moved!==next?{fragment:moved}:{}});receipts.push({sourceId:p.id,fragmentId:moved.id,quantity,toPawnId:target});
  }
  const packUpdates=packs.map(p=>({original:p,next:{...p,owner:{type:'inventory' as const,pawnId:choose()}}}));
  const mass=captureGroupMass(people,staged,true,w.schemaVersion,packUpdates.map(p=>p.next),actualAnimals);if(!mass)return fail('La masse ou les détenteurs finaux ne sont pas valides.');

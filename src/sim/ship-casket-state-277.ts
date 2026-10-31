@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {heldCore297,validationCore297,type PhaseWorld297} from './core-phase-297.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import type {MaterialPile,Pawn,Structure} from './types.ts';
@@ -56,13 +57,13 @@ function actualData277(value:unknown):boolean {
 /** Sparse descriptor-first field boundary. The owner guard owns complete
  * actors, clocks, namespace, bed bindings and personal possessions. */
 export function validShipCasketField277(v:unknown,version:number,tick:number,coreNow297?:number):boolean {
- if(!plain(v)||!integer(version,1,297)||!integer(tick))return false;
+ if(!plain(v)||!integer(version,1,298)||!integer(tick))return false;
  const kind=descriptor(v,'kind');if('kind'in v&&!kind)return false;
  if(kind?.value!=='ship-cryptosleep-casket')return !('shipCryptosleep277'in v);
  const field=descriptor(v,'shipCryptosleep277');
  if(!isSchema277OrLater(version)||!field||!actualData277(field.value)||!plain(field.value))return false;
  const h=field.value;
- if(Reflect.ownKeys(h).length!==5+(version===297&&Object.hasOwn(h,'heldAtCore297')?1:0)||!Number.isSafeInteger(heldCore297(h,version,Number(h.heldAt)))||('heldAtCore297'in h&&(h.occupant===null||heldCore297(h,version,Number(h.heldAt))>validationCore297(version,tick,coreNow297)||!Number.isSafeInteger(validationCore297(version,tick,coreNow297))))||!['revision','heldAt','occupant','items','packed'].every(k=>descriptor(h,k))||h.revision!==1||!integer(h.heldAt,0,tick)
+ if(Reflect.ownKeys(h).length!==5+(isCorePhysicalSchema297(version)&&Object.hasOwn(h,'heldAtCore297')?1:0)||!Number.isSafeInteger(heldCore297(h,version,Number(h.heldAt)))||('heldAtCore297'in h&&(h.occupant===null||heldCore297(h,version,Number(h.heldAt))>validationCore297(version,tick,coreNow297)||!Number.isSafeInteger(validationCore297(version,tick,coreNow297))))||!['revision','heldAt','occupant','items','packed'].every(k=>descriptor(h,k))||h.revision!==1||!integer(h.heldAt,0,tick)
   ||!Array.isArray(h.items)||h.items.length>32768||!Array.isArray(h.packed)||h.packed.length>32768)return false;
  if(h.occupant===null)return h.items.length===0&&h.packed.length===0;
  const o=h.occupant;if(!plain(o)||Reflect.ownKeys(o).length!==2)return false;
@@ -72,18 +73,18 @@ export function validShipCasketField277(v:unknown,version:number,tick:number,cor
 export function captureShipCasketHumans277(w:{schemaVersion:number;tick:number;phaseCore297?:number;structures:readonly unknown[]}) {
  const rows:{pawn:Pawn;kind:'ship-casket';simulation:'frozen';place:{kind:'ship-casket';casketId:number};validationTick:number;items:readonly MaterialPile[];packed:readonly PackedFurniture[]}[]=[];
  for(const s of w.structures){if(!isShipCasket277(s)&&!(s&&typeof s==='object'&&'shipCryptosleep277'in s))continue;
-  if(!validShipCasketField277(s,w.schemaVersion,w.tick,w.schemaVersion===297?w.tick*10+Number(w.phaseCore297):undefined))throw Error('Invalid actual spatial casket before human capture');
+  if(!validShipCasketField277(s,w.schemaVersion,w.tick,isCorePhysicalSchema297(w.schemaVersion)?w.tick*10+Number(w.phaseCore297):undefined))throw Error('Invalid actual spatial casket before human capture');
   const c=s as ShipCasket277,h=c.shipCryptosleep277;if(h.occupant?.kind==='human')rows.push({pawn:h.occupant.pawn,kind:'ship-casket',simulation:'frozen',place:{kind:'ship-casket',casketId:c.id},validationTick:h.heldAt,items:h.items,packed:h.packed});
  }return rows;
 }
 export function captureShipCasketAnimals277(w:{schemaVersion:number;tick:number;phaseCore297?:number;structures:readonly unknown[]}) {
  const rows:{animal:WildAnimal;casket:ShipCasket277;validationTick:number;items:readonly MaterialPile[];packed:readonly PackedFurniture[]}[]=[];
  for(const s of w.structures){if(!isShipCasket277(s)&&!(s&&typeof s==='object'&&'shipCryptosleep277'in s))continue;
-  if(!validShipCasketField277(s,w.schemaVersion,w.tick,w.schemaVersion===297?w.tick*10+Number(w.phaseCore297):undefined))throw Error('Invalid actual spatial casket before animal capture');
+  if(!validShipCasketField277(s,w.schemaVersion,w.tick,isCorePhysicalSchema297(w.schemaVersion)?w.tick*10+Number(w.phaseCore297):undefined))throw Error('Invalid actual spatial casket before animal capture');
   const c=s as ShipCasket277,h=c.shipCryptosleep277;if(h.occupant?.kind==='animal')rows.push({animal:h.occupant.animal,casket:c,validationTick:h.heldAt,items:h.items,packed:h.packed});
  }return rows;
 }
 
 export function captureShipCasketMechanoids277(w:{schemaVersion:number;tick:number;phaseCore297?:number;structures:readonly unknown[]}) {
- const rows:{mech:Mechanoid;casket:ShipCasket277;validationTick:number}[]=[];for(const s of w.structures){if(!isShipCasket277(s)&&!(s&&typeof s==='object'&&'shipCryptosleep277'in s))continue;if(!validShipCasketField277(s,w.schemaVersion,w.tick,w.schemaVersion===297?w.tick*10+Number(w.phaseCore297):undefined))throw Error('Invalid actual spatial casket before mechanical capture');const c=s as ShipCasket277,h=c.shipCryptosleep277;if(h.occupant?.kind==='mechanical')rows.push({mech:h.occupant.mech,casket:c,validationTick:h.heldAt});}return rows;
+ const rows:{mech:Mechanoid;casket:ShipCasket277;validationTick:number}[]=[];for(const s of w.structures){if(!isShipCasket277(s)&&!(s&&typeof s==='object'&&'shipCryptosleep277'in s))continue;if(!validShipCasketField277(s,w.schemaVersion,w.tick,isCorePhysicalSchema297(w.schemaVersion)?w.tick*10+Number(w.phaseCore297):undefined))throw Error('Invalid actual spatial casket before mechanical capture');const c=s as ShipCasket277,h=c.shipCryptosleep277;if(h.occupant?.kind==='mechanical')rows.push({mech:h.occupant.mech,casket:c,validationTick:h.heldAt});}return rows;
 }

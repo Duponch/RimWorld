@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema275OrLater} from './schema-compatibility-257.ts';
 import {isShipPartKind277} from './ship-casket-graph-277.ts';
@@ -91,7 +92,7 @@ export function advanceShipReactors275(w:World):ShipReactorAdvance275 {
    else {starting=true;next=Math.min(next,state.endCore);}
   }
  }
- for(const {state} of ready)state.state='running';if(Number(w.schemaVersion)===297)reactorDue297.set(w,{structures:w.structures,next});return {completed:ready.length,starting,completedReactorIds:ready.map(r=>r.id)};
+ for(const {state} of ready)state.state='running';if(isCorePhysicalSchema297(Number(w.schemaVersion)))reactorDue297.set(w,{structures:w.structures,next});return {completed:ready.length,starting,completedReactorIds:ready.map(r=>r.id)};
 }
 /** A constant-time deadline probe between macros. No building walk while the
  * retained deadline is in the future (including maps without any reactor).

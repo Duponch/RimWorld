@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {animalComfyRange256,isAnimalSpecies256} from './animal-core-v256.ts';
 import {actualNativeSevenFacts256} from './actual-animal-profile-256.ts';
 import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
@@ -23,7 +24,7 @@ export function animalThermalProfile466(a:Pick<WildAnimal,'species'|'growthTrack
  * guards still validate anatomy, growth provenance, clocks and descriptors.
  * In particular an unmarked historical seven or insect cold is not opened. */
 export function animalThermalFields466(value:unknown,version:number):{heat:boolean;cold:boolean} {
- if(version!==287&&version!==288&&(version!==289&&(version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&version!==297))))))))||!value||typeof value!=='object')return {heat:false,cold:false};
+ if(version!==287&&version!==288&&(version!==289&&(version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&!isCorePhysicalSchema297(version)))))))))||!value||typeof value!=='object')return {heat:false,cold:false};
  const species=Object.getOwnPropertyDescriptor(value,'species'),growth=Object.getOwnPropertyDescriptor(value,'growthTracker');
  if(!species?.enumerable||!Object.hasOwn(species,'value')||typeof species.value!=='string'||'growthTracker'in value&&(!growth?.enumerable||!Object.hasOwn(growth,'value')))return {heat:false,cold:false};
  const range=animalThermalProfile466(value as Pick<WildAnimal,'species'|'growthTracker'>);
@@ -37,7 +38,7 @@ export interface AnimalThermalOpportunity466 {temperature:number;mapHeld:boolean
  * Fixed-point severity kernels are the existing local adaptation. Frostbite,
  * air burns and insect cold slowdown remain distinct unrepresented effects. */
 export function applyAnimalThermal466(w:Pick<World,'tick'|'schemaVersion'>,a:WildAnimal,record:MedicalRecord|undefined,input:AnimalThermalOpportunity466):MedicalRecord|undefined {
- if(![287,288,289,290,291,292,293,294,295,296,297].includes(Number(w.schemaVersion))||record?.death||a.state==='dead')return record;
+ if(![287,288,289,290,291,292,293,294,295,296,297,298].includes(Number(w.schemaVersion))||record?.death||a.state==='dead')return record;
  const range=animalThermalProfile466(a);if(!range)return record;
  if(!Number.isFinite(input.temperature)||typeof input.mapHeld!=='boolean')throw Error('Invalid actual local animal thermal opportunity');
  const cold=record?.hypothermia??0,heat=record?.heatstroke??0;

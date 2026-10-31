@@ -35,6 +35,7 @@ export function pileMarketValue(pile:Pick<MaterialPile,'item'|'weapon'|'apparel'
     value+=Math.min(value*(qualityFactors[index]!-1),qualityGains[index]!);
     if(entry.healthAffectsPrice)value*=tradeHealthFactor(hitPoints/entry.maxHitPoints);
   }
+  if(pile.item==='ai-core'){const damage=pile.damage??0;if(!Number.isInteger(damage)||damage<0||damage>=100)return undefined;if(entry.healthAffectsPrice)value*=tradeHealthFactor((100-damage)/100);}
   if(isProstheticItem273(pile.item)&&entry.healthAffectsPrice)value*=tradeHealthFactor((entry.maxHitPoints-(pile.damage??0))/entry.maxHitPoints);
   return value>200?roundTradeSilver(value/5)*5:value;
 }

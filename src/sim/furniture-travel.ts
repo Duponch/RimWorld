@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveLocal297} from './core-phase-297.ts';
 import {humanMoveSpeedFactor297} from './human-move-speed-297.ts';
 import type {DuckTerrainOverride256} from './duck-water-256.ts';
@@ -22,13 +23,14 @@ export function terrainTravelDelay(world:World,index:number):number {
   if(tile?.floor)return FLOOR_DEFINITIONS[tile.floor].pathCost/10;
   const natural=naturalTerrainCosts256(terrain);if(natural)return natural.pathCostCore/10;
   if(isWetTerrain(terrain))return MARSH_PATH_COST_CORE/10;
-  return terrain==='rough-stone'||terrain==='rich-soil'||terrain==='gravel'||world.site&&terrain==='grass'||Number(world.schemaVersion)===297&&(terrain==='grass'||terrain==='soil')?.2:0;
+  return terrain==='rough-stone'||terrain==='rich-soil'||terrain==='gravel'||world.site&&terrain==='grass'||isCorePhysicalSchema297(Number(world.schemaVersion))&&(terrain==='grass'||terrain==='soil')?.2:0;
 }
 
 /** Current Core wiki path costs, converted by the local day/tick ratio (10).
  * Repeat suppression is shared by all qualifying furniture, not by instance. */
 export const FURNITURE_TRAVEL:Readonly<Record<StructureKind,Readonly<{delay:number;stand:boolean;repeat:boolean}>>>=Object.freeze({
   'ship-cryptosleep-casket':{delay:4.2,stand:false,repeat:true},
+  'ship-computer':{delay:0,stand:false,repeat:false},'ship-sensors':{delay:0,stand:false,repeat:false},
   'ship-beam':{delay:0,stand:false,repeat:false},'ship-engine':{delay:0,stand:false,repeat:false},
   'ship-reactor':{delay:0,stand:false,repeat:false},
   'fueled-smithy':{delay:5,stand:false,repeat:true},'electric-smithy':{delay:5,stand:false,repeat:true},
@@ -187,7 +189,7 @@ export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTe
     };
     for(let i=0;i<tiles.length;i++){
       const tile=tiles[i]!,kind=tile.terrain;
-      let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'||Number(version)===297&&(kind==='grass'||kind==='soil')?67:0;
+      let cost=tile.floor?Math.round(FLOOR_DEFINITIONS[tile.floor].pathCost/10/3*1000):kind==='rough-stone'||kind==='rich-soil'||kind==='gravel'||hasSite&&kind==='grass'||isCorePhysicalSchema297(Number(version))&&(kind==='grass'||kind==='soil')?67:0;
       const natural=readNatural(kind);
       if(natural&&!tile.bridge&&!tile.floor)cost=natural.pathCost;
       else if(isWetTerrain(kind)&&!tile.bridge&&!tile.floor)cost=Math.round(MARSH_PATH_COST_CORE/30*1000);
@@ -202,13 +204,13 @@ export function navigationCosts(world:World,origin?:Cell,terrainOverride?:DuckTe
   if(version>=29)for(const p of world.piles)if((p.kind==='steel'||version>=32&&p.kind==='blocks'||version>=41&&p.kind==='component'||version>=123&&(p.kind==='gold'||p.kind==='plasteel'||p.kind==='advanced-component'))&&p.owner.type==='ground'){const i=p.owner.z*width+p.owner.x;floors.set(i,Math.max(floors.get(i)??0,467));costs.set(i,Math.max(costs.get(i)??0,467));}
   // Door wait is added after the terrain/object/material maximum, not compared
   // with it. Preserve present zero entries for fully open doors on bare floors.
-  for(const s of geometry?.roomDoors??world.structures)if(isRoomDoor(s.kind)) {const i=s.z*width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick)/3*1000));}
+  for(const s of geometry?.roomDoors??world.structures)if(isRoomDoor(s.kind)) {const i=s.z*width+s.x;repeaters.delete(i);costs.set(i,Math.max(costs.get(i)??0,terrain[i]??0)+Math.round(doorWait(s,isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick)/3*1000));}
   const fire=fireNavigationCosts(world);
   // Trap avoidance is additive after the ordinary terrain/object maximum, like
   // fire danger. Its 800 Core cost already includes avoidance: do not add the
   // separate 40 Core physical walk delay to the search a second time.
   const result={costs:addFireNavigationCosts(addFireNavigationCosts(addFireNavigationCosts(costs.size||terrainMaximum?overlayNavigationCosts(terrain,terrainMaximum,costs):undefined,fire),traps),marshPerceptionCosts),repeaters,stops,floors:addFireNavigationCosts(addFireNavigationCosts(addFireNavigationCosts(overlayNavigationCosts(terrain,terrainMaximum,floors),fire),traps),marshPerceptionCosts)!};
-  const human=Number(version)===297&&origin&&'id'in origin?world.pawns.find(p=>p.id===origin.id):undefined;
+  const human=isCorePhysicalSchema297(Number(version))&&origin&&'id'in origin?world.pawns.find(p=>p.id===origin.id):undefined;
   if(!human)return result;
   const factor=humanMoveSpeedFactor297(world,human),base=60/(4.6*factor);
   return {...result,costs:coreNavigationUnits297(result.costs),floors:coreNavigationUnits297(result.floors)!,coreMoveCosts297:{cardinal:Math.round(Math.min(450,Math.max(1,base))),diagonal:Math.round(Math.min(450,Math.max(1,base*1.41421)))}};

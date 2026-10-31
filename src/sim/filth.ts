@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import {isSmoothedStone281} from './smooth-floor-terrain-281.ts';
@@ -28,9 +29,9 @@ function accepted(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
 function put(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
   if(!filthWalkable(w,c))return false;
   const found=w.filth?.items.find(f=>same(f,c)&&f.kind===kind);
-  if(found){if(found.thickness>=5)return false;found.thickness++;found.grownCore=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10;return true;}
+  if(found){if(found.thickness>=5)return false;found.thickness++;found.grownCore=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10;return true;}
   if(!accepted(w,c,kind,spontaneous)||!Number.isSafeInteger(w.nextId+1)||(w.filth?.items.length??0)>=w.width*w.height*(w.schemaVersion>=290?10:w.schemaVersion>=256?9:6))return false;
-  const state=ensureFilth(w),d=FILTH_DEFINITIONS[kind],period=filthCheckPeriod(w),now=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10;
+  const state=ensureFilth(w),d=FILTH_DEFINITIONS[kind],period=filthCheckPeriod(w),now=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10;
   // A cell's phase is stable; adding another trace never rerolls rain chronology.
   const phase=((Math.imul(c.z*w.width+c.x,1103515245)>>>0)%(period));
   const nextCheckCore=now+((phase-now%period+period)%period||period);
@@ -39,7 +40,7 @@ function put(w:World,c:Cell,kind:FilthKind,spontaneous=false):boolean {
 /** Actual deposits only. A blocked/full cell tries the eight neighbors in a
  * private shuffled order; rejected terrain alone does not spill outward. */
 export function addFilth(w:World,c:Cell,kind:FilthKind,count=1,spontaneous=false):boolean {
-  if(w.schemaVersion<89||kind==='firefoam'&&(Number(w.schemaVersion)!==290&&(Number(w.schemaVersion)!==291&&(Number(w.schemaVersion)!==292&&(Number(w.schemaVersion)!==293&&(Number(w.schemaVersion)!==294&&(Number(w.schemaVersion)!==295&&(Number(w.schemaVersion)!==296&&Number(w.schemaVersion)!==297)))))))||w.schemaVersion<256&&(kind==='rock-rubble'||kind==='building-rubble'||kind==='slime')||!inside(w,c)||!Object.hasOwn(FILTH_DEFINITIONS,kind)||!Number.isSafeInteger(count)||count<1||count>100)return false;
+  if(w.schemaVersion<89||kind==='firefoam'&&(Number(w.schemaVersion)!==290&&(Number(w.schemaVersion)!==291&&(Number(w.schemaVersion)!==292&&(Number(w.schemaVersion)!==293&&(Number(w.schemaVersion)!==294&&(Number(w.schemaVersion)!==295&&(Number(w.schemaVersion)!==296&&!isCorePhysicalSchema297(Number(w.schemaVersion)))))))))||w.schemaVersion<256&&(kind==='rock-rubble'||kind==='building-rubble'||kind==='slime')||!inside(w,c)||!Object.hasOwn(FILTH_DEFINITIONS,kind)||!Number.isSafeInteger(count)||count<1||count>100)return false;
   let made=false;
   for(let n=0;n<count;n++){
     if(put(w,c,kind,spontaneous)){made=true;continue;}
@@ -81,7 +82,7 @@ export function recordFilthMovement(w:World,p:Pawn):void {
   if(!feet.carried.length&&!feet.lastTerrain)delete p.filthFeet;
 }
 export function recordFilthMovement297(w:World,p:Pawn):boolean {
-  if(Number(w.schemaVersion)!==297)throw Error('Physical filth entry requires297');
+  if(!isCorePhysicalSchema297(Number(w.schemaVersion)))throw Error('Physical filth entry requires297');
   let changed=false;
   if(p.state==='dead')return false;
   const state=ensureFilth(w),tile=w.tiles[p.z*w.width+p.x]!,feet=p.filthFeet??={carried:[]};

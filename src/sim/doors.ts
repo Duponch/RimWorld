@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveLocal297} from './core-phase-297.ts';
 import {targetDoorCanOpen263,targetBuildingPlayerUse263} from './world-target-building-263.ts';
 import { isColonist } from './affiliation.ts';
@@ -17,15 +18,15 @@ import type { Cell, CommandResult, Pawn, Structure, World } from './types.ts';
 export type DoorCommand={type:'door-policy';structureId:number;setting:'holdOpen'|'forbidden';value:boolean};
 
 function openDoor(world:World,s:Structure):void {
-  const now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
+  const now=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick;
   const d=s.door!;
   if(!d.open){d.from=doorOpenness(s,now);d.changedAt=now;d.open=true;if(d.holdOpen)invalidateAnimalPens(world);}
-  if(Number(world.schemaVersion)===297){const state=physicalDoorState297(world);state.open.add(s);state.changed=true;}
+  if(isCorePhysicalSchema297(Number(world.schemaVersion))){const state=physicalDoorState297(world);state.open.add(s);state.changed=true;}
   d.closeAt=now+(1-doorOpenness(s,now))*doorMotionTicks(s)+DOOR_CLOSE_DELAY;
 }
 /** Called before committing an edge. Waiting consumes no path or travel distance. */
 export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
-  const now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
+  const now=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick;
   const s=doorAt(world,next);if(!s)return true;
   const d=s.door!,breaking=prisonBreakActive(pawn),permission=targetDoorCanOpen263(world,pawn,s);
   if(permission!==undefined&&!(pawn.prisoner&&pawn.prisoner.releasedAt===undefined&&!breaking)){if(!permission)return d.open&&doorOpenness(s,now)>=1-1e-9;if(d.forbidden&&isColonist(pawn)&&!breaking)return false;rememberExplorationApproacher256(world,d,pawn.id,isColonist(pawn));d.lastTouch=now;if(!d.open)openDoor(world,s);if(doorOpenness(s,now)<1-1e-9)return false;d.closeAt=now+DOOR_CLOSE_DELAY;return true;}
@@ -41,7 +42,7 @@ export function readyDoorEntry(world:World,pawn:Pawn,next:Cell):boolean {
 /** Real domestic hauler at the threshold. Opening uses the existing timed
  * door transaction; a false result consumes neither path nor physical edge. */
 export function readyAnimalHaulDoorEntry282(world:World,a:WildAnimal,next:Cell):boolean {
-  const now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
+  const now=isCorePhysicalSchema297(world.schemaVersion)?effectiveLocal297(world):world.tick;
   if(!isSchema282OrLater(world.schemaVersion)||!a.domestic||a.state==='dead'||a.shipCryptosleepHeldAt277!==undefined)return false;
   const s=doorAt(world,next);if(!s)return true;
   if(world.wildlife?.animals.find(value=>value.id===a.id)!==a||Math.max(Math.abs(next.x-a.x),Math.abs(next.z-a.z))!==1||(a.motion?.end??0)>now)return false;
@@ -57,7 +58,7 @@ export function readyAnimalHaulDoorEntry282(world:World,a:WildAnimal,next:Cell):
  * edge. The normal threshold check remains authoritative if the path or power
  * changes before arrival. Stone autodoors still open at the threshold. */
 export function approachAutodoor(world:World,pawn:Pawn,next:Cell):void {
-  const now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
+  const now=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick;
   if(!isColonist(pawn)&&!pawn.visitor&&pawn.prisoner?.releasedAt===undefined&&!prisonBreakActive(pawn)||pawn.path[0]?.x!==next.x||pawn.path[0]?.z!==next.z)return;
   const upcoming=pawn.path[1];if(!upcoming||Math.max(Math.abs(upcoming.x-next.x),Math.abs(upcoming.z-next.z))!==1)return;
   const s=doorAt(world,upcoming);if(s&&targetDoorCanOpen263(world,pawn,s)===false)return;

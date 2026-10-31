@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {CorePhaseFrameOwner297,type PreparedCoreFull297} from './core-phase-owner-297';
 import {copyCoreData297,coreOwnRecord297,coreInteger297,validCoreTrace297} from './core-phase-data-297';
 import type {CorePhaseAnchor297,CorePhaseTypedProjection297} from './core-phase-projection-297';
@@ -75,7 +76,7 @@ export function createNativeCloneResidentLane():NativeCloneResidentLane {
  const mintPhase297=(projection:CorePhaseTypedProjection297):object=>{const generation=phaseGeneration297,token=Object.freeze({});nativeCoreInputs297.set(token,{projection,alive:()=>!closed&&generation===phaseGeneration297});return token;};
  const preflightFull297=(packet:Packet):void=>{
   const world=packet.world as unknown as Record<string,unknown>,version=Object.getOwnPropertyDescriptor(world,'schemaVersion')?.value,field=Object.getOwnPropertyDescriptor(packet,'corePhase297');
-  if(version!==297){if(field)throw Error('Future physical header on historical Native publication');return;}
+  if(!isCorePhysicalSchema297(version)){if(field)throw Error('Future physical header on historical Native publication');return;}
   if(!field?.enumerable||!Object.hasOwn(field,'value'))throw Error('Native297 full lost its physical header');
   const meta=copyCoreData297(field.value),tick=Object.getOwnPropertyDescriptor(world,'tick')?.value,phase=Object.getOwnPropertyDescriptor(world,'phaseCore297')?.value,nextId=Object.getOwnPropertyDescriptor(world,'nextId')?.value;
   const frontier=coreOwnRecord297(meta)&&Object.hasOwn(meta,'actorMode297');
@@ -147,7 +148,7 @@ export function createNativeCloneResidentLane():NativeCloneResidentLane {
     let physicalFull:PreparedCoreFull297|undefined;
     const result=super.adopt(packet,view=>{
      if(acceptExtra&&!acceptExtra(view))return false;
-     if(eligible&&Number(view.schemaVersion)===297){
+     if(eligible&&isCorePhysicalSchema297(Number(view.schemaVersion))){
       const prepared=scope?.prepared;if(!prepared)throw Error('Missing staged Native Full publication');
       physicalFull=phaseOwner297.prepareFull(view,packet.epoch,packet.revision,prepared.motion,packet.corePhase297,packet.speed as 0|1|3|6,packet.kind==='checkpoint');
      }
@@ -155,7 +156,7 @@ export function createNativeCloneResidentLane():NativeCloneResidentLane {
     });
     if(result.status==='applied'){
      if(eligible&&scope?.prepared){
-      if(Number(result.world.schemaVersion)===297){const old=phaseOwner297.currentAnchor,metadata=packet.corePhase297;
+      if(isCorePhysicalSchema297(Number(result.world.schemaVersion))){const old=phaseOwner297.currentAnchor,metadata=packet.corePhase297;
        if(result.replaced||old&&old.epoch!==packet.epoch||old&&old.mapId!==metadata?.mapId)phaseGeneration297++;
        if(!physicalFull||physicalFull.projection.world!==result.world)throw Error('Missing atomically prepared Core Full');
        const projection=phaseOwner297.commitFull(physicalFull);
@@ -214,7 +215,7 @@ export function createNativeCloneResidentLane():NativeCloneResidentLane {
       // Capture only the constant scheduling discriminator inside the genuine
       // first listener. World/admission/FX guards are not repeated or bypassed.
       const version=Object.getOwnPropertyDescriptor(owned.world,'schemaVersion'),header=Object.getOwnPropertyDescriptor(owned,'corePhase297');
-      const modern=version?.enumerable===true&&Object.hasOwn(version,'value')&&version.value===297&&header?.enumerable===true&&Object.hasOwn(header,'value')&&coreOwnRecord297(header.value);
+      const modern=version?.enumerable===true&&Object.hasOwn(version,'value')&&isCorePhysicalSchema297(version.value)&&header?.enumerable===true&&Object.hasOwn(header,'value')&&coreOwnRecord297(header.value);
       held.receipt={raw:held.captured,original:owned,...modern?{modernFull297:true as const}:{},consumed:false};
      }
     }catch{/* ordinary strict reader owns malformed publication refusal */}

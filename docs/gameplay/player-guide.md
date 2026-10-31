@@ -1,5 +1,7 @@
 # Guide joueur
 
+**31 octobre — voie de victoire spatiale, schéma298.** Faites rejoindre une console utilisable à votre négociateur, puis contactez une faction admissible. Une information coûte1500argent disponibles sous les balises alimentées : elle révèle une cache, elle ne livre pas le cœur d’IA. Il faut préparer l’expédition et ramener l’objet. Recherchez puis construisez ordinateur et capteurs avec leurs vrais matériaux ; un bâtisseur de niveau8 est nécessaire. Une fois les pièces reliées, les réacteurs prêts et les caissons occupés, inspectez l’ordinateur pour lancer. La confirmation indique les personnes laissées sur place ; ouvrir le menu annule le compte à rebours. Le départ confirmé mène aux crédits puis à la continuation de la colonie, sans transformer les personnes parties en morts. [Règles et limites](../development/ship-victory298.md).
+
 ## Régler et utiliser l’interface en carton
 
 Dans **Options → Échelle de l’interface**, réglez l’ensemble du HUD, des fenêtres et du texte de **75 à 200 %**, par pas de 5 %. **100 %** correspond aux dimensions par défaut. Le choix est conservé par ce navigateur. Les cartes se réorganisent ; sur un petit écran fortement agrandi, les flèches de la barre permettent d’accéder à tous les menus.

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
@@ -14,7 +15,7 @@ const keys=(v:Record<string,unknown>,allowed:readonly string[])=>Object.keys(v).
 const durations=EMP_DAMAGE_AMOUNTS.map(empStunDuration);
 
 export function validMechanoidEmpState(value:unknown,version:number,tick:number,stopped=false,coreNow297?:number):boolean {
- const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return false;
+ const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(physicalCoreNow297))return false;
   if(value===undefined)return true;
   const core=physicalCoreNow297,offset=object(value)?value.suspendedCore277:undefined;
   if(offset!==undefined&&(!isSchema277OrLater(version)||!integer(offset,1,core)||!object(value)||!integer(value.lastAtCore,0,core-offset)))return false;
@@ -29,7 +30,7 @@ export function validMechanoidEmpState(value:unknown,version:number,tick:number,
 /** The larger future horizon belongs only to the EMP mechanical owner.
  * Ordinary human/animal/melee interval readers retain their 45-Core limit. */
 export function validMechanoidEmpIntervals(value:unknown,version:number,start:number,tick:number,emp:unknown,coreNow297?:number):boolean {
- const physicalLocalNow297=version===297?validationCore297(version,tick,coreNow297)/10:tick;if(version===297&&!Number.isFinite(physicalLocalNow297))return false;
+ const physicalLocalNow297=isCorePhysicalSchema297(version)?validationCore297(version,tick,coreNow297)/10:tick;if(isCorePhysicalSchema297(version)&&!Number.isFinite(physicalLocalNow297))return false;
   if(version<208||!Array.isArray(value)||!value.length||value.length>4096||Object.keys(value).length!==value.length)return false;
   let previous=start-1;
   return value.every(s=>{
@@ -40,7 +41,7 @@ export function validMechanoidEmpIntervals(value:unknown,version:number,start:nu
   });
 }
 export function validStructureEmpState(value:unknown,kind:unknown,version:number,tick:number,coreNow297?:number):boolean {
- const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return false;
+ const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(physicalCoreNow297))return false;
   if(value===undefined)return true;
   const core=physicalCoreNow297;
   return version>=208&&integer(core)&&empStructureSupported(kind)&&object(value)
@@ -54,7 +55,7 @@ export function validEmpStructureTransport(w:World,version?:number,packedRecords
 export function validEmpStructureTransport(w:Pick<World,'schemaVersion'|'research'|'tick'>&Partial<Pick<World,'phaseCore297'>>,version:number,packedRecords:readonly PackedFurniture[],clock?:number,coreNow297?:number):boolean;
 export function validEmpStructureTransport(w:World|Pick<World,'schemaVersion'|'research'|'tick'>&Partial<Pick<World,'phaseCore297'>>,version:number=w.schemaVersion,packedRecords?:readonly PackedFurniture[],clock:number=w.tick,coreNow297?:number):boolean {
   const local='structures'in w?w:undefined;if(!packedRecords&&!local)return false;
- const actualCore=version===297?(packedRecords?(coreNow297??clock*10):effectiveCore297(w)):undefined;
+ const actualCore=isCorePhysicalSchema297(version)?(packedRecords?(coreNow297??clock*10):effectiveCore297(w)):undefined;
   if(!packedRecords)for(const s of local!.structures)if(Object.hasOwn(s,'emp')&&(s.emp===undefined||!validStructureEmpState(s.emp,s.kind,version,w.tick,actualCore)))return false;
   const copied=(v:unknown)=>object(v)&&Object.hasOwn(v,'emp');
   const packed=(p:unknown,tick:number,physicalCore?:number)=>!copied(p)&&object(p)&&object(p.building)
@@ -63,7 +64,7 @@ export function validEmpStructureTransport(w:World|Pick<World,'schemaVersion'|'r
   if(packedRecords)return true;
   for(const j of local!.jobs)if(copied(j)||copied(j.furniture)||copied(j.deconstruction))return false;
   for(const records of [local!.visitors?.departed??[],local!.podRescues?.departed??[]])for(const departure of records)
-    for(const p of departure.packed??[])if(!packed(p,departure.tick,version===297?departure.tick*10:undefined))return false;
+    for(const p of departure.packed??[])if(!packed(p,departure.tick,isCorePhysicalSchema297(version)?departure.tick*10:undefined))return false;
   return true;
 }
 

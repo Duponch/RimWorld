@@ -14,6 +14,8 @@ import { DEFAULT_MAP_SIZE } from '../sim/map-config';
 import { SnapshotDecoder } from './snapshots';
 import type { AudioCue } from './audio-cues';
 import type {BillWorkerOption283,BillWorkerOptions283} from '../sim/bill-worker-state-283';
+import {createShipFramePump298,type ShipClientCountdownState298,type ShipLaunchResult298} from './ship-frame-pump-298.ts';
+import type {ShipLightRequest298} from './ship-countdown-wire-298.ts';
 
 /** Transport readers are selected by a fixed client implementation, never by a packet flag. */
 export type SnapshotReader=Pick<SnapshotDecoder,'adopt'|'adoptCampaignOnly'|'prepareDraftPreview'|'authorizeDraftPreview'|'discardDraftPreview'>&{readMotion?(packet:import('./snapshots').SnapshotMessage<true>):import('./motion-tracks').PawnTrack[]|undefined;readCorePhase297?(packet:import('./snapshots').SnapshotMessage<true>):object|undefined};
@@ -25,10 +27,14 @@ interface PendingWorldDraft256 {
 }
 interface PendingWorldStart256 {generation:number;operationId?:number;cancelRequested?:boolean;onProgress:(progress:WorldCreationProgress256)=>void}
 interface PendingRequest {
+  shipCold?:object;
+  shipPost?:()=>void;
+  shipPosted?:boolean;
+  shipCancelAfterLaunch?:'menu'|'front';
   draft?:PendingWorldDraft256;
   draftStart?:PendingWorldStart256;
   campGroupId?:number;
-  type: Request['type'];
+  type: Payload['type'];
   resolve: (value: string | undefined) => void;
   reject: (reason: Error) => void;
   timer: ReturnType<typeof setTimeout>;
@@ -39,6 +45,11 @@ interface PendingRequest {
 
 export class SimulationClient {
   private worker!: Worker;
+  private readonly shipFrames298=createShipFramePump298<Worker>();
+  private shipStateRevision298=-1;
+  /** Scalar transport state only. Real credits come from the admitted summary. */
+  onShipCountdownState298:(state:ShipClientCountdownState298)=>void=()=>{};
+  get shipCountdownActive298():boolean{return !this.stopped&&!this.fault&&this.shipFrames298.feeding;}
   private readonly urgentThreats = new UrgentThreatDelivery();
   private confirmedCampaign?:CampaignSummary;
   private activeMap=false;
@@ -105,6 +116,7 @@ export class SimulationClient {
   private deliverTradeArrivals261():void {const adopted=this.adopted;if(!adopted)return;const rows=this.tradeArrivals261;this.tradeArrivals261=[];for(const row of rows){if(row.checkpoint.epoch<adopted.epoch)continue;if(row.checkpoint.epoch===adopted.epoch&&row.checkpoint.revision<=adopted.revision){try{this.onCaravanTradeArrival(row);}catch(error){this.onError(String(error));}}else this.tradeArrivals261.push(row);}}
   private startWorker() {
     this.worker = this.createWorker();
+    this.shipFrames298.bindWorker(this.worker);this.notifyShipState298();
     this.stopped = false;
     const source=this.worker;
     this.worker.onmessage = (event:MessageEvent<unknown>) => {
@@ -113,6 +125,10 @@ export class SimulationClient {
       if(source!==this.worker||this.stopped)return;
       let data:Response;
       try{data=this.readWorkerMessage(raw);}catch{this.stop('La projection reçue ne correspond pas au Worker courant.');return;}
+      if(data.type==='ship-frame-ack-298'||data.type==='ship-countdown-state-298'){
+        const outgoing=this.shipFrames298.receive(source,data);
+        if(outgoing!==undefined){if(outgoing)this.postShipLight298(source,outgoing);this.postDrainedShipRequests298(source);this.notifyShipState298();}return;
+      }
       if(data.type==='actor-phase-297'||data.type==='actor-frontier-297'){try{this.deliverCorePhase297(data);}catch(error){this.stop(`Phase physique reçue invalide : ${String(error)}`);}return;}
       if(data.type==='world-draft-progress'){
         const pending=this.pending.get(data.id),d=pending?.draft,s=pending?.draftStart,p=data.progress;
@@ -136,6 +152,7 @@ export class SimulationClient {
       }
       if (data.type === 'fault') {
         this.fault = data;
+        this.shipFrames298.abortUnknown(source,data.reason);this.notifyShipState298();
         // The worker has stopped authoritatively. Keep recovery copies, even
         // when publication failed after a replacement or a partial tick.
         this.rejectPending(new SimulationRequestError(data.reason, 'unknown', true));
@@ -211,8 +228,21 @@ export class SimulationClient {
       if (!expected && pending.type !== 'resync' && pending.replacementEpoch === undefined) return;
     }
     if(reply.ok&&pending.type==='world-draft-generate'&&(!pending.draft?.preview||!pending.draft.geography)){pending.reply={type:'reply',id,ok:false,outcome:'refused',reason:'La préparation du monde n’a pas été reçue.'};this.finishReply(id,pending);return;}
+    // Only a correlated reply from the current Worker reaches this boundary.
+    // Metadata is monotone and never grants ownership of a World or Snapshot.
+    if(reply.shipOwnerEpoch298!==undefined)this.shipFrames298.adoptOwner(this.worker,reply.shipOwnerEpoch298);
+    if(reply.ok&&pending.type==='ship-launch-298'){
+      let launch:unknown;try{launch=JSON.parse(reply.data??'null');}catch{/* Rejected below without creating an optimistic mandate. */}
+      if(!this.shipFrames298.acceptLaunch(this.worker,launch)){
+        this.shipFrames298.abortUnknown(this.worker,'Le résultat du lancement est illisible ou périmé.');pending.reply={type:'reply',id,ok:false,outcome:'unknown',reason:'Le résultat du lancement est illisible ou périmé.'};this.finishReply(id,pending);return;
+      }
+      if(pending.shipCancelAfterLaunch){const message=this.shipFrames298.cancel(this.worker,pending.shipCancelAfterLaunch);if(message)this.postShipLight298(this.worker,message);}
+    }
+    if(!reply.ok&&reply.outcome==='unknown')this.shipFrames298.abortUnknown(this.worker,reply.reason??'Le résultat de la demande reste inconnu.');
+    if(pending.shipCold)this.shipFrames298.finishCold(this.worker,pending.shipCold);
     clearTimeout(pending.timer);
     this.pending.delete(id);
+    this.notifyShipState298();
     if(pending.campGroupId!==undefined){try{this.onCampProgress(undefined);}catch(error){this.onError(String(error));}}
     this.onRequestStatus({ id, type: pending.type, state: 'settled' });
     if (reply.ok) {
@@ -226,6 +256,7 @@ export class SimulationClient {
   stop(reason = 'Simulation arrêtée. Un remplacement validé est nécessaire pour reprendre.') {
     if (this.stopped) return;
     this.stopped = true;
+    this.shipFrames298.abortUnknown(this.worker,reason);this.notifyShipState298();
     this.clearWorldDraft256();
     this.workerStopped(this.worker);this.worker.terminate();
     const fault: SimulationFault = { type: 'fault', reason, speed: 0, transport: true };
@@ -254,6 +285,8 @@ export class SimulationClient {
     if ((payload.type === 'init' || payload.type === 'load' || payload.type === 'world-draft-start') && [...this.pending.values()].some(p => p.type === 'init' || p.type === 'load' || p.type === 'world-draft-start')) {
       return Promise.reject(new SimulationRequestError('Un remplacement de colonie attend encore sa décision.', 'refused'));
     }
+    const cold=shipColdRequest298(payload.type);
+    if((cold||payload.type==='command'||payload.type==='speed')&&[...this.pending.values()].some(p=>p.shipCold!==undefined))return Promise.reject(new SimulationRequestError('Une frontière de remplacement ou de lancement attend encore sa décision.','refused'));
     if(this.hasCampPreparation&&payload.type!=='camp-entry-cancel'&&payload.type!=='resync')return Promise.reject(new SimulationRequestError('La préparation de la carte locale attend encore sa décision.', 'refused'));
     if([...this.pending.values()].some(p=>p.type==='world-draft-start')&&payload.type!=='world-draft-cancel'&&payload.type!=='resync')return Promise.reject(new SimulationRequestError('La création de la colonie attend encore sa décision.','refused'));
     if([...this.pending.values()].some(p=>p.type==='world-draft-generate')&&!['world-draft-generate','world-draft-cancel','resync'].includes(payload.type))return Promise.reject(new SimulationRequestError('La préparation du monde attend encore sa décision.','refused'));
@@ -268,14 +301,64 @@ export class SimulationClient {
         this.onRequestStatus({ id, type: payload.type, state: 'waiting', message });
         this.onError(message);
       }, 15_000);
-      this.pending.set(id, { type: payload.type, resolve, reject, timer,...draft?{draft}:{},...draftStart?{draftStart}:{},...payload.type==='command'&&payload.command.type==='group-enter'&&['camp','settle'].includes(payload.command.mode)?{campGroupId:payload.command.groupId}:{} });
-      try { this.worker.postMessage({ ...payload, id } satisfies Request); }
-      catch (error) {
-        clearTimeout(timer);
-        this.pending.delete(id);
-        reject(new SimulationRequestError(error instanceof Error ? error.message : String(error), 'refused'));
-      }
+      // Reserve the existing pending/15s-warning slot BEFORE drainage. A second
+      // replacement cannot pass the old guards while this request is waiting.
+      const pending:PendingRequest={ type: payload.type, resolve, reject, timer,...draft?{draft}:{},...draftStart?{draftStart}:{},...payload.type==='command'&&payload.command.type==='group-enter'&&['camp','settle'].includes(payload.command.mode)?{campGroupId:payload.command.groupId}:{} };
+      this.pending.set(id,pending);const source=this.worker;
+      const post=()=>{
+        if(this.pending.get(id)!==pending)return;
+        if(source!==this.worker||this.stopped||draftStart?.cancelRequested){pending.reply={type:'reply',id,ok:false,outcome:source!==this.worker||this.stopped?'unknown':'refused',reason:'La demande préparée est arrêtée ou annulée avant son envoi.'};this.finishReply(id,pending);return;}
+        try{pending.shipPosted=true;source.postMessage({ ...payload, id } satisfies Request);}
+        catch(error){pending.reply={type:'reply',id,ok:false,outcome:'refused',reason:error instanceof Error?error.message:String(error)};this.finishReply(id,pending);}
+      };
+      if(cold){
+        try{pending.shipCold=this.shipFrames298.beginCold(source);pending.shipPost=post;this.postDrainedShipRequests298(source);this.notifyShipState298();}
+        catch(error){pending.reply={type:'reply',id,ok:false,outcome:'refused',reason:error instanceof Error?error.message:String(error)};this.finishReply(id,pending);}
+      }else post();
     });
+  }
+
+  private notifyShipState298():void {
+    const revision=this.shipFrames298.revision;if(revision===this.shipStateRevision298)return;this.shipStateRevision298=revision;
+    try{this.onShipCountdownState298(this.shipFrames298.state());}catch(error){this.onError(error instanceof Error?error.message:String(error));}
+  }
+  private postShipLight298(source:Worker,message:ShipLightRequest298):void {
+    if(source!==this.worker||this.stopped)return;
+    try{source.postMessage(message);}catch(error){const reason=error instanceof Error?error.message:String(error);this.shipFrames298.abortUnknown(source,reason);this.onError(reason);}
+  }
+  private postDrainedShipRequests298(source:Worker):void {
+    if(source!==this.worker||this.stopped)return;
+    for(const [id,pending]of this.pending){
+      if(!pending.shipCold||!pending.shipPost)continue;
+      if(!this.shipFrames298.isCurrentCold(source,pending.shipCold)){pending.shipPost=undefined;pending.reply={type:'reply',id,ok:false,outcome:'unknown',reason:'La continuité du drainage a été remplacée ou interrompue.'};this.finishReply(id,pending);continue;}
+      if(this.shipFrames298.drained(source,pending.shipCold)){const post=pending.shipPost;pending.shipPost=undefined;post();}
+    }
+  }
+  /** Called only with a real eligible browser delta by the future frame port. */
+  feedShipFrame298(delta:number):void {
+    if(!this.shipCountdownActive298)return;const message=this.shipFrames298.feed(this.worker,delta);if(message)this.postShipLight298(this.worker,message);this.notifyShipState298();
+  }
+  /** Explicit end-of-preparation edge, never an automatic retry per frame. */
+  resumeShipFramesAfterPreparation298():void {
+    if(this.stopped||this.fault||this.hasCampPreparation||this.hasWorldCreationPreparation)return;
+    const message=this.shipFrames298.resumeAfterPreparation(this.worker);if(message)this.postShipLight298(this.worker,message);this.postDrainedShipRequests298(this.worker);this.notifyShipState298();
+  }
+  cancelShipCountdown298(reason:'menu'|'front'):void {
+    if(this.stopped)return;const message=this.shipFrames298.cancel(this.worker,reason);if(message)this.postShipLight298(this.worker,message);
+    for(const [id,pending]of this.pending)if(pending.type==='ship-launch-298'){
+      if(pending.shipPosted)pending.shipCancelAfterLaunch=reason;
+      else{pending.reply={type:'reply',id,ok:false,outcome:'refused',reason:'Le lancement a été annulé avant son envoi.'};this.finishReply(id,pending);}
+    }
+    this.postDrainedShipRequests298(this.worker);this.notifyShipState298();
+  }
+  async launchShip298(computerId:number):Promise<ShipLaunchResult298> {
+    if(!Number.isSafeInteger(computerId)||computerId<1||this.shipFrames298.ownerEpoch<1)throw new SimulationRequestError('Ordinateur ou propriétaire de lancement invalide.','refused');
+    const raw=await this.request({type:'ship-launch-298',ownerEpoch:this.shipFrames298.ownerEpoch,computerId});return JSON.parse(raw!) as ShipLaunchResult298;
+  }
+  /** Invoke at END of the UI closing transition, not at its initial click. */
+  continueShipCredits298(departureId:number):Promise<string|undefined> {
+    if(!Number.isSafeInteger(departureId)||departureId<1||this.shipFrames298.ownerEpoch<1)return Promise.reject(new SimulationRequestError('Crédits ou propriétaire invalide.','refused'));
+    return this.request({type:'ship-credits-continue-298',ownerEpoch:this.shipFrames298.ownerEpoch,departureId});
   }
 
   private clearWorldDraft256():void {const held=!!this.draftAbortCleanup||!!this.worldDraft;this.draftAbortCleanup?.();this.draftAbortCleanup=undefined;this.worldDraft=undefined;if(held)this.snapshots.discardDraftPreview();}
@@ -359,12 +442,15 @@ export class SimulationClient {
   }
 
   dispose() {
+    this.shipFrames298.abortUnknown(this.worker,'Le client a été fermé.');this.notifyShipState298();
     this.workerStopped(this.worker);this.worker.terminate();
     this.clearWorldDraft256();
     this.stopped = true;
     this.rejectPending(new SimulationRequestError('Simulation fermée.', 'unknown', true));
   }
 }
+
+const shipColdRequest298=(type:Payload['type']):boolean=>type==='load'||type==='init'||type==='world-draft-start'||type==='ship-launch-298';
 
 const positiveId283=(v:unknown):v is number=>Number.isSafeInteger(v)&&Number(v)>0;
 const plainFields283=(v:unknown,required:readonly string[],optional:readonly string[]=[]):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype&&required.every(k=>Object.hasOwn(v,k))&&Object.keys(v).every(k=>required.includes(k)||optional.includes(k));

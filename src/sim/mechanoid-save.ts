@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 
 import {validCapturedCoreMove297} from './core-move-save-297.ts';
 import {MIN_PAWN_SPEED_V87} from './travel-validation.ts';
@@ -42,7 +43,7 @@ export function validMechaMedicalRecord(value:unknown,worldTick:number,dead:bool
   return record.tick<=worldTick&&!!record.death===dead;
 }
 export function validMechanoidShape(value:unknown,version:number,tick:number,heldAt277?:number,coreNow297?:number):value is Mechanoid {
- const physicalCoreNow297=validationCore297(version,tick,coreNow297),physicalLocalNow297=version===297?physicalCoreNow297/10:tick;if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return false;
+ const physicalCoreNow297=validationCore297(version,tick,coreNow297),physicalLocalNow297=isCorePhysicalSchema297(version)?physicalCoreNow297/10:tick;if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(physicalCoreNow297))return false;
   if(object(value)){const d=Object.getOwnPropertyDescriptor(value,'shipCryptosleepHeldAt277');if(heldAt277!==undefined?(!isSchema277OrLater(version)||heldAt277!==tick||!d?.enumerable||!Object.hasOwn(d,'value')||d.value!==heldAt277):'shipCryptosleepHeldAt277'in value)return false;if(Object.hasOwn(value,'filthFeet')&&(!isSchema277OrLater(version)||!validFilthFeet(value.filthFeet,version)))return false;}
   if(version<194||!integer(tick)||!object(value)||!validMechanicalWorldFactionField259(value,version)||!validRetainedCorpseDamage256(value,version)||!validTempleMechField256(value,version,tick,coreNow297)||!validSiteMechField263(value,version,tick,coreNow297)||!keys(value,['id','mechKind','x','z','state','health','path','motion','heading','moveCooldown','planCooldown','raid','melee','stagger','stun',...(version>=197?['ranged','meleeThreat']:[]),...(version>=208?['emp']:[]),...(version>=256?['corpseDamage','temple']:[]),...(version>=259?['worldFaction259']:[]),...(isSchema263OrLater(version)?['site263']:[]),...(isSchema277OrLater(version)?['filthFeet']:[]),...(heldAt277!==undefined?['shipCryptosleepHeldAt277']:[])])
     ||!integer(value.id,1)||!isMechanoidKind(value.mechKind)||version<197&&value.mechKind!=='scyther'||!integer(value.x)||!integer(value.z)
@@ -64,7 +65,7 @@ export function validMechanoidShape(value:unknown,version:number,tick:number,hel
     const carriedSegment277=isSchema277OrLater(version)&&m.path.length===0&&['idle','downed','dead'].includes(m.state)
       &&!m.melee?.order&&!m.ranged?.order&&m.ranged?.stance?.phase!=='warmup'&&!mechanicalOrder256(m)?.goal;
     const maximumSpeed=carriedSegment277?Math.max(1,mechanoidDefinition(m.mechKind).moveSpeed/4.6):mechanoidDefinition(m.mechKind).moveSpeed/4.6;
-    if(!object(motion)||!keys(motion,['from','to','start','end','speedFactor','terrainDelay','stagger','stuns',...(version===297&&carriedSegment277?['coreMove297','coreMoveWalk297']:[])])||!cell(motion.from)||!cell(motion.to)
+    if(!object(motion)||!keys(motion,['from','to','start','end','speedFactor','terrainDelay','stagger','stuns',...(isCorePhysicalSchema297(version)&&carriedSegment277?['coreMove297','coreMoveWalk297']:[])])||!cell(motion.from)||!cell(motion.to)
       ||!validCapturedCoreMove297(motion,version,carriedSegment277)||motion.coreMove297===true&&motion.speedFactor!==undefined&&!finite(motion.speedFactor,MIN_PAWN_SPEED_V87,1)
       ||!finite(motion.start,0,physicalLocalNow297)||!finite(motion.end,0,physicalLocalNow297+1000)||motion.end<=motion.start
       ||motion.speedFactor!==undefined&&!finite(motion.speedFactor,.001,maximumSpeed)||motion.terrainDelay!==undefined&&!finite(motion.terrainDelay,0,50)
@@ -102,7 +103,7 @@ export function validateMechanoids(w:World,version:number=w.schemaVersion,ids:Nu
   errors.push(...validateSiteMechGroups263(w));
   const inBounds=(c:{x:number;z:number})=>c.x>=0&&c.z>=0&&c.x<w.width&&c.z<w.height;
   for(const m of w.mechanoids){
-    if(!validMechanoidShape(m,version,w.tick,undefined,version===297?effectiveCore297(w):undefined)){errors.push('Invalid mechanoid shape.');continue;}
+    if(!validMechanoidShape(m,version,w.tick,undefined,isCorePhysicalSchema297(version)?effectiveCore297(w):undefined)){errors.push('Invalid mechanoid shape.');continue;}
     if(!validMechanicalWorldFaction259(m,version,w.worldFactions))errors.push('Invalid actual mechanical faction foreign key.');
     if(m.id>=w.nextId||ids.has(m.id))errors.push('Invalid mechanoid identity.');ids.add(m.id);
     if(m.meleeThreat&&(m.meleeThreat.attackerId>=w.nextId||m.meleeThreat.attackerId===m.id))errors.push('Invalid mechanical melee threat identity.');

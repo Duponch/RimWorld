@@ -27,7 +27,8 @@ export class GameSession {
   constructor(private readonly client: SessionClient,
     storage: SaveRepository | (() => SessionStorage),
     private readonly prepare: () => Promise<void>,
-    private readonly onReplacementAccepted: () => void = () => {}) {
+    private readonly onReplacementAccepted: () => void = () => {},
+    private readonly onOperationSettled: () => void = () => {}) {
     this.repository = typeof storage === 'function' ? new LocalSaveRepository(storage) : storage;
   }
 
@@ -79,7 +80,7 @@ export class GameSession {
       const status = error as { outcome?: unknown; stopped?: unknown };
       undecided = status?.outcome === 'unknown' && status.stopped !== true;
       throw error;
-    } finally { if (!undecided) this.busy = false; }
+    } finally { if (!undecided) { this.busy = false; this.onOperationSettled(); } }
   }
 
   async save(): Promise<void> {

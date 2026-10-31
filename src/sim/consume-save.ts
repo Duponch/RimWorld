@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import {validCapturedCoreMove297} from './core-move-save-297.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
@@ -40,7 +41,7 @@ function validConsumeTravel(pawn:Pawn,world:World):boolean {
   if(m==null)return pawn.moveCooldown===0;
   if(!record(m)||'stop297'in m||!cell(m.from,world)||!cell(m.to,world)||!same(m.to,pawn)||stepDistance(m.from,m.to)!==1
     ||!Number.isFinite(m.start)||!Number.isFinite(m.end)||m.start<0||m.start>effectiveLocal297(world))return false;
-  return validCapturedCoreMove297(m,world.schemaVersion)&&validStunIntervals(m.stuns,world.schemaVersion,m.start,world.tick,world.schemaVersion===297?effectiveCore297(world):undefined)&&validSlowIntervals(m.stagger,world.schemaVersion,m.start,world.tick,world.schemaVersion===297?effectiveCore297(world):undefined)
+  return validCapturedCoreMove297(m,world.schemaVersion)&&validStunIntervals(m.stuns,world.schemaVersion,m.start,world.tick,isCorePhysicalSchema297(world.schemaVersion)?effectiveCore297(world):undefined)&&validSlowIntervals(m.stagger,world.schemaVersion,m.start,world.tick,isCorePhysicalSchema297(world.schemaVersion)?effectiveCore297(world):undefined)
     &&(m.speedFactor===undefined||Number.isFinite(m.speedFactor)&&m.speedFactor>=MIN_PAWN_SPEED_V87&&m.speedFactor<=1)
     &&validCapturedTravelDelay(m.terrainDelay,world.schemaVersion)&&Math.abs(m.end-travelEnd(m))<=1e-7
     &&Math.abs(pawn.moveCooldown-Math.max(0,m.end-effectiveLocal297(world)))<=1e-7;

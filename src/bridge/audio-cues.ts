@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {effectiveCore297} from '../sim/core-phase-297';
 import type { World } from '../sim/types.ts';
 import { isConstruction } from '../sim/construction-rules.ts';
@@ -125,7 +126,7 @@ export class AudioCueRecorder {
   /** Only a committed physical boundary calls this. Work/doors/health retain
    * the existing observer; causal receipts preserve intra-Core transients. */
   capturePhysical297(world:World,core:number,strikes:readonly CoreStrikeAudio297[],shots:readonly CoreShotAudio297[]):void {
-    if(Number(world.schemaVersion)!==297||core!==effectiveCore297(world)||!Number.isSafeInteger(core)||strikes.length>512||shots.length>512||this.coreCapture297!==undefined)throw Error('Invalid physical audio boundary');
+    if(!isCorePhysicalSchema297(Number(world.schemaVersion))||core!==effectiveCore297(world)||!Number.isSafeInteger(core)||strikes.length>512||shots.length>512||this.coreCapture297!==undefined)throw Error('Invalid physical audio boundary');
     this.coreCapture297=core;
     try{
       if(world.tick!==this.tick){this.tick=world.tick;this.tickCount=0;}

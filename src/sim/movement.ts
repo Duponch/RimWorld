@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {humanMoveSpeedFactor297} from './human-move-speed-297.ts';
 import {effectiveCore297,effectiveLocal297} from './core-phase-297.ts';
 import {coreMoveDuration297} from './human-move-core-297.ts';
@@ -24,17 +25,17 @@ export const CARDINAL_COST = 1000;
 export const DIAGONAL_COST = 1414;
 export const edgeCost = (a:Cell,b:Cell):number => a.x!==b.x && a.z!==b.z ? DIAGONAL_COST : CARDINAL_COST;
 export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReader,geometry?:StructureNavigationGeometry,freshStart297=false):boolean {
-  const now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
-  if(Number(world.schemaVersion)===297&&(pawn.motion?.end??0)>now)return false;
-  if(isStunned(pawn,Number(world.schemaVersion)===297?effectiveCore297(world):world.tick*10)||medicallyStopped(pawn)||carrierOf(world,pawn.id)||!actorStepAllowed(world,pawn,next))return false;
+  const now=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick;
+  if(isCorePhysicalSchema297(Number(world.schemaVersion))&&(pawn.motion?.end??0)>now)return false;
+  if(isStunned(pawn,isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):world.tick*10)||medicallyStopped(pawn)||carrierOf(world,pawn.id)||!actorStepAllowed(world,pawn,next))return false;
   if(!readyDoorEntry(world,pawn,next))return false;
   // Carry fractional tick overshoot to the next edge; never round each diagonal up.
-  let start = !freshStart297&&pawn.motion && pawn.motion.end >= now-(Number(world.schemaVersion)===297?.1:1) ? pawn.motion.end : now;
+  let start = !freshStart297&&pawn.motion && pawn.motion.end >= now-(isCorePhysicalSchema297(Number(world.schemaVersion))?.1:1) ? pawn.motion.end : now;
   const door=doorAt(world,next);if(door)start=Math.max(start,door.door!.changedAt+(1-door.door!.from)*importDoorDuration(door));
   const terrainDelay=furnitureDelay(world,pawn,next,undefined,geometry);
-  let speedFactor=Number(world.schemaVersion)===297?humanMoveSpeedFactor297(world,pawn,getLight):(getLight?.()??new LightEnvironmentCache().read(world)).speedAt(pawn)*pawnBody(pawn).capacities.moving*apparelMoveFactor(world,pawn)*weatherMoveFactor(world,pawn);
-  if(world.schemaVersion>=86&&Number(world.schemaVersion)!==297){if(pawn.prisoner)speedFactor*=.35;if(pawn.rescue?.phase==='carry'||cryptosleepCarrying271(pawn)||shipCasketCarrying277(pawn)||groupHumanCarrying257(world,pawn.id)||kidnapCarrying261(pawn))speedFactor*=.6;}
-  const coreMove297=Number(world.schemaVersion)===297,walk297=(pawn.mental?.crisis?.kind==='sad-wander'||pawn.mental?.crisis?.kind==='food-binge')&&!pawn.need;
+  let speedFactor=isCorePhysicalSchema297(Number(world.schemaVersion))?humanMoveSpeedFactor297(world,pawn,getLight):(getLight?.()??new LightEnvironmentCache().read(world)).speedAt(pawn)*pawnBody(pawn).capacities.moving*apparelMoveFactor(world,pawn)*weatherMoveFactor(world,pawn);
+  if(world.schemaVersion>=86&&!isCorePhysicalSchema297(Number(world.schemaVersion))){if(pawn.prisoner)speedFactor*=.35;if(pawn.rescue?.phase==='carry'||cryptosleepCarrying271(pawn)||shipCasketCarrying277(pawn)||groupHumanCarrying257(world,pawn.id)||kidnapCarrying261(pawn))speedFactor*=.6;}
+  const coreMove297=isCorePhysicalSchema297(Number(world.schemaVersion)),walk297=(pawn.mental?.crisis?.kind==='sad-wander'||pawn.mental?.crisis?.kind==='food-binge')&&!pawn.need;
   if(!coreMove297&&walk297)speedFactor=Math.min(speedFactor/2,TRAVEL_TICKS/5);
   const duration = coreMove297?coreMoveDuration297(pawn,next,speedFactor,terrainDelay,walk297):TRAVEL_TICKS * edgeLength(pawn,next)/speedFactor+terrainDelay;
   const motion:TravelSegment={from:{x:pawn.x,z:pawn.z},to:{x:next.x,z:next.z},start,end:start+duration,...terrainDelay?{terrainDelay}:{},...speedFactor!==1?{speedFactor}:{}};
@@ -55,7 +56,7 @@ export function startTravel(world:World,pawn:Pawn,next:Cell,getLight?:LightReade
 /** A real pather interruption returns to the still committed source cell.
  * Ordinary retargets retain a progressed captured edge and its remaining cost. */
 export function stopCapturedTravel297(world:World,pawn:Pawn):void {
-  if(Number(world.schemaVersion)!==297)throw Error('Physical stop requires297');
+  if(!isCorePhysicalSchema297(Number(world.schemaVersion)))throw Error('Physical stop requires297');
   if(carrierOf(world,pawn.id))return; // a carried mirror owns no autonomous pather
   const now=effectiveLocal297(world),m=pawn.motion;
   if(m&&m.end>now){pawn.x=m.from.x;pawn.z=m.from.z;}

@@ -1,3 +1,5 @@
+import {validAiCorePile298} from './victory-content-save-298.ts';
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {isNovelBook295} from './book-state-295.ts';
 import {animalContentsOwner256,animalContentsLocation256} from './animal-local-contents-256.ts';
 import {animalHaulContents282} from './animal-haul-contents-282.ts';
@@ -71,6 +73,9 @@ export function materialIdentityCount(world:World,quantity:number,owner:Material
   return Math.ceil(Math.max(0,remaining)/limit);
 }
 export function materialCanFit(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind),subject?:MaterialPile): boolean {
+  if(kind==='ai-core'||item==='ai-core'){
+    if(world.schemaVersion!==298||kind!=='ai-core'||item!=='ai-core'||quantity!==1||subject&&(subject.kind!==kind||subject.item!==item||subject.quantity!==1)||owner.type==='equipment'||owner.type==='apparel'||owner.type==='grave')return false;
+  }
   if(kind==='book'||item==='novel'){
     if(world.schemaVersion<295||kind!=='book'||item!=='novel'||quantity!==1||!subject||subject.item!==item||subject.kind!==kind||subject.quantity!==1||!isNovelBook295(subject.book)||owner.type==='job'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='grave')return false;
   }
@@ -78,13 +83,14 @@ export function materialCanFit(world: World, kind: MaterialKind, quantity: numbe
   if((kind==='prosthesis'||kind==='corpse'||kind==='mech-corpse'||kind==='weapon'||kind==='apparel')&&owner.type==='job')return false;
   if(owner.type==='apparel'&&(kind!=='apparel'||quantity!==1||!isApparelItem(item)||world.piles.some(p=>p.owner.type==='apparel'&&p.owner.pawnId===owner.pawnId&&!apparelCompatible(APPAREL[p.item as keyof typeof APPAREL].coverage,APPAREL[item].coverage))))return false;
   if(owner.type==='equipment'&&(kind!=='weapon'||quantity!==1||world.piles.some(p=>p.owner.type==='equipment'&&p.owner.pawnId===owner.pawnId)))return false;
-  const bookCarrier=kind==='book'&&subject&&(subject.owner.type==='pawn'||subject.owner.type==='inventory')?subject.owner.pawnId:undefined;
+  const bookCarrier=(kind==='book'||kind==='ai-core')&&subject&&(subject.owner.type==='pawn'||subject.owner.type==='inventory')?subject.owner.pawnId:undefined;
   if (owner.type === 'ground' && quantity > groundCapacity(world, owner, subject??item,bookCarrier)) return false;
-  const needed=kind==='book'&&subject&&world.piles.includes(subject)?0:materialIdentityCount(world,quantity,owner,item,subject??{});
+  const needed=(kind==='book'||kind==='ai-core')&&subject&&world.piles.includes(subject)?0:materialIdentityCount(world,quantity,owner,item,subject??{});
   return world.piles.length + needed <= 32768 && Number.isSafeInteger(world.nextId + needed);
 }
 
 export function addMaterial(world: World, kind: MaterialKind, quantity: number, owner: MaterialOwner, item: ItemId = legacyItem(kind),condition:Pick<MaterialPile,'egg'|'eggForbidden'>={}): void {
+  if((kind==='ai-core'||item==='ai-core')&&(world.schemaVersion!==298||kind!=='ai-core'||item!=='ai-core'))throw Error('AI cores require their current singleton content domain.');
   if(kind==='book'||item==='novel')throw new Error('A Novel requires an original generated book.');
   if(world.schemaVersion<256&&(isFutureEcologyItem256(item)||item==='slag-steel-chunk'))throw Error('Future animal item.');
   if(kind==='plant')throw new Error('A minified tree requires an original Resource.');
@@ -126,7 +132,8 @@ export function addGroundMaterial(world: World, kind: MaterialKind, quantity: nu
 /** Move the existing stack, merging only when possible. No allocation or identity budget needed. */
 export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):boolean {
   if(!world.piles.includes(pile)||!validOrbitalOwner(world,owner))return false;
-  if((pile.kind==='book'||pile.item==='novel')&&sameOwner(pile.owner,owner))return (Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))&&pile.kind==='book'&&pile.item==='novel'&&pile.quantity===1&&isNovelBook295(pile.book)&&owner.type!=='job'&&owner.type!=='equipment'&&owner.type!=='apparel'&&owner.type!=='grave';
+  if((pile.kind==='ai-core'||pile.item==='ai-core')&&(!validAiCorePile298(pile,world.schemaVersion)||!materialCanFit(world,pile.kind,pile.quantity,owner,pile.item,pile)))return false;
+  if((pile.kind==='book'||pile.item==='novel')&&sameOwner(pile.owner,owner))return (Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion))))&&pile.kind==='book'&&pile.item==='novel'&&pile.quantity===1&&isNovelBook295(pile.book)&&owner.type!=='job'&&owner.type!=='equipment'&&owner.type!=='apparel'&&owner.type!=='grave';
   if((pile.kind==='book'||pile.item==='novel')&&!materialCanFit(world,pile.kind,pile.quantity,owner,pile.item,pile))return false;
   if(sameOwner(pile.owner,owner))return true;
   if(pile.kind==='plant'){if(owner.type!=='ground'&&owner.type!=='pawn'&&owner.type!=='inventory')return false;if(owner.type==='ground'&&groundCapacity(world,owner,pile,pile.owner.type==='pawn'?pile.owner.pawnId:undefined)<1)return false;pile.owner={...owner};refreshStock(world);return true;}
@@ -148,6 +155,7 @@ export function transferPile(world:World,pile:MaterialPile,owner:MaterialOwner):
 }
 /** Split only the delivered fraction. The held source identity and its states survive. */
 export function depositMaterialPart(world:World,source:MaterialPile,cell:Cell,quantity:number,exceptPawn?:number):boolean {
+  if((source.kind==='ai-core'||source.item==='ai-core')&&(!validAiCorePile298(source,world.schemaVersion)||quantity!==1))return false;
   if((source.kind==='book'||source.item==='novel')&&(quantity!==1||source.quantity!==1||!isNovelBook295(source.book)))return false;
   if(!world.piles.includes(source)||!Number.isSafeInteger(quantity)||quantity<1||quantity>source.quantity||groundCapacity(world,cell,source,exceptPawn)<quantity)return false;
   if(quantity===source.quantity)return transferPile(world,source,{type:'ground',x:cell.x,z:cell.z});

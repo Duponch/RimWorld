@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {forestNativeSpecies291,treeSowingUnlocked291,isForestrySpecies291,isGrowingPlantInVersion291,TREE_SOWING_COST_291} from './forestry-content-291.ts';
 import type {World} from './types.ts';
 
@@ -11,7 +12,7 @@ export function validSownResource291(value:unknown,version:unknown):boolean {
  try{
   if(!value||typeof value!=='object')return false;
   if(!('sown291'in value))return true;
-  return (version===291||(version===292||(version===293||(version===294||(version===295||(version===296||version===297))))))&&plain(value)&&data(value,'sown291')?.value===true&&data(value,'kind')?.value==='tree'&&isForestrySpecies291(data(value,'species')?.value);
+  return (version===291||(version===292||(version===293||(version===294||(version===295||(version===296||isCorePhysicalSchema297(version)))))))&&plain(value)&&data(value,'sown291')?.value===true&&data(value,'kind')?.value==='tree'&&isForestrySpecies291(data(value,'species')?.value);
  }catch{return false;}
 }
 
@@ -20,7 +21,7 @@ export function validForestryResearch291(value:unknown,version:unknown,tick=Numb
   if(value===undefined)return true;if(!plain(value))return false;
   const project=data(value,'project');if('project'in value&&!project)return false;
   if(!('treeSowing291'in value))return project?.value!=='tree-sowing';
-  const d=data(value,'treeSowing291');if((version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&version!==297))))))||!d||!plain(d.value))return false;
+  const d=data(value,'treeSowing291');if((version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&!isCorePhysicalSchema297(version)))))))||!d||!plain(d.value))return false;
   const p=d.value,points=data(p,'points'),completed=data(p,'completedAt');
   if(!points||!Reflect.ownKeys(p).every(key=>typeof key==='string'&&(key==='points'||key==='completedAt')&&!!data(p,key))||!integer(points.value,0,TREE_SOWING_COST_291))return false;
   return completed?integer(completed.value,0,tick)&&points.value===TREE_SOWING_COST_291&&project?.value!=='tree-sowing':points.value<TREE_SOWING_COST_291;
@@ -52,7 +53,7 @@ const lanes:readonly [string,boolean?][]=[
  ['humans',true],['members',true],['people',true],['animals',true],['pawns',true],['human'],['pawn'],['animal'],['actor'],['scout'],['commercialTrip'],
 ];
 export function validForestryHistoricalTransport291(raw:unknown,version:unknown):boolean {
- if(!integer(version,1,297))return false;
+ if(!integer(version,1,298))return false;
  let budget=2_000_000;const active=new Set<object>();
  const list=(value:unknown,key:string):boolean=>{
   if(!Array.isArray(value))return plain(value)&&!!data(value,'upserted')&&visit(value,key);

@@ -10,6 +10,8 @@ import {brandCampaignContext,forwardCampaignFields,registeredMapId,registeredMap
 import {invalidateAnimalPens} from './animal-pens.ts';
 import {campaignLivingObservers} from './campaign-people.ts';
 import {captureHumanOwners} from './human-owners.ts';
+import {effectiveCore297} from './core-phase-297.ts';
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import type {World,Pawn} from './types.ts';
 
 type Data=Record<string,unknown>;
@@ -21,7 +23,28 @@ const writableSlot=(o:object,key:PropertyKey)=>{const d=Object.getOwnPropertyDes
 const deletableSlot=(o:object,key:PropertyKey)=>{const d=Object.getOwnPropertyDescriptor(o,key);return !d||d.configurable===true;};
 const mutableState=['startingArrival','roofing','economy','destroyed','stock','spoiled','deconstructed','tailoring','hunting','bombWaves','firefoam290','growingCursor'] as const;
 const localCollections=['pawns','resources','structures','jobs','piles','packed','stockpiles','growingZones','events'] as const;
-export function roofCollapseProjection256(world:World){
+type ExtraMutableDomain256='exploration'|'party292';
+export interface RoofCollapseProjectionOptions256 {readonly extraMutableDomains:readonly ExtraMutableDomain256[]}
+/** Internal closed option only. Snapshot the tiny selection so a caller cannot
+ * change ownership domains between preparation and adoption. No list is
+ * allocated on the historical no-option path. */
+function selectedExtraDomains256(options:RoofCollapseProjectionOptions256|undefined):readonly ExtraMutableDomain256[]|undefined {
+ if(options===undefined)return;
+ if(!options||typeof options!=='object'||Array.isArray(options)||Object.getPrototypeOf(options)!==Object.prototype)throw Error('Invalid roof projection options');
+ const keys=Reflect.ownKeys(options),field=Object.getOwnPropertyDescriptor(options,'extraMutableDomains');
+ if(keys.length!==1||keys[0]!=='extraMutableDomains'||!field?.enumerable||!Object.hasOwn(field,'value'))throw Error('Closed extra mutable domain option required');
+ const values:unknown=field.value;
+ if(!Array.isArray(values)||Object.getPrototypeOf(values)!==Array.prototype||values.length>2||Reflect.ownKeys(values).length!==values.length+1)throw Error('Invalid extra mutable domain list');
+ const selected:ExtraMutableDomain256[]=[];
+ for(let i=0;i<values.length;i++){
+  const d=Object.getOwnPropertyDescriptor(values,String(i));
+  if(!d?.enumerable||!Object.hasOwn(d,'value')||(d.value!=='exploration'&&d.value!=='party292')||selected.includes(d.value))throw Error('Unsupported or duplicate extra mutable domain');
+  selected.push(d.value);
+ }
+ return selected.length?Object.freeze(selected):undefined;
+}
+export function roofCollapseProjection256(world:World,options?:RoofCollapseProjectionOptions256){
+ const extra=selectedExtraDomains256(options),stateSlots=extra?[...mutableState,...extra]:mutableState;
  const root=campaignAuthority(world),mapId=registeredMapId(world),pairs:Pair[]=[],byOriginal=new Map<object,object>(),originalForDraft=new Map<object,object>();
  const own=<T extends object>(original:T):T=>{
   const previous=byOriginal.get(original);if(previous)return previous as T;
@@ -49,7 +72,7 @@ export function roofCollapseProjection256(world:World){
  // Copy the array only. Roof/mining writers replace individual cells; no
  // producer in this transaction is allowed to mutate a borrowed Tile object.
  view.tiles=world.tiles.slice();
- for(const key of mutableState){const value=world[key];if(value!==undefined&&key!=='startingArrival')(view as unknown as Data)[key]=structuredClone(value);}
+ for(const key of stateSlots){const value=world[key];if(value!==undefined&&key!=='startingArrival')(view as unknown as Data)[key]=structuredClone(value);}
  if(world.thermal)view.thermal={regions:world.thermal.regions.map(region=>({...region,cells:region.cells}))};
  // observerView already owns wildlife and held originals, including pet Master recipients.
  if(world.mechanoids)view.mechanoids=world.mechanoids.map(own);
@@ -94,7 +117,9 @@ export function roofCollapseProjection256(world:World){
  else if(root!==world&&privateRoot.secondarySite){const live=secondaryContext(privateRoot);if(!live)throw Error('Roof projection legacy map disappeared');view=live;}
  captureHumanOwners(view); // Pure ownership/clock failure before any real write.
  const rootRng=root.rng,nextId=root.nextId,tick=root.tick,schema=world.schemaVersion;
- const reads=[...localCollections,'tiles','wildlife','mechanoids','filth','fires','raids',...mutableState] as const;
+ const physicalCore=isCorePhysicalSchema297(Number(schema))?effectiveCore297(root):undefined;
+ const samePhysicalCore=()=>{if(physicalCore===undefined)return true;try{return effectiveCore297(root)===physicalCore;}catch{return false;}};
+ const reads=[...localCollections,'tiles','wildlife','mechanoids','filth','fires','raids',...stateSlots] as const;
  const references=reads.map(key=>[key,world[key]] as const),tileRefs=[...world.tiles];
  const collections=[...localCollections.map(key=>world[key]),world.wildlife?.animals,world.mechanoids,world.filth?.items,world.fires?.items];
  const memberships=collections.map(a=>a?[...a]:undefined);
@@ -102,7 +127,7 @@ export function roofCollapseProjection256(world:World){
  const sameObservers=()=>{const current=campaignLivingObservers(world).map(slot=>slot.pawn);return current.length===observers.length&&current.every((p,i)=>p===observers[i]);};
  // No giant terrain/planet JSON: guards retain exact source identities and
  // encoded MUTABLE domains only, so a delayed plan refuses changed owners.
- const guardDomains=[...world.pawns,...world.resources,...world.structures,...world.jobs,...world.piles,...world.packed,...world.stockpiles,...world.growingZones,world.wildlife,world.mechanoids,world.filth,world.fires,world.raids?.mechActive,world.raids?.extraMechActive261,...mutableState.map(key=>world[key])];
+ const guardDomains=[...world.pawns,...world.resources,...world.structures,...world.jobs,...world.piles,...world.packed,...world.stockpiles,...world.growingZones,world.wildlife,world.mechanoids,world.filth,world.fires,world.raids?.mechActive,world.raids?.extraMechActive261,...stateSlots.map(key=>world[key])];
  const before=guardDomains.map(encoded),registry=root.worldMaps,groups=root.worldGroups,relationships=root.relationships,relationshipValues=encoded(root.relationships),thermal=world.thermal,heat=world.thermal?.regions.map(r=>({cells:r.cells,temperature:r.temperature}));
  let finished=false;
  return {view,finish:()=>{
@@ -124,29 +149,33 @@ export function roofCollapseProjection256(world:World){
   // top-level Pawn/Thing/Frame identities are patched rather than substituted.
   const patches=changed.map(pair=>({original:pair.original,before:pair.before,after:Object.fromEntries(Object.entries(pair.draft).map(([key,v])=>[key,translated(v)]))}));
   const arrays=Object.fromEntries(localCollections.map(key=>[key,(view[key] as object[]).map(value=>originalForDraft.get(value)??value)]));
-  const tiles=view.tiles,states=Object.fromEntries(mutableState.map(key=>[key,key==='startingArrival'&&view.startingArrival===world.startingArrival?world.startingArrival:translated(view[key])])),wildlife=view.wildlife?translated(view.wildlife):undefined;
+  const tiles=view.tiles,states=Object.fromEntries(stateSlots.map(key=>[key,key==='startingArrival'&&view.startingArrival===world.startingArrival?world.startingArrival:translated(view[key])])),wildlife=view.wildlife?translated(view.wildlife):undefined;
   const mechanoids=view.mechanoids?.map(a=>originalForDraft.get(a)??a),filth=view.filth?{...view.filth,items:view.filth.items.map(f=>originalForDraft.get(f)??f)}:undefined;
   const fires=view.fires?{...view.fires,items:view.fires.items.map(f=>originalForDraft.get(f)??f)}:undefined;
   const thermalAfter=view.thermal,rngAfter=privateRoot.rng,nextAfter=privateRoot.nextId,mechActive=view.raids?.mechActive,extraMechActive261=view.raids?.extraMechActive261;
   // A spread gives private slots fresh writable descriptors. Prove the REAL
   // recipients again at adoption, before cancelGC or the first original patch.
   const actualSlotsMutable=()=>localCollections.every(key=>writableSlot(world,key))&&writableSlot(world,'tiles')
-   &&mutableState.every(key=>states[key]===undefined?deletableSlot(world,key):writableSlot(world,key))
+   &&stateSlots.every(key=>states[key]===undefined?deletableSlot(world,key):writableSlot(world,key))
    &&(thermalAfter?writableSlot(world,'thermal'):deletableSlot(world,'thermal'))
    &&(!wildlife||writableSlot(world,'wildlife'))&&(!mechanoids||writableSlot(world,'mechanoids'))
    &&(filth?writableSlot(world,'filth'):deletableSlot(world,'filth'))&&(fires?writableSlot(world,'fires'):deletableSlot(world,'fires'))
    &&(!world.raids||writableSlot(world.raids,'mechActive')&&(mechExtras===undefined||writableSlot(world.raids,'extraMechActive261')))&&writableSlot(root,'rng')&&writableSlot(root,'nextId')
    &&(!root.worldPawns||!privateRoot.worldPawns||encoded(root.worldPawns)===encoded(privateRoot.worldPawns)||writableSlot(root.worldPawns,'currentRate'));
   let used=false;
-  return {adopt:()=>{
-   if(used||root.rng!==rootRng||root.nextId!==nextId||root.tick!==tick||world.schemaVersion!==schema||root.worldMaps!==registry||root.worldGroups!==groups||root.relationships!==relationships||encoded(root.relationships)!==relationshipValues||!sameMechanicalOwners()||world.thermal!==thermal||heat?.some((r,i)=>!thermal||thermal.regions[i]?.cells!==r.cells||thermal.regions[i]?.temperature!==r.temperature)
+  const current=()=>{
+   if(used||root.rng!==rootRng||root.nextId!==nextId||root.tick!==tick||world.schemaVersion!==schema||!samePhysicalCore()||root.worldMaps!==registry||root.worldGroups!==groups||root.relationships!==relationships||encoded(root.relationships)!==relationshipValues||!sameMechanicalOwners()||world.thermal!==thermal||heat?.some((r,i)=>!thermal||thermal.regions[i]?.cells!==r.cells||thermal.regions[i]?.temperature!==r.temperature)
      ||references.some(([key,ref])=>world[key]!==ref)||collections.some((a,i)=>a&&(a.length!==memberships[i]!.length||a.some((value,n)=>value!==memberships[i]![n])))||!sameObservers()||world.tiles.length!==tileRefs.length||world.tiles.some((tile,i)=>tile!==tileRefs[i])
      ||guardDomains.some((value,i)=>encoded(value)!==before[i])||patches.some(pair=>!mutableRecipient(pair.original)||encoded(pair.original)!==pair.before)||!actualSlotsMutable())return false;
+   return true;
+  };
+  return {current,adopt:()=>{
+   if(!current())return false;
    used=true;
    if(root.worldPawns&&privateRoot.worldPawns&&encoded(root.worldPawns)!==encoded(privateRoot.worldPawns))cancelWorldPawnGC256(root.worldPawns);
    for(const pair of patches)replace(pair.original,pair.after);
    Object.assign(world,arrays,{tiles});
-   for(const key of mutableState){if(states[key]===undefined)delete (world as unknown as Data)[key];else (world as unknown as Data)[key]=states[key];}
+   for(const key of stateSlots){if(states[key]===undefined)delete (world as unknown as Data)[key];else (world as unknown as Data)[key]=states[key];}
    if(thermalAfter)world.thermal=thermalAfter;else delete world.thermal;
    if(wildlife)world.wildlife=wildlife as World['wildlife'];if(mechanoids)world.mechanoids=mechanoids as World['mechanoids'];
    if(filth)world.filth=filth as World['filth'];else delete world.filth;

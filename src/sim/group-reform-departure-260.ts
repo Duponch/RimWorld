@@ -107,7 +107,17 @@ export function prepareReformDeparture260(w:World,input:ReformDepartureInput260)
  for(const pack of w.packed)if(pack.owner.type==='pawn'&&ids.has(pack.owner.pawnId)){const c=drops.get(pack.building.id);if(!c)throw Error('Reform furniture drop lost its admitted cell');put(pack,'owner',{type:'ground',...c});}
  for(const [id,cell] of inventoryDrops){const pile=w.piles.find(p=>p.id===id),pack=w.packed.find(p=>p.building.id===id);if(pile)put(pile,'owner',{type:'ground',...cell});else if(pack)put(pack,'owner',{type:'ground',...cell});else throw Error('Reform inventory drop source disappeared');}
  const originals=new Map<number,MaterialPile>(intrinsic.map(p=>[p.id,p]));
- for(const t of transfers){if(t.fragment){put(t.original,'quantity',t.next.quantity);originals.set(t.fragment.id,t.fragment);}else {put(t.original,'owner',t.next.owner);originals.set(t.original.id,t.original);}}
+ for(const t of transfers){if(t.fragment){put(t.original,'quantity',t.next.quantity);originals.set(t.fragment.id,t.fragment);}else {
+  put(t.original,'owner',t.next.owner);
+  if(Number(w.schemaVersion)>=298){
+   // Staging cleaned the moved clone. Seal the same deletion on the real
+   // whole original when reconnecting its identity to the departing holder.
+   for(const key of ['forbidden','eggForbidden'] as const)if(Object.hasOwn(t.original,key)&&!Object.hasOwn(t.next,key))del(t.original,key);
+   if(t.original.apparel&&t.next.apparel&&!Object.hasOwn(t.next.apparel,'forbidden')&&Object.hasOwn(t.original.apparel,'forbidden'))del(t.original.apparel,'forbidden');
+   if(t.original.weapon&&t.next.weapon&&!Object.hasOwn(t.next.weapon,'forbidden')&&Object.hasOwn(t.original.weapon,'forbidden'))del(t.original.weapon,'forbidden');
+  }
+  originals.set(t.original.id,t.original);
+ }}
  next.items=next.items.map(p=>originals.get(p.id)!);if(next.items.some(p=>!p))throw Error('Reform future holder has no original');
  for(const p of packUpdates)put(p.original,'owner',p.next.owner);if(packs.length)next.packed=packs;
  const taken=new Set(next.items),fragments=transfers.flatMap(t=>t.fragment?[t.fragment]:[]);

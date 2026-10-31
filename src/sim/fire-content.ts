@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {terrainExtinguishesFire256} from './natural-terrain-runtime-256.ts';
 import { footprintCells } from './definitions.ts';
 import { structureFlammability,pileFlammability,resourceFlammability } from './thing-damage-rules.ts';
@@ -15,7 +16,7 @@ export class FireContent {
   readonly world:World;
   constructor(world:World){
     this.world=world;
-    if((Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))))))))for(const f of world.filth?.items??[])if(f.kind==='firefoam')this.firefoam.add(index(world,f));
+    if((Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion))))))))))for(const f of world.filth?.items??[])if(f.kind==='firefoam')this.firefoam.add(index(world,f));
     const add=(c:Cell,t:FireTarget)=>{const key=index(world,c),list=this.contents.get(key);if(list)list.push(t);else this.contents.set(key,[t]);};
     for(const r of world.resources)if(r.kind!=='rock')add(r,{kind:'resource',value:r});
     for(const p of world.piles)if(p.owner.type==='ground')add(p.owner,{kind:'pile',value:p});

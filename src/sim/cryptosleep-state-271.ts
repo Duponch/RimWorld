@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {heldCore297,validationCore297,type PhaseWorld297} from './core-phase-297.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import type {Cell,MaterialPile,Pawn,Structure} from './types.ts';
@@ -73,7 +74,7 @@ export function validCryptosleepField271(value:unknown,version:number,tick:numbe
  if(kind?.value!=='cryptosleep-casket')return !('cryptosleep'in value);
  if(!isSchema271OrLater(version)||!integer(tick)||!field||!field.enumerable||!Object.hasOwn(field,'value')||!dataOnly271(field.value)||!object(field.value))return false;
  const state=field.value;
- return Reflect.ownKeys(state).length===5+(version===297&&Object.hasOwn(state,'heldAtCore297')?1:0)&&['revision','heldAt','human','items','packed'].every(k=>Object.hasOwn(state,k))
+ return Reflect.ownKeys(state).length===5+(isCorePhysicalSchema297(version)&&Object.hasOwn(state,'heldAtCore297')?1:0)&&['revision','heldAt','human','items','packed'].every(k=>Object.hasOwn(state,k))
   &&Number.isSafeInteger(heldCore297(state,version,Number(state.heldAt)))&&(!('heldAtCore297'in state)||state.human!==null&&heldCore297(state,version,Number(state.heldAt))<=validationCore297(version,tick,coreNow297))
   &&state.revision===1&&integer(state.heldAt,0,tick)&&(state.human===null||object(state.human))
   &&Array.isArray(state.items)&&state.items.length<=32768&&Array.isArray(state.packed)&&state.packed.length<=32768&&(state.human!==null||state.items.length===0&&state.packed.length===0);
@@ -82,7 +83,7 @@ export function cryptosleepHumanOwnersForWorld271(w:{schemaVersion:number;tick:n
  const result:{pawn:Pawn;kind:'player-casket';simulation:'frozen';place:{kind:'player-casket';casketId:number};validationTick:number;items:readonly MaterialPile[];packed:readonly PackedFurniture[]}[]=[];
  for(const s of w.structures){
   if(!isPlayerCasket271(s)&&!(s&&typeof s==='object'&&'cryptosleep'in s))continue;
-  if(!validCryptosleepField271(s,w.schemaVersion,w.tick,w.schemaVersion===297?w.tick*10+Number(w.phaseCore297):undefined))throw Error('Invalid actual player casket before owner capture');
+  if(!validCryptosleepField271(s,w.schemaVersion,w.tick,isCorePhysicalSchema297(w.schemaVersion)?w.tick*10+Number(w.phaseCore297):undefined))throw Error('Invalid actual player casket before owner capture');
   const c=s as PlayerCasket271,p=c.cryptosleep.human;
   if(p)result.push({pawn:p,kind:'player-casket',simulation:'frozen',place:{kind:'player-casket',casketId:c.id},validationTick:c.cryptosleep.heldAt,items:c.cryptosleep.items,packed:c.cryptosleep.packed});
  }

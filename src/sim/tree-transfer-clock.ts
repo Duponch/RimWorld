@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {validSownResource291} from './forestry-save-291.ts';
 import {isPlantSpeciesInVersion} from './biome-flora.ts';
 import {validInitialPlantAge256} from './initial-plant-age-256.ts';
@@ -18,7 +19,7 @@ export function validPausedTreeLife(plant:Partial<Resource>,version:number,world
   if(!hasPausedTreeClock(plant))return validOrdinaryPlantLife(plant,version,world);
   const life:unknown=plant.plantLife;
   if(!validInitialPlantAge256(plant,version))return false;
-  if(version<235||plant.kind!=='tree'||plant.species===undefined||!extractTreeDefinition(plant as Resource)||!world.climate&&!((version===291||(version===292||(version===293||(version===294||(version===295||(version===296||version===297))))))&&plant.sown291===true)||!record(life)||
+  if(version<235||plant.kind!=='tree'||plant.species===undefined||!extractTreeDefinition(plant as Resource)||!world.climate&&!((version===291||(version===292||(version===293||(version===294||(version===295||(version===296||isCorePhysicalSchema297(version)))))))&&plant.sown291===true)||!record(life)||
     !Object.keys(life).every(k=>['initialAgeCore','since','bornAt','age','darkTicks','leaflessAt','nextCheck','pausedTicks','ageTick','leaflessPausedTicks'].includes(k))||
     !integer(life.since,version>=256&&Object.hasOwn(life,'initialAgeCore')?0:(world.climate?.adoptedAt??0),world.tick)||!integer(life.pausedTicks,0,world.tick-life.since)||
     !integer(life.ageTick,life.since+life.pausedTicks,world.tick)||!integer(life.age,0,world.tick-life.since-life.pausedTicks)||

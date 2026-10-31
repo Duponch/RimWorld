@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import type {ItemId} from './items.ts';
 import type {PackedFurniture} from './furniture-rules.ts';
 /** Verified Core4871 numeric facts for existing playable goods only. Historical
@@ -21,7 +22,7 @@ const PACKS:Readonly<Partial<Record<PackedFurniture['building']['kind'],number>>
 });
 /** The original inner building supplies mass. No wrapper/quality/HP multiplier. */
 export function groupPackedMassGrams258(pack:PackedFurniture,version:number):number|undefined {
- if(pack.building.kind==='firefoam-popper')return (version===290||(version===291||(version===292||(version===293||(version===294||(version===295||(version===296||version===297)))))))?10000:undefined;
+ if(pack.building.kind==='firefoam-popper')return (version===290||(version===291||(version===292||(version===293||(version===294||(version===295||(version===296||isCorePhysicalSchema297(version))))))))?10000:undefined;
  if(pack.building.kind==='fueled-smithy'||pack.building.kind==='electric-smithy')return version>=267?20000:undefined;
  if(pack.building.kind==='brewery'||pack.building.kind==='fermenting-barrel')return version>=265?(pack.building.kind==='brewery'?20000:10000):undefined;
  return version>=258?PACKS[pack.building.kind]:version>=256&&pack.building.kind==='bedroll'?2500:undefined;

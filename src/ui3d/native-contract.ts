@@ -11,6 +11,9 @@ import type {WorldPhysicalSurface} from '../sim/world-surface-geography';
 import type {WorldRoadLink} from '../sim/world-roads';
 import type {NativeTextEntity} from './native-rich-text';
 
+/** Presentation-only curtain events; no owner object or simulation permission. */
+export type NativeShipCurtainPhase298='closing'|'held'|'clear'|'reset';
+
 /** Renderer-neutral native interface. No element, HTML, CSS, browser layout or
  * synthetic click is an authority for a visible control. */
 export interface NativeControl {
@@ -63,6 +66,8 @@ export interface NativePage {
   rows:NativeRow[];
   actions?:NativeControl[];
   onClose?:()=>void;
+  /** Explicit cancel gesture, independent of outside-click/close-button policy. */
+  onCancel?:()=>void;
   /** True for front screens/confirmations. Captures world input until closed. */
   modal?:boolean;
   closable?:boolean;
@@ -128,6 +133,9 @@ export interface NativeUiActions {
   closePage?:()=>void;
   openVisitorTrade?:()=>void;
   openOrbitalTrade?:(consoleId?:number)=>void;
+  openFactionComms298?:(consoleId?:number)=>void;
+  /** Opens a scoped confirmation; the Worker retains launch authority. */
+  launchShip298?:(computerId:number)=>void;
   resizeZone?:(kind:'stockpile'|'growing',id:number,shrink:boolean)=>void;
   paintAllowedArea?:(id:number,enabled:boolean)=>void;
   pawnActivity?:(pawnId:number)=>string;

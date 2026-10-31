@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {validPeaceTalksArrival293} from './peace-talks-save-293.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {CARAVAN_INCIDENTS_261,type CaravanStory261,type RetainedArrival261,type RetainedCaravan261,type CaravanBattlefield261} from './caravan-encounter-state-261.ts';
@@ -42,7 +43,7 @@ export function validRetainedCaravan261(v:unknown,c:EncounterValidation261):v is
  return d===null||plain(d)&&keys(d,['tile','action'])&&int(d.tile,0,c.tileCount-1)&&validRetainedArrivalShape261(d.action,c.version);
 }
 export function validCaravanBattlefield261(value:unknown,c:EncounterValidation261):value is CaravanBattlefield261 {
- return (c.version===261||(Number(c.version)===262||isSchema263OrLater(Number(c.version))))&&plain(value)&&keys(value,['revision','kind','won','factionId','retained'],value.kind==='peace-talks'?['peaceTalksSiteId293']:[])&&value.revision===1&&(value.kind==='ambush'||value.kind==='attacked-caravan'||(c.version===293||(c.version===294||(c.version===295||(c.version===296||c.version===297))))&&value.kind==='peace-talks'&&int(value.peaceTalksSiteId293,1)&&int(value.factionId,1))&&typeof value.won==='boolean'&&(value.factionId===null||int(value.factionId,1)&&c.factionIds.has(value.factionId))&&validRetainedCaravan261(value.retained,c);
+ return (c.version===261||(Number(c.version)===262||isSchema263OrLater(Number(c.version))))&&plain(value)&&keys(value,['revision','kind','won','factionId','retained'],value.kind==='peace-talks'?['peaceTalksSiteId293']:[])&&value.revision===1&&(value.kind==='ambush'||value.kind==='attacked-caravan'||(c.version===293||(c.version===294||(c.version===295||(c.version===296||isCorePhysicalSchema297(c.version)))))&&value.kind==='peace-talks'&&int(value.peaceTalksSiteId293,1)&&int(value.factionId,1))&&typeof value.won==='boolean'&&(value.factionId===null||int(value.factionId,1)&&c.factionIds.has(value.factionId))&&validRetainedCaravan261(value.retained,c);
 }
 export function validCaravanCaptivity261(value:unknown,c:EncounterValidation261):boolean {
  return value===undefined||(c.version===261||(Number(c.version)===262||isSchema263OrLater(Number(c.version))))&&plain(value)&&keys(value,['factionId','atCore'])&&int(value.factionId,1)&&c.factionIds.has(value.factionId)&&int(value.atCore,0,c.atCore);

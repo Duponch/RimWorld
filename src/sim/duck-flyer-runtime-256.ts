@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {wildlifeRandom,MAX_WILDLIFE,type WildAnimal} from './wildlife-state.ts';
 import {canAutoExtinguishDuckForHolder256,autoExtinguishDuckForHolder256} from './fire.ts';
@@ -40,7 +41,7 @@ export function beginDuckFlyExit256(w:World,a:WildAnimal,core:number,cause:'flee
  const s=w.wildlife;if(w.schemaVersion<256||a.species!=='duck'||!s||!s.animals.includes(a)||a.state==='dead'||a.state==='downed'||a.domestic||a.manhunter||animalCarrier(w,a.id)||!Number.isSafeInteger(w.nextId+1))return false;
  if(duckFlyExitUnsupportedReason256(w,a))return false;
  if(a.exitFlight)return true;
- if(!Number.isSafeInteger(core)||!Number.isSafeInteger(core+9)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)||!Number.isSafeInteger((s.exitedAnimals??0)+(s.flyers?.filter(f=>f.kind==='leaving').length??0)+s.animals.filter(other=>!!other.exitFlight).length+1))return false;
+ if(!Number.isSafeInteger(core)||!Number.isSafeInteger(core+9)||(isCorePhysicalSchema297(Number(w.schemaVersion))?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)||!Number.isSafeInteger((s.exitedAnimals??0)+(s.flyers?.filter(f=>f.kind==='leaving').length??0)+s.animals.filter(other=>!!other.exitFlight).length+1))return false;
  const occupied=a.motion&&a.motion.end>core/10?a.motion.from:a;if(isRoofed(w,occupied.z*w.width+occupied.x))return false;
  if(cause==='flee'&&wildlifeRandom(s)>=.25)return false;
  const wait=Math.floor(wildlifeRandom(s)*10);notifyDuckFlightJob256(w,a,'other',()=>wildlifeRandom(s));

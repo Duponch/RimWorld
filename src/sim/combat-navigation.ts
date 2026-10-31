@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveLocal297} from './core-phase-297.ts';
 import {targetDoorCanOpen263} from './world-target-building-263.ts';
 import { hostileTo,isColonist } from './affiliation.ts';
@@ -12,7 +13,7 @@ const actor=(world:World,origin:Cell):Pawn|Mechanoid|undefined=>'id' in origin?w
 const opensDoors=(pawn:Pawn|Mechanoid)=>!isMechanoidTarget(pawn)&&(isColonist(pawn)||!!pawn.visitor||pawn.prisoner?.releasedAt!==undefined||prisonBreakActive(pawn));
 /** Capture only within one synchronous decision. Both endpoints protect 3D travel. */
 export function hostileCells(world:World,pawn:Pawn|Mechanoid):Set<number> {
-  const local=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
+  const local=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick;
   const cells=new Set<number>();
   for(const p of world.pawns)if(p!==pawn&&(isMechanoidTarget(pawn)?!p.prisoner:hostileTo(pawn,p)||!!pawn.melee?.order&&!!p.melee?.order&&!(pawn.prisoner&&p.prisoner&&(prisonBreakActive(pawn)||prisonBreakActive(p))))&&p.state!=='dead'&&p.state!=='downed') {
     cells.add(p.z*world.width+p.x);

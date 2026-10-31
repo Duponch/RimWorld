@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {worldPawnsPhysicalCore297,worldPawnPhysicalCore297} from './world-pawn-physical-clock-297.ts';
 import {isSchema287OrLater} from './schema-compatibility-257.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -41,7 +42,7 @@ export function preparePassedToWorld256(state:WorldPawnsState256,input:WorldPawn
  if(!Object.isExtensible(state.owners)||!Object.getOwnPropertyDescriptor(state.owners,'length')?.writable)return {ok:false,reason:'PassedToWorld requires its mutable actual registry'};
  if(state.owners.some(r=>r.actor===input.actor||r.actor.id===input.actor.id))return {ok:false,reason:'Actual Pawn already has a WorldPawn owner'};
  if(input.clockCore>state.atCore||input.mode==='active'&&input.clockCore!==state.atCore||input.mode!=='active'&&input.mode!=='dead'||input.startingPawnLeftBehind&&(input.kind!=='human'||input.keepForever!==true))return {ok:false,reason:'Invalid true PassedToWorld frontier'};
- const effects=prepareWorldPawnEntryEffects256(input,version297===297?physicalRow297:state.atCore,registry,random,options);if(!effects.ok)return effects;const row=effects.row;
+ const effects=prepareWorldPawnEntryEffects256(input,isCorePhysicalSchema297(version297)?physicalRow297:state.atCore,registry,random,options);if(!effects.ok)return effects;const row=effects.row;
  // Actual present colonist at this true PassToWorld only, before SetFaction.
  // This supplies no past history to a load/migration or an already foreign row.
  if((options.version===259||options.version===260||(options.version===261||(Number(options.version)===262||isSchema263OrLater(Number(options.version)))))&&input.kind==='human'&&row.kind==='human'&&!terminalWorldPawn256(input)&&isColonist(input.actor)&&!input.actor.prisoner&&!input.actor.visitor&&!input.actor.podRescue&&!input.actor.raid&&input.actor.worldAffiliation259?.factionId===registry.playerFactionId&&input.actor.worldAffiliation259.hostFactionId===null&&input.actor.worldAffiliation259.guestStatus==='Guest')row.everColonist=true;

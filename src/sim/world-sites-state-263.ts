@@ -1,3 +1,4 @@
+import type {AiCoreInformationReceipt298} from './faction-comms-state-298.ts';
 import type {MaterialPile} from './types.ts';
 import type {RetainedCaravan261} from './caravan-encounter-state-261.ts';
 /** New actual world intents only. No load/bootstrap creates a target. */
@@ -21,6 +22,7 @@ export type ItemStashThreat263={kind:'none'}
  |{kind:'manhunters'|'sleeping-mechanoids';points:number};
 export interface ItemStash263 extends WorldSiteHeader263 {
  kind:'item-stash';expiresAtCore:number|null;heldAtCore:number;items:MaterialPile[];
+ aiCoreInformation298?:AiCoreInformationReceipt298;
  threat:ItemStashThreat263;closed?:ClosedWorldSite263;
 }
 export interface DestroyedSettlement263 extends WorldSiteHeader263 {kind:'destroyed-settlement';factionId:number;sourceSettlementId:number}

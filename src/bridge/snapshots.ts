@@ -1,3 +1,9 @@
+import {validVictoryContentHistorical298,validShipComputerSensorsBuilding298} from '../sim/victory-content-save-298.ts';
+import {escapedShipProjection298,validEscapedShipsProjection298,validEscapedShipsProjectionScope298,type NativeUIWorld298} from '../sim/ship-escape-projection-298.ts';
+import {validShipEscapeHistorical298} from '../sim/ship-escape-save-298.ts';
+import {registeredCampaign} from '../sim/world-map-context.ts';
+import {validFactionCommsTransportForSnapshot298} from '../sim/faction-comms-save-298.ts';
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {validCorePathBudget297} from '../sim/core-path-budget-297';
 import {effectiveCore297,validPhaseCore297} from '../sim/core-phase-297';
 import {validWallDoorHistoricalTransport296,validWallDoorWorld296,registerWallDoorPlanIds296} from '../sim/wall-door-save-296.ts';
@@ -584,7 +590,7 @@ export function readSnapshotResourceStructure(from: World, to: World): SnapshotR
 
 const validCapturedResourceId = (id: number): boolean => Number.isSafeInteger(id) && id > 0;
 
-type DynamicWorld = Omit<World, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
+type DynamicWorld = Omit<NativeUIWorld298, 'tiles' | 'resources' | 'piles'> & { readonly piles?: never };
 type StructurelessDynamicWorld = Omit<DynamicWorld, 'structures'> & { readonly structures?: never };
 interface ResourceChanges { removed: number[]; upserted: Resource[]; order?: number[]; growth?:Float64Array }
 interface PileChanges { removed: number[]; upserted: MaterialPile[]; order?: number[] }
@@ -596,7 +602,7 @@ function validMiningTransport(pawn:Pawn,version:number):boolean {
 /** Private crisis/retaliation ownership follows the same shape contract as a
  * save. Target relations are checked after the complete delta is reconstructed. */
 function validMentalTransport(pawn:Pawn,world:Pick<World,'schemaVersion'|'tick'|'width'|'height'|'phaseCore297'>):boolean {
-  const coreNow297=Number(world.schemaVersion)===297?effectiveCore297(world):undefined;
+  const coreNow297=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):undefined;
   return !(world.schemaVersion<192&&Object.hasOwn(pawn,'meleeThreat'))
     &&validMentalShape(pawn.mental,world.schemaVersion,world.tick,world.width,world.height)
     &&validMeleeThreatShape(pawn.meleeThreat,world.schemaVersion,world.tick,coreNow297)
@@ -617,7 +623,7 @@ function validBackgroundTransport(value:unknown,version:number,offer=false):bool
 /** The default type remains the complete historical protocol. Structure deltas
  * are an explicit opt-in transport form, never a partial World-field patch. */
 export type SnapshotMessage<SparseStructures extends boolean = false> = SnapshotHeader & (
-  | { kind: 'checkpoint'; world: World; structures?: never }
+  | { kind: 'checkpoint'; world: NativeUIWorld298; structures?: never }
   | ({ kind: 'delta'; baseRevision: number; tiles?: TileDelta[]; resources?: ResourceChanges; piles?: PileChanges } & (
       | { world: DynamicWorld; structures?: never }
       | (SparseStructures extends true ? { world: StructurelessDynamicWorld; structures: StructureChanges } : never)
@@ -700,9 +706,9 @@ function denseArray(value:unknown):value is unknown[] {
 function validStructurePatchEntry(value:unknown,world:Pick<World,'nextId'|'width'|'height'|'schemaVersion'|'tick'>):value is Structure {
   if(!value||typeof value!=='object'||Array.isArray(value))return false;
   if(!validCaveHiveBuilding256(value,world.schemaVersion,world)||!validAncientCasketField256(value,world.schemaVersion)||!validLocalRoadPropStructure256(value,world.schemaVersion,world)||!validHumanSleepingSpotStructureEntry(value,world.schemaVersion,world)||!validBedrollStructureEntry256(value,world.schemaVersion,world)||!validAncientMonumentBuilding256(value,world.schemaVersion))return false;
-  if(!validShipCasketBuilding277(value,world.schemaVersion,world,world.tick,Number(world.schemaVersion)===297?effectiveCore297(world):undefined))return false;
-  if(!validShipReactorBuilding275(value,world.schemaVersion,world,effectiveCore297(world))||!validShipHullBuilding276(value,world.schemaVersion,world))return false;
-  if(!validAncientCasketBuilding256(value,world.schemaVersion,world,Number(world.schemaVersion)===297?world.tick:undefined,Number(world.schemaVersion)===297?effectiveCore297(world):undefined)||!validCryptosleepBuilding271(value,world.schemaVersion,world,world.tick,Number(world.schemaVersion)===297?effectiveCore297(world):undefined))return false;
+  if(!validShipCasketBuilding277(value,world.schemaVersion,world,world.tick,isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):undefined))return false;
+  if(!validShipComputerSensorsBuilding298(value,world.schemaVersion,world)||!validShipReactorBuilding275(value,world.schemaVersion,world,effectiveCore297(world))||!validShipHullBuilding276(value,world.schemaVersion,world))return false;
+  if(!validAncientCasketBuilding256(value,world.schemaVersion,world,isCorePhysicalSchema297(Number(world.schemaVersion))?world.tick:undefined,isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):undefined)||!validCryptosleepBuilding271(value,world.schemaVersion,world,world.tick,isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):undefined))return false;
   const s=value as Structure;
   return Number.isSafeInteger(s.id)&&s.id>=1&&s.id<world.nextId
     &&typeof s.kind==='string'&&Object.hasOwn(STRUCTURE_DEFINITIONS,s.kind)
@@ -793,7 +799,7 @@ function validPile(pile:MaterialPile,world:World|DynamicWorld,deferAnimalHolder=
     if(world.schemaVersion<89||!Number.isSafeInteger(owner.graveId)||owner.graveId<1||!world.structures.some(s=>s.id===owner.graveId&&(s.kind==='grave'||world.schemaVersion>=256&&s.kind==='sarcophagus'))
       ||Object.keys(owner).some(key=>!['type','graveId'].includes(key)))return false;
   }else return false;
-  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','prostheticWork273','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden',...((Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))?['book']:[])].includes(key)))return false;
+  if(Object.keys(pile).some(key=>!['id','kind','item','quantity','owner','rot','foodPoison','corpse','humanCorpse','mechCorpse','damage','unfinished','gunWork','flakWork','componentWork','artWork','smithingWork','prostheticWork273','apparel','weapon','haulRequested','innerResource','plantPack','egg','eggForbidden','forbidden',...((Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion))))?['book']:[])].includes(key)))return false;
   if(!validMaterialPermission256(pile,world.schemaVersion))return false;
   if(!validEggPile256(pile,world.schemaVersion,heldDuckInventoryClock256(world,pile,world.schemaVersion,world.tick),world.nextId)||world.schemaVersion<256&&isFutureEcologyItem256(pile.item))return false;
   if(world.schemaVersion<194&&Object.hasOwn(pile,'mechCorpse'))return false;
@@ -920,7 +926,11 @@ export class SnapshotEncoder<SparseStructures extends boolean = false> {
     const replacement = world !== this.source || world.width !== this.width || world.height !== this.height || this.riverWater!==undefined&&world.riverWater===undefined;
     if (replacement) { this.epoch++; this.revision = 0; }
     const baseRevision = this.revision++;
-    const geographic=this.geographicTransport.encode(world,replacement||checkpoint);
+    // Keep the REAL source/cache identity. Registered presentation is already
+    // projected; the genuine monomap fallback must never publish its RAW owner.
+    let transportWorld:World=world;
+    if('escapedShips298' in world){const {escapedShips298:_raw,...surface}=world;transportWorld={...surface,...escapedShipProjection298(registeredCampaign(world))};}
+    const geographic=this.geographicTransport.encode(transportWorld,replacement||checkpoint);
     const explorationApproachers=captureExplorationTransport256(actualExplorationWorld,world);
     const header: SnapshotHeader = { type: 'snapshot', epoch: this.epoch, revision: this.revision, stepMs, speed,...geographic.geography?{geography:geographic.geography}:{},...explorationApproachers?{explorationApproachers}:{} };
     if (replacement || checkpoint) {
@@ -1147,7 +1157,9 @@ export class SnapshotDecoder {
     const refuse=()=>({status:'resync' as const,reason:'Campagne sans carte illisible.'});
     if(!Number.isSafeInteger(packet.epoch)||packet.epoch<1||!Number.isSafeInteger(packet.revision)||packet.revision<1||!Number.isFinite(packet.stepMs)||packet.stepMs<0||![0,1,3,6].includes(packet.speed))return refuse();
     if(packet.epoch<this.epoch||packet.epoch===this.epoch&&packet.revision<=this.revision)return {status:'stale'};
-    if(!validPhaseCore297(packet.summary,packet.summary.schemaVersion)||!validCorePathBudget297(packet.summary,packet.summary.schemaVersion,packet.summary.tick,Number(packet.summary.schemaVersion)===297?Number(Object.getOwnPropertyDescriptor(packet.summary,'phaseCore297')?.value):0,false))return refuse();
+    if(!validPhaseCore297(packet.summary,packet.summary.schemaVersion)||!validCorePathBudget297(packet.summary,packet.summary.schemaVersion,packet.summary.tick,isCorePhysicalSchema297(Number(packet.summary.schemaVersion))?Number(Object.getOwnPropertyDescriptor(packet.summary,'phaseCore297')?.value):0,false))return refuse();
+    if(!validVictoryContentHistorical298(packet.summary,packet.summary.schemaVersion))return refuse();
+    if(!validShipEscapeHistorical298(packet.summary,packet.summary.schemaVersion)||!validEscapedShipsProjection298(packet.summary,packet.summary.schemaVersion,packet.summary.tick,packet.summary.nextId,Number(packet.summary.schemaVersion)===298&&'escapedShipsSummary298' in packet.summary?effectiveCore297(packet.summary):undefined))return refuse();
     if(!validWallDoorHistoricalTransport296(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validNovelHistoricalTransport295(packet.summary,packet.summary.schemaVersion))return refuse();
     if(!validToxicFalloutTransport294(packet.summary,packet.summary.schemaVersion)||!validPeaceTalksHistorical293(packet.summary,packet.summary.schemaVersion)||!validPartyHistoricalTransport292(packet.summary,packet.summary.schemaVersion)||!validForestryHistoricalTransport291(packet.summary,packet.summary.schemaVersion)||!validFirefoamHistoricalTransport290(packet.summary,packet.summary.schemaVersion)||!validBillPauseHistoricalTransport289(packet.summary,packet.summary.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet.summary,packet.summary.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet.summary,packet.summary.schemaVersion)||!validLinkedStorageHistorical286(packet.summary,packet.summary.schemaVersion)||!validCoupleHistoricalTransport285(packet.summary,packet.summary.schemaVersion)||!validTradeRequestHistorical284(packet.summary,packet.summary.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet.summary,packet.summary.schemaVersion))return refuse();
@@ -1174,7 +1186,7 @@ export class SnapshotDecoder {
     if (packet.epoch < this.epoch || (packet.epoch === this.epoch && packet.revision <= this.revision)) return { status: 'stale' };
     if (!Number.isSafeInteger(packet.world.schemaVersion) || packet.world.schemaVersion < 1
       || packet.world.schemaVersion > SCHEMA_VERSION) return resync('Version de schéma du snapshot invalide.');
-    if(!validPhaseCore297(packet.world,packet.world.schemaVersion)||!validCorePathBudget297(packet.world,packet.world.schemaVersion,packet.world.tick,Number(packet.world.schemaVersion)===297?Number(Object.getOwnPropertyDescriptor(packet.world,'phaseCore297')?.value):0,true))return resync('Invalid physical clock or local path-budget owner.');
+    if(!validPhaseCore297(packet.world,packet.world.schemaVersion)||!validCorePathBudget297(packet.world,packet.world.schemaVersion,packet.world.tick,isCorePhysicalSchema297(Number(packet.world.schemaVersion))?Number(Object.getOwnPropertyDescriptor(packet.world,'phaseCore297')?.value):0,true))return resync('Invalid physical clock or local path-budget owner.');
     if(packet.world.destroyed!==undefined&&!validNaturalHiveLoss256(packet.world.destroyed,packet.world.schemaVersion))return resync('Invalid or future natural Hive loss counter.');
     if(!validWorldPawnsEnvelope256(packet.world,packet.world.schemaVersion,effectiveCore297(packet.world),packet.world.nextId))return resync('Invalid or future WorldPawns header.');
     if(!validAnimalTrainingHistoricalTransport282(packet,packet.world.schemaVersion))return resync('Future animal training or hauling.');
@@ -1182,10 +1194,12 @@ export class SnapshotDecoder {
     if(!validPrisonerSurgeryHistoricalTransport280(packet,packet.world.schemaVersion))return resync('Future captive surgery.');
     if(!validApparelTradeHistoricalTransport279(packet,packet.world.schemaVersion))return resync('Future ordinary apparel inventory or trade.');
     if(!validApparelReservesHistoricalTransport278(packet,packet.world.schemaVersion))return resync('Future apparel reserve settings.');
+    if(!validVictoryContentHistorical298(packet,packet.world.schemaVersion))return resync('Invalid or future victory content.');
     if(!validWallDoorHistoricalTransport296(packet,packet.world.schemaVersion))return resync('Invalid or future wall-door successor data.');
     if(!validNovelHistoricalTransport295(packet,packet.world.schemaVersion))return resync('Invalid or future Novel/reading data.');
     if(!validToxicFalloutTransport294(packet,packet.world.schemaVersion))return resync('Invalid or future ToxicFallout condition or corpse rot credit.');
     if(!validPeaceTalksHistorical293(packet,packet.world.schemaVersion)||!validPartyHistoricalTransport292(packet,packet.world.schemaVersion)||!validForestryHistoricalTransport291(packet,packet.world.schemaVersion)||!validFirefoamHistoricalTransport290(packet,packet.world.schemaVersion)||!validBillPauseHistoricalTransport289(packet,packet.world.schemaVersion)||!validAnimalThermalRefugeHistoricalTransport288(packet,packet.world.schemaVersion)||!validAnimalAreaHistoricalTransport287(packet,packet.world.schemaVersion)||!validLinkedStorageHistorical286(packet,packet.world.schemaVersion)||!validCoupleHistoricalTransport285(packet,packet.world.schemaVersion)||!validTradeRequestHistorical284(packet,packet.world.schemaVersion)||!validApparelProvenanceHistoricalTransport284(packet,packet.world.schemaVersion)||!validBillWorkerHistoricalTransport283(packet,packet.world.schemaVersion))return resync('Future couple or bill worker settings.');
+    if(!validShipEscapeHistorical298(packet,packet.world.schemaVersion)||!validEscapedShipsProjection298(packet.world,packet.world.schemaVersion,packet.world.tick,packet.world.nextId,Number(packet.world.schemaVersion)===298&&'escapedShipsSummary298' in packet.world?effectiveCore297(packet.world):undefined))return resync('Invalid escaped-ship read projection.');
     if(!validShipCasketHistoricalTransport277(packet,packet.world.schemaVersion))return resync('Future spatial casket content.');
     if(!validShipPartHistoricalTransport276(packet,packet.world.schemaVersion))return resync('Pièce de vaisseau ou recherche moteur future dans ce snapshot.');
     if(!validShipReactorHistoricalTransport275(packet,packet.world.schemaVersion))return resync('Réacteur stellaire futur dans ce snapshot.');
@@ -1246,7 +1260,7 @@ export class SnapshotDecoder {
     if(message.world.schemaVersion<194&&(Object.hasOwn(message.world,'mechanoids')||Object.hasOwn(message.world,'mechSalvage')
       ||['mechanoid','mechActive'].some(k=>Object.hasOwn(message.world.raids??{},k))
       ||['mechanoid','mechComposition'].some(k=>Object.hasOwn(message.world.raids?.last??{},k))))return resync('Propriétaire ou calendrier mécanique futur.');
-    if(Object.hasOwn(message.world,'mechanoids')&&(!Array.isArray(message.world.mechanoids)||message.world.mechanoids.some(m=>!validMechanoidShape(m,message.world.schemaVersion,message.world.tick,undefined,Number(message.world.schemaVersion)===297?effectiveCore297(message.world):undefined))))return resync('Forme mécanique invalide.');
+    if(Object.hasOwn(message.world,'mechanoids')&&(!Array.isArray(message.world.mechanoids)||message.world.mechanoids.some(m=>!validMechanoidShape(m,message.world.schemaVersion,message.world.tick,undefined,isCorePhysicalSchema297(Number(message.world.schemaVersion))?effectiveCore297(message.world):undefined))))return resync('Forme mécanique invalide.');
     if(validateDuckFlyers256(message.world,message.world.schemaVersion).length)return resync('Invalid actual Duck holder before pile owner lookup.');
     if(message.world.wildlife?.animals.some(a=>isMechanoidKind(a.health?.body)))return resync('Dossier mécanique attribué à un animal.');
     if(message.world.schemaVersion<194&&[...message.world.structures,...message.world.packed.map(p=>p.building)].some(s=>s.bills?.some(b=>['smash-mechanoid','shred-mechanoid'].includes(b.recipe))))return resync('Facture mécanique future.');
@@ -1266,7 +1280,7 @@ export class SnapshotDecoder {
     if(message.world.schemaVersion<193&&(Object.hasOwn(message.world,'bombWaves')||Object.hasOwn(message.world.research??{},'gunTurrets')
       ||[...message.world.structures,...message.world.jobs,...message.world.packed.map(p=>p.building)].some(s=>s.kind==='mini-turret'||Object.hasOwn(s,'turret'))))return resync('Tourelle, recherche ou vague future.');
     for(const s of message.world.structures)if(Object.hasOwn(s,'turret')&&!validMiniTurretShape(s.turret,message.world.schemaVersion,effectiveCore297(message.world),message.world.nextId))return resync('Canon intrinsèque invalide.');
-    if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion,Number(message.world.schemaVersion)===297?effectiveCore297(message.world):undefined))))return resync('Forme de vague Bomb invalide.');
+    if(Object.hasOwn(message.world,'bombWaves')&&(!Array.isArray(message.world.bombWaves)||message.world.bombWaves.some(w=>!validBombWaveShape(w,message.world.schemaVersion,isCorePhysicalSchema297(Number(message.world.schemaVersion))?effectiveCore297(message.world):undefined))))return resync('Forme de vague Bomb invalide.');
     let hasDraftedTend=false;const forcedConsumers:Pawn[]=[];
     for(const pawn of message.world.pawns){
       if(!validCouplePawnShape285(pawn,message.world.schemaVersion,message.world.tick))return resync('Activité, horloge ou souvenir de couple invalide ou futur.');
@@ -1291,9 +1305,9 @@ export class SnapshotDecoder {
       if(!validDeathThoughtsPawnShape(pawn as unknown as Record<string,unknown>,message.world.schemaVersion,message.world.tick))return resync('Souvenir de décès perçu invalide ou futur.');
       if(Object.hasOwn(pawn,'bombRefuge')&&!validBombRefugeShape(pawn.bombRefuge,message.world.schemaVersion))return resync('Refuge Bomb futur ou invalide.');
       if(!validMentalTransport(pawn,message.world))return resync('Crise mentale, menace ou autorité de mêlée invalide pour ce snapshot.');
-      if(!validShootingShape(pawn.shooting,message.world.schemaVersion,message.world.tick,Number(message.world.schemaVersion)===297?effectiveCore297(message.world):undefined)
+      if(!validShootingShape(pawn.shooting,message.world.schemaVersion,message.world.tick,isCorePhysicalSchema297(Number(message.world.schemaVersion))?effectiveCore297(message.world):undefined)
         ||!validShootingLeanOwner(pawn,message.world,message.world.schemaVersion)
-        ||pawn.shooting!==undefined&&!validStunShape(pawn.stun,message.world.schemaVersion,message.world.tick,45,Number(message.world.schemaVersion)===297?effectiveCore297(message.world):undefined))return resync('Phase de tir humaine invalide pour ce snapshot.');
+        ||pawn.shooting!==undefined&&!validStunShape(pawn.stun,message.world.schemaVersion,message.world.tick,45,isCorePhysicalSchema297(Number(message.world.schemaVersion))?effectiveCore297(message.world):undefined))return resync('Phase de tir humaine invalide pour ce snapshot.');
       if(!validBackgroundTransport(pawn,message.world.schemaVersion))return resync('Âge ou passé personnel invalide pour ce snapshot.');
       if(!validSurgeryTransport(pawn,message.world))return resync('État chirurgical ou anesthésique invalide pour ce snapshot.');
       if(!validImmuneDiseaseTransport(pawn,message.world))return resync('Maladie immunitaire invalide pour ce snapshot.');
@@ -1631,7 +1645,7 @@ export class SnapshotDecoder {
     if(next.pawns.some(p=>!validArrivalRotation256(p,next.schemaVersion)))return resync('Orientation d’arrivée retenue invalide ou future.');
     if(!validAnimalTrainingWorld282(next))return resync('Dressage ou transport animal incohérent.');
     if(!validWildlifePredationState(next,next.schemaVersion))return resync('Prédation de faune invalide.');
-    if(!validWildlifeManhunterState(next,next.schemaVersion,Number(next.schemaVersion)===297?effectiveCore297(next):undefined))return resync('Rage de faune invalide.');
+    if(!validWildlifeManhunterState(next,next.schemaVersion,isCorePhysicalSchema297(Number(next.schemaVersion))?effectiveCore297(next):undefined))return resync('Rage de faune invalide.');
     if(validateQuests(next,next.schemaVersion).length)return resync('Dossier de quête invalide.');
     if(next.scout&&(next.scout.phase==='travelling'||next.scout.phase==='awaiting-entry')){
       const registry=scoutRegistryView(next),pawn=next.scout.pawn;
@@ -1759,6 +1773,7 @@ export class SnapshotDecoder {
     // Only the fixed MAIN context reuses this default capture within this call.
     // Public decoding and each foreign context retain their complete capture.
     const readHumanOwners=()=>validation.humanOwners?.read(next)??captureHumanOwners(next);
+    if(!validFactionCommsTransportForSnapshot298(next,next.schemaVersion,readHumanOwners))return resync('Communication de faction ou contact invalide.');
     if(Object.hasOwn(next,'group')||Object.hasOwn(next,'groupLosses')){
       try {const people=readHumanOwners().people;
         if(validateSocial(next,next.schemaVersion,new Set(people.keys())).length||next.pawns.some(p=>!validBereavement(p.bereavement,p.id,next.schemaVersion,next,people)))return resync('Souvenirs de personnes hors carte incohérents.');
@@ -1782,6 +1797,7 @@ export class SnapshotDecoder {
     if(!validReadingWorld295(next))return resync('Invalid Novel ownership, reading phase or reservation.');
     if(!validPeaceTalksBindings293(next)||!validPartyWorld292(next)||!validForestryPolicies291(next))return resync('Invalid or locked forest growing policy.');
     if(!validFirefoamWorld290(next)||!validBillPauseWorld289(next)||!validAnimalThermalRefugeWorld288(next)||!validAnimalAreaWorld287(next)||!validLinkedStorageProjection286(next)||!validBillWorkerWorld283(next,readHumanOwners))return resync('Opérateur de facture ou réglages incohérents.');
+    if(!validEscapedShipsProjection298(next,next.schemaVersion,next.tick,next.nextId,Number(next.schemaVersion)===298&&'escapedShipsSummary298' in next?effectiveCore297(next):undefined)||!validEscapedShipsProjectionScope298(next))return resync('Escaped-ship credits do not match known away people.');
     if(acceptExtra&&!acceptExtra(next))return resync('Métadonnées supplémentaires incompatibles avec la carte confirmée.');
     freezeAdmittedNativeWorldPawnOrder256(next);
     if(!riverWater.inherited&&next.riverWater)freezeAdmittedRiverWater256(next.riverWater);

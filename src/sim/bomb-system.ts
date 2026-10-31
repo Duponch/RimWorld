@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {notifySiteAmbushExplosion263} from './world-site-ambush-state-263.ts';
 import {landedStartingPods256,damageStartingPod256} from './starting-pod-damage-256.ts';
@@ -26,7 +27,7 @@ import { applyEmpEffect } from './emp-effects.ts';
  * the next Core substep. No thermal, flame or physical damage is emitted. */
 export function startEmpExplosion(w:World,p:WorldProjectile,core:number):boolean {
   if(w.schemaVersion<208||p.weaponItem!=='emp-launcher'||!w.projectiles?.includes(p)||p.arrival?.kind!=='impact'
-    ||p.advancedAtCore!==core||!Number.isSafeInteger(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)
+    ||p.advancedAtCore!==core||!Number.isSafeInteger(core)||(isCorePhysicalSchema297(Number(w.schemaVersion))?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)
     ||!Number.isSafeInteger(w.nextId+1)||(w.bombWaves?.length??0)>=w.width*w.height
     ||w.bombWaves?.some(wave=>wave.emp&&wave.sourceId===p.id))return false;
   const center={x:Math.floor(p.arrival.point.x),z:Math.floor(p.arrival.point.z)};
@@ -41,7 +42,7 @@ export function startEmpExplosion(w:World,p:WorldProjectile,core:number):boolean
  * The caller commits its battery drain/report only after this returns true.
  * Emission owns no fire/combat draw; seed records the incident's private draw. */
 export function startShortCircuitDischarge(w:World,conduit:Structure,flameRadius:number,bombRadius:number|undefined,seed:number):boolean {
-  const count=bombRadius===undefined?1:2,core=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10;
+  const count=bombRadius===undefined?1:2,core=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10;
   if(w.schemaVersion<201||conduit.kind!=='power-conduit'||!w.structures.includes(conduit)
     ||!Number.isSafeInteger(conduit.id)||conduit.id<1||conduit.id>=w.nextId
     ||!Number.isSafeInteger(conduit.x)||!Number.isSafeInteger(conduit.z)||conduit.x<0||conduit.z<0||conduit.x>=w.width||conduit.z>=w.height
@@ -64,8 +65,8 @@ export function startShortCircuitDischarge(w:World,conduit:Structure,flameRadius
   return true;
 }
 
-export function applyStructureExternalDamage(w:World,s:Structure,rawAmount:number,appliedAmount:number,cause:StructureDamageCause,rng=w.rng,core=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10,instigatorKey?:BombInstigatorKey):boolean {
-  if(!Number.isFinite(rawAmount)||rawAmount<0||!Number.isSafeInteger(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))return false;
+export function applyStructureExternalDamage(w:World,s:Structure,rawAmount:number,appliedAmount:number,cause:StructureDamageCause,rng=w.rng,core=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10,instigatorKey?:BombInstigatorKey):boolean {
+  if(!Number.isFinite(rawAmount)||rawAmount<0||!Number.isSafeInteger(core)||(isCorePhysicalSchema297(Number(w.schemaVersion))?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))return false;
   return damageStructure(w,s,appliedAmount,cause,rng,{core,rawAmount,...instigatorKey?{instigatorKey}:{}});
 }
 /** Called in the source's global-ID owner slot. No recursive wave draining. */

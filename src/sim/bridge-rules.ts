@@ -21,6 +21,7 @@ export function validBridgeTile(tile:{terrain?:unknown;floor?:unknown;snowDepth?
 export const BUILDING_SUPPORT:Readonly<Record<StructureKind,'Light'|'Medium'|'Heavy'|'Diggable'|'Stuff'|'None'>>={
  'firefoam-popper':'Light',
  'ship-cryptosleep-casket':'Heavy',
+ 'ship-computer':'Heavy','ship-sensors':'Heavy',
  'ship-beam':'Heavy','ship-engine':'Heavy',
  'ship-reactor':'Heavy',
  'fueled-smithy':'Medium','electric-smithy':'Medium',

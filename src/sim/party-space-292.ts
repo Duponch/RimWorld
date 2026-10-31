@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {captureStandability} from './furniture-travel.ts';
 import {RoomTopologyCache,type RoomTopology} from './room-topology.ts';
 import {isRoofed} from './roof-rules.ts';
@@ -32,6 +33,6 @@ export function capturePartySpace292(world:World,site:Cell,topology?:RoomTopolog
 export function partyTaskSiteValid292(world:World,task:RecreationTask,topology?:RoomTopology,standable=captureStandability(world)):boolean {
  const active=world.party292?.active;
  if(toxicFalloutActive294(world)&&active&&(!isRoofed(world,active.site.z*world.width+active.site.x)||!isRoofed(world,task.target.z*world.width+task.target.x)))return false;
- return (Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297)))))&&task.activity==='party'&&!!active&&task.partyStartedAtCore===active.startedAtCore
+ return (Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion)))))))&&task.activity==='party'&&!!active&&task.partyStartedAtCore===active.startedAtCore
   &&task.buildingId===null&&standable(active.site)&&standable(task.target)&&partyArea292(world,active.site,task.target,partyTopology292(world,topology));
 }

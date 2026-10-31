@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {effectiveLocal297} from '../sim/core-phase-297.ts';
 import { travelPieces,type PresentationSegment } from '../sim/travel-timing.ts';
 import type { World } from '../sim/types.ts';
@@ -10,8 +11,8 @@ export class MotionRecorder {
   capture(world:World):void {
     for(const pawn of [...world.pawns,...world.wildlife?.animals??[],...world.mechanoids??[]]) {
       let track=this.tracks.get(pawn.id);if(!track){track=[];this.tracks.set(pawn.id,track);}
-      const motion=pawn.motion,now=Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick;
-      if(Number(world.schemaVersion)===297&&track.length){
+      const motion=pawn.motion,now=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick;
+      if(isCorePhysicalSchema297(Number(world.schemaVersion))&&track.length){
         const prior=track.at(-1)!;
         const source=motion?.from??pawn;
         const replaced=!!motion&&(prior.edgeStart??prior.start)===motion.start&&(prior.from.x!==source.x||prior.from.z!==source.z||prior.to.x!==motion.to.x||prior.to.z!==motion.to.z);
@@ -28,7 +29,7 @@ export class MotionRecorder {
         }
       }
       const last=track.at(-1),edgeStart=last?.edgeStart??last?.start;
-      if(motion&&(edgeStart!==motion.start||last?.end!==motion.end||Number(world.schemaVersion)===297&&(last?.from.x!==motion.from.x||last?.from.z!==motion.from.z||last?.to.x!==motion.to.x||last?.to.z!==motion.to.z))) {
+      if(motion&&(edgeStart!==motion.start||last?.end!==motion.end||isCorePhysicalSchema297(Number(world.schemaVersion))&&(last?.from.x!==motion.from.x||last?.from.z!==motion.from.z||last?.to.x!==motion.to.x||last?.to.z!==motion.to.z))) {
         if(edgeStart===motion.start){track=track.filter(s=>(s.edgeStart??s.start)!==motion.start);this.tracks.set(pawn.id,track);}
         if(motion.stagger||motion.stuns)for(const s of travelPieces(motion))track.push({...s,from:{...s.from},to:{...s.to}});
         else track.push({...motion,from:{...motion.from},to:{...motion.to}});

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import type {World,Pawn} from '../sim/types';
 import type {WildAnimal} from '../sim/wildlife-state';
 import type {Mechanoid} from '../sim/mechanoid-state';
@@ -23,7 +24,7 @@ export class CorePhaseFrameOwner297 {
  get currentAnchor():CorePhaseAnchor297|undefined{return this.state?.anchor;}
  get currentSequence():number|undefined{return this.state?.seq;}
  prepareFull(world:World,epoch:number,revision:number,motion:PawnTrack[]|undefined,metadata:unknown,speed:0|1|3|6,reset=false):PreparedCoreFull297 {
-  if(Number(world.schemaVersion)!==297)throw Error('Phase anchor requires current schema297');
+  if(!isCorePhysicalSchema297(Number(world.schemaVersion)))throw Error('Phase anchor requires current schema297');
   const core=effectiveCore297(world),m=copyCoreData297(metadata);
   const frontier=coreOwnRecord297(m)&&Object.hasOwn(m,'actorMode297');
   if(!coreOwnRecord297(m)||Reflect.ownKeys(m).length!==(frontier?4:3)||frontier&&m.actorMode297!=='frontier'||!Object.hasOwn(m,'mapId')||!Object.hasOwn(m,'core')||!Object.hasOwn(m,'projectilesRetained')||m.core!==core||!coreInteger297(m.mapId)||!Array.isArray(m.projectilesRetained))throw Error('Invalid full Core phase metadata');

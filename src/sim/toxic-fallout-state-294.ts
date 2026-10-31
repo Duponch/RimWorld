@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import type {World} from './types.ts';
 
 /** A condition belongs to this local map's existing Misc calendar. It never
@@ -27,7 +28,7 @@ export const TOXIC_FALLOUT_DOSE_INTERVAL294=3451;
 /** No time filtering here: the clinical adapter also needs the last partial
  * interval when the native end falls between two local simulation steps. */
 export function getToxicFallout294(world:Pick<World,'miscIncidents'>&{schemaVersion?:number}):ToxicFalloutActive294|undefined {
-  return (world.schemaVersion===294||(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297)))?world.miscIncidents?.toxicFallout?.active:undefined;
+  return (world.schemaVersion===294||(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion)))))?world.miscIncidents?.toxicFallout?.active:undefined;
 }
 export function toxicFalloutActive294(world:Pick<World,'tick'|'miscIncidents'>&{schemaVersion?:number},atCore=world.tick*10):boolean {
   const active=getToxicFallout294(world);

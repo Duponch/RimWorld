@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import {capturedCoreMoveDuration297} from './human-move-core-297.ts';
 import type { Cell } from './types.ts';
@@ -42,7 +43,7 @@ export function travelPieces(m:TravelSegment):PresentationSegment[] {
 export const travelEnd=(m:TravelSegment):number=>m.stagger?.length||m.stuns?.length?travelPieces(m).at(-1)!.end:m.start+neutralTravelDuration(m);
 
 export function validSlowIntervals(value:unknown,version:number,start:number,tick:number,coreNow297?:number):boolean {
- const physicalLocalNow297=version===297?validationCore297(version,tick,coreNow297)/10:tick;if(version===297&&!Number.isFinite(physicalLocalNow297))return false;
+ const physicalLocalNow297=isCorePhysicalSchema297(version)?validationCore297(version,tick,coreNow297)/10:tick;if(isCorePhysicalSchema297(version)&&!Number.isFinite(physicalLocalNow297))return false;
   if(value===undefined)return true;
   if(version<57||!Array.isArray(value)||!value.length||value.length>451)return false;
   let previous=start-1;
@@ -53,7 +54,7 @@ export function validSlowIntervals(value:unknown,version:number,start:number,tic
 }
 
 export function validStunIntervals(value:unknown,version:number,start:number,tick:number,coreNow297?:number):boolean {
- const physicalLocalNow297=version===297?validationCore297(version,tick,coreNow297)/10:tick;if(version===297&&!Number.isFinite(physicalLocalNow297))return false;
+ const physicalLocalNow297=isCorePhysicalSchema297(version)?validationCore297(version,tick,coreNow297)/10:tick;if(isCorePhysicalSchema297(version)&&!Number.isFinite(physicalLocalNow297))return false;
   if(value===undefined)return true;
   if(version<59||!Array.isArray(value)||!value.length||value.length>4096)return false;
   let previous=start-1;

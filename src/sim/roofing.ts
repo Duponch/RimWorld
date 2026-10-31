@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {roofCollapseProjection256} from './roof-collapse-projection-256.ts';
 import {interruptWork} from './interrupted-cargo.ts';
@@ -205,7 +206,7 @@ function executeNaturalRoofSupport256(world:World,removal:boolean,lostSupport?:C
  * A false result has no physical/ID/RNG effect; caller must keep its holder
  * pending and must not mark hasHitRoof or spawn the arriving owner. */
 export function hitSkyfallerRoof256(world:World,cell:Cell,atCore:number):boolean {
- if(world.schemaVersion<256||!Number.isSafeInteger(atCore)||(Number(world.schemaVersion)===297?atCore!==effectiveCore297(world):atCore<Math.max(0,(world.tick-1)*10)||atCore>world.tick*10)
+ if(world.schemaVersion<256||!Number.isSafeInteger(atCore)||(isCorePhysicalSchema297(Number(world.schemaVersion))?atCore!==effectiveCore297(world):atCore<Math.max(0,(world.tick-1)*10)||atCore>world.tick*10)
   ||!Number.isInteger(cell.x)||!Number.isInteger(cell.z)||cell.x<0||cell.z<0||cell.x>=world.width||cell.z>=world.height)return false;
  const center=roofIndex(world,cell);
  // Core does not punch neighbouring roofs when the occupied rect has none.

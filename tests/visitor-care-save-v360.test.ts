@@ -173,7 +173,7 @@ test('V360 a real healed guest departure freezes its changed care ceiling and po
   const decoder=new SnapshotDecoder(),encoder=new SnapshotEncoder();expect(adopted(decoder,encoder.encode(w,0,1,true))).toEqual(w);
   const frozen=structuredClone(archive);stepWorld(w,3);expect(w.visitors!.departed.find(d=>d.pawn.id===patient.id)).toEqual(frozen);exact(w);
   const bad=structuredClone(w),d=bad.visitors!.departed.find(d=>d.pawn.id===patient.id)!;d.pawn.visitor!.medicalGuestAt=d.tick+1;
-  const next=structuredClone(encoder.encode(w,0,1,true)),badPacket=structuredClone(next);badPacket.world=bad;
+  const next=structuredClone(encoder.encode(w,0,1,true)),badPacket=structuredClone(next);Object.assign(badPacket,{world:bad});
   expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow();expect(decoder.adopt(badPacket).status).toBe('resync');expect(adopted(decoder,next)).toEqual(w);
   for(const care of ['none','dry','herbal','industrial','best'] as const){const copy=structuredClone(w),p=copy.visitors!.departed.find(d=>d.pawn.id===patient.id)!.pawn;p.medicalCare=care;exact(copy);}
   for(const disabled of [false,true]){const copy=structuredClone(w),p=copy.visitors!.departed.find(d=>d.pawn.id===patient.id)!.pawn;delete p.medicalCare;if(disabled)p.careDisabled=true;exact(copy);}

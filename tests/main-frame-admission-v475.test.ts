@@ -1,3 +1,4 @@
+import {mockRequestId298} from './request-id-binding298';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {MessageChannel as NodeMessageChannel} from 'node:worker_threads';
 import {MainFrameAdmissionFIFO,MAIN_FRAME_ADMISSION_CAPACITY,type MainFrameAdmissionHost} from '../src/bridge/main-frame-admission-fifo';
@@ -185,11 +186,11 @@ describe('base client dispatch hook correlation (decoder double, no World proof)
   const f=clientTransport(),seen:number[]=[];let done=false;
   try{
    f.client.onSnapshot=world=>{seen.push(world.tick);f.ready(true);};
-   const load=f.client.load('startup-raw').then(()=>{done=true;}),id=f.ports[0]!.requests[0]!.id;
+   const load=f.client.load('startup-raw').then(()=>{done=true;}),id=mockRequestId298(f.ports[0]!.requests[0]!);
    f.ports[0]!.emit(checkpoint(1));f.ports[0]!.emit({type:'reply',id,ok:true,checkpoint:{epoch:1,revision:1}});
    await microtasks();expect(seen).toEqual([1]);expect(done).toBe(false);
    f.frame();await load;expect(done).toBe(true);
-   let replaced=false;const second=f.client.load('replacement-raw').then(()=>{replaced=true;}),nextId=f.ports[0]!.requests.at(-1)!.id;
+   let replaced=false;const second=f.client.load('replacement-raw').then(()=>{replaced=true;}),nextId=mockRequestId298(f.ports[0]!.requests.at(-1)!);
    f.ports[0]!.emit({type:'reply',id:nextId,ok:true,checkpoint:{epoch:2,revision:1}});f.ports[0]!.emit(checkpoint(2,2));
    f.frame();await microtasks();expect(replaced).toBe(false);expect(seen).toEqual([1]);
    f.frame();await second;expect(replaced).toBe(true);expect(seen).toEqual([1,2]);
@@ -201,7 +202,7 @@ describe('base client dispatch hook correlation (decoder double, no World proof)
    f.ready(true);f.client.onSnapshot=world=>seen.push(world.tick);
    const pending=f.client.load('old-raw'),rejected=pending.catch(error=>error);f.ports[0]!.emit(checkpoint(1));
    f.client.stop('intentional transport stop');expect((await rejected).message).toContain('intentional');
-   f.client.restartForReplacement();const replacement=f.client.load('fresh-raw'),port=f.ports[1]!,id=port.requests[0]!.id;
+   f.client.restartForReplacement();const replacement=f.client.load('fresh-raw'),port=f.ports[1]!,id=mockRequestId298(port.requests[0]!);
    f.ports[0]!.emit(checkpoint(9,9));port.emit({type:'reply',id,ok:true,checkpoint:{epoch:2,revision:1}});port.emit(checkpoint(2,2));
    f.frame();await microtasks();expect(seen).toEqual([]);f.frame();await replacement;expect(seen).toEqual([2]);expect(f.ports[0]!.terminated).toBe(1);
   }finally{f.client.dispose();}

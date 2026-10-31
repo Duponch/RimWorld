@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297} from './core-phase-297.ts';
 import { EMP_ADAPTATION_CORE_TICKS,empStunDuration } from './emp-rules.ts';
 import { empStructureActive,empStructureSupported,empAdaptedUntilCore277,empStunUntilCore277 } from './emp-state.ts';
@@ -10,7 +11,7 @@ import type { Structure,World } from './types.ts';
  * spent here. A resisted hit leaves every clock and the captured edge intact. */
 export function applyEmpEffect(world:World,target:Structure|LivingTarget,damage:number,core:number):boolean {
   const duration=empStunDuration(damage);
-  if(world.schemaVersion<208||!duration||!Number.isSafeInteger(core)||(Number(world.schemaVersion)===297?core!==effectiveCore297(world):core<Math.max(0,(world.tick-1)*10)||core>world.tick*10)
+  if(world.schemaVersion<208||!duration||!Number.isSafeInteger(core)||(isCorePhysicalSchema297(Number(world.schemaVersion))?core!==effectiveCore297(world):core<Math.max(0,(world.tick-1)*10)||core>world.tick*10)
     ||!Number.isSafeInteger(core+Math.max(duration,EMP_ADAPTATION_CORE_TICKS)))return false;
   if('mechKind' in target){
     const mech=target as Mechanoid;
@@ -23,11 +24,11 @@ export function applyEmpEffect(world:World,target:Structure|LivingTarget,damage:
     if(motion&&motion.end>core/10){
       slowed={...motion,stuns:mergeSlowIntervals([...(motion.stuns??[]),{start:Math.max(motion.start,core/10),end:until/10}])};
       slowed.end=travelEnd(slowed);
-      if(!Number.isFinite(slowed.end)||slowed.end>(Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick)+1000)return false;
+      if(!Number.isFinite(slowed.end)||slowed.end>(isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick)+1000)return false;
     }
     mech.emp={lastAtCore:core,adaptedUntilCore:core+EMP_ADAPTATION_CORE_TICKS,stunUntilCore:until};
     if(recovery&&recovery.untilCore>core)recovery.empPause={ticks:recovery.empPause?.ticks??0,lastAtCore:core};
-    if(slowed){mech.motion=slowed;mech.moveCooldown=Math.max(0,slowed.end-(Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick));mech.state='moving';}
+    if(slowed){mech.motion=slowed;mech.moveCooldown=Math.max(0,slowed.end-(isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick));mech.state='moving';}
     return true;
   }
   if(!('kind' in target))return false;
@@ -43,7 +44,7 @@ export function applyEmpEffect(world:World,target:Structure|LivingTarget,damage:
 
 /** Shared Core scheduler calls this before owners. No actor decision or
  * topology mutation is needed when an EMP interval ends. */
-export function advanceEmp(world:World,core=Number(world.schemaVersion)===297?effectiveCore297(world):world.tick*10):boolean {
+export function advanceEmp(world:World,core=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):world.tick*10):boolean {
   let changed=false;
   for(const mech of world.mechanoids??[])if(mech.emp&&core>=Math.max(empAdaptedUntilCore277(mech.emp),empStunUntilCore277(mech.emp))){
     delete mech.emp;changed=true;

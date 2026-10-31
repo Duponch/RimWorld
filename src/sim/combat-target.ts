@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {activeHiveInsect256} from './cave-hive-lord-256.ts';
 import { hostileTo,activeThreat } from './affiliation.ts';
@@ -17,7 +18,7 @@ export type LivingTargetKey=`pawn:${number}`|`animal:${number}`|`mech:${number}`
  * plain proposed Cells, animals and machines keep their existing semantics.
  * Borrow a Cell: no Pawn/World clone, lookup, interpolation or mutable cache. */
 export function combatCell297(version:number,actor:Cell,atCore:number):Cell {
-  if(version!==297||!('skills' in actor)||!('orders' in actor))return actor;
+  if(!isCorePhysicalSchema297(version)||!('skills' in actor)||!('orders' in actor))return actor;
   const motion=(actor as Pawn).motion;
   return motion&&atCore<motion.end*10?motion.from:actor;
 }
@@ -52,7 +53,7 @@ export const retaliationPermission=(p:Pawn):boolean=>isColonist(p)&&!p.prisoner&
   &&!p.orbitalTrade&&!p.trade&&!p.cleaning?.forced&&!p.firefighting?.forced;
 /** A real attempt establishes this short-lived threat even between allies.
  * It is distinct from faction hostility and cannot turn Flee/Ignore into Attack. */
-export function meleeThreatTarget(w:World,p:Pawn|Mechanoid,core=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10,grid?:ShotGrid,readGrid?:()=>ShotGrid):LivingTarget|undefined {
+export function meleeThreatTarget(w:World,p:Pawn|Mechanoid,core=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10,grid?:ShotGrid,readGrid?:()=>ShotGrid):LivingTarget|undefined {
   const threat=p.meleeThreat;if(!threat||core<threat.atCore||core-threat.atCore>400)return;
   const attacker=combatTarget(w,threat.attackerId);
   if(!attacker||attacker===p||['dead','downed','sleeping'].includes(attacker.state)||distanceSquared(combatCell297(Number(w.schemaVersion),p,core),combatCell297(Number(w.schemaVersion),attacker,core))>9||isPawnTarget(attacker)&&carrierOf(w,attacker.id))return;

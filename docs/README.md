@@ -1,5 +1,9 @@
 # Documentation d’Elsewhere
 
+**31 octobre 2026 — schéma 298 intégré.** La [chaîne de victoire spatiale](development/ship-victory298.md) raccorde console/information payée, cœur d’IA physique, ordinateur/capteurs, lancement et départ vivant rechargeable. Typage complet, compilation et contrôles ciblés passent ; le coût de composition ne montre pas de recul agrégé dans la cohorte mesurée, sans preuve FPS globale.
+
+Les six ensembles reprennent selon la consigne humaine ; aucun n’est clos. Les essais de fluidité sont suspendus et le défaut reste ouvert. Cloudflare495c93d0/source58fc7307 est la dernière production attestée, encore au schéma297. Les détails V492 ci-dessous décrivent les fondations et leurs limites historiques, pas une nouvelle suspension du projet.
+
 **28 octobre 2026 — V492 intégrée localement, schéma 297.** Le [statut V492](development/movement-parity-v492-status.md) est la référence courante : comportement Source12 testé, huit ordres au premier plan acquis, dette de débit ×6 de 9,98–11,28 % acceptée provisoirement par l’utilisateur. ×1/×3 tiennent leurs rythmes nominaux dans les mesures ; ×4 n’est pas mesuré. La visibilité reste non acquise et la parité complète n’est pas proclamée.
 
 Voir aussi [architecture](development/architecture.md), [validation](development/validation.md), [règles de déplacement](gameplay/deplacement-et-redirection-20261027.md) et [bilan du 26 au 28 octobre](development/bilan-nuit-20261027.md). Les contrôles locaux et les réserves conservées sont consignés dans le statut V492. Cloudflare reste V491, schéma 296, jusqu’à publication distincte ; aucune publication n’est inférée de la demande de commit. L’objectif général, le heartbeat et les six ensembles restent pausés.

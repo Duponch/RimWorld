@@ -10,6 +10,7 @@ export const OCCUPANCY = Object.freeze({
   'ship-cryptosleep-casket':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'ship-beam':Object.freeze({clearItems:true,items:false,zones:false,store:false}),'ship-engine':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'ship-reactor':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
+  'ship-computer':Object.freeze({clearItems:true,items:false,zones:false,store:false}),'ship-sensors':Object.freeze({clearItems:true,items:false,zones:false,store:false}),
   'fueled-smithy':Object.freeze({clearItems:false,items:true,zones:false,store:false}),'electric-smithy':Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   brewery:Object.freeze({clearItems:false,items:true,zones:false,store:false}),
   'fermenting-barrel':Object.freeze({clearItems:false,items:true,zones:false,store:false}),

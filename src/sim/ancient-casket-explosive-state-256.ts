@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {validationCore297} from './core-phase-297.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
@@ -17,7 +18,7 @@ export function validAncientCasketWickField256(owner:object,version:number,tick=
  const d=Object.getOwnPropertyDescriptor(owner,'casketWick');if(!d)return !('casketWick'in owner);
  const kind=Object.getOwnPropertyDescriptor(owner,'kind')?.value,spatial=isSchema277OrLater(version)&&kind==='ship-cryptosleep-casket';
  if(!isSchema256Or257(version)||!Object.hasOwn(d,'value')||!d.enumerable||!(kind==='ancient-cryptosleep-casket'||isSchema271OrLater(version)&&kind==='cryptosleep-casket'||spatial)||!data(d.value))return false;
- const w=d.value,keys=Object.keys(w),core=version===297&&tick!==Number.MAX_SAFE_INTEGER?validationCore297(version,tick,coreNow297):tick*10;
+ const w=d.value,keys=Object.keys(w),core=isCorePhysicalSchema297(version)&&tick!==Number.MAX_SAFE_INTEGER?validationCore297(version,tick,coreNow297):tick*10;
  if(!keys.every(k=>['startedAtCore','endCore','instigatorKey'].includes(k))||!integer(w.startedAtCore)||!integer(w.endCore,w.startedAtCore+140,w.startedAtCore+150)||tick!==Number.MAX_SAFE_INTEGER&&(!Number.isSafeInteger(core)||w.startedAtCore>core||w.endCore<=core))return false;
  if(Object.hasOwn(w,'instigatorKey')&&!key(w.instigatorKey))return false;
  // StartWick is reached only after actual HP<=RoundToInt(.2*MaxHP).

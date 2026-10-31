@@ -1,3 +1,4 @@
+import {validAiCorePile298} from './victory-content-save-298.ts';
 import {finishBarrelFill265} from './fermentation-runtime-265.ts';
 import {FERMENTING_SERVICE_TICKS_265} from './fermentation-state-265.ts';
 import {eggAllowedForPlayer256} from './animal-egg-permission-v256.ts';
@@ -28,9 +29,11 @@ export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allow
     const source = world.piles.find(item => item.id === task.sourcePileId);
     if (!source || !eggAllowedForPlayer256(source)||source.owner.type !== 'ground' || source.quantity < task.quantity) { releaseWork(world, pawn); return; }
     if (!nearby(pawn, source.owner)) { move(source.owner, true); return; }
-    if (source.kind!=='book'&&source.kind!=='plant'&&source.kind!=='corpse'&&source.kind!=='mech-corpse'&&source.kind!=='unfinished'&&source.kind!=='weapon'&&source.kind!=='apparel'&&(!Number.isSafeInteger(world.nextId + 1) || (source.quantity > task.quantity && world.piles.length >= 32768))) { releaseWork(world, pawn); return; }
+    const aiCore298=source.kind==='ai-core'||source.item==='ai-core';
+    if(aiCore298&&(!validAiCorePile298(source,world.schemaVersion)||task.quantity!==1)){releaseWork(world,pawn);return;}
+    if (!aiCore298&&source.kind!=='book'&&source.kind!=='plant'&&source.kind!=='corpse'&&source.kind!=='mech-corpse'&&source.kind!=='unfinished'&&source.kind!=='weapon'&&source.kind!=='apparel'&&(!Number.isSafeInteger(world.nextId + 1) || (source.quantity > task.quantity && world.piles.length >= 32768))) { releaseWork(world, pawn); return; }
     task.pickupCell={x:source.owner.x,z:source.owner.z};
-    if(source.kind==='book'||source.kind==='plant'||source.kind==='corpse'||source.kind==='mech-corpse'||source.kind==='unfinished'||source.kind==='weapon'||source.kind==='apparel'){
+    if(aiCore298||source.kind==='book'||source.kind==='plant'||source.kind==='corpse'||source.kind==='mech-corpse'||source.kind==='unfinished'||source.kind==='weapon'||source.kind==='apparel'){
       source.owner={type:'pawn',pawnId:pawn.id};task.carryPileId=source.id;task.phase='deliver';pawn.path=[];pawn.planCooldown=0;pawn.state='working';return;
     }
     source.quantity -= task.quantity;
@@ -42,6 +45,7 @@ export function processHaul(world: World, pawn: Pawn, move: (target: Cell, allow
   const target = destinationCell(world, task.destination);
   const carry = world.piles.find(item => item.id === task.carryPileId);
   if (!target || !carry) { releaseWork(world, pawn); return; }
+  if((carry.kind==='ai-core'||carry.item==='ai-core')&&(!validAiCorePile298(carry,world.schemaVersion)||task.quantity!==1)){releaseWork(world,pawn);return;}
   const atTarget = task.destination.type === 'job' ? footprintCells(target as Job).some(cell => adjacent(pawn, cell)) && !footprintCells(target as Job).some(cell => sameCell(pawn, cell)) : task.destination.type==='fuel'?footprintCells(target as Job).some(cell=>nearby(pawn,cell)):nearby(pawn, target);
   if (!atTarget) { move(target, task.destination.type !== 'job'); return; }
   if(task.destination.type==='job'&&!constructionSiteFree(world,target as Job,pawn.id)){releaseWork(world,pawn);return;}

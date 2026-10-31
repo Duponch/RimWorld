@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {combatTargetByKey,type LivingTarget,type LivingTargetKey} from './combat-target.ts';
 import {spikeTrapPhysicalCell,spikeTrapTargetKey} from './spike-trap-state.ts';
 import {carrierOf} from './rescue-state.ts';
@@ -12,7 +13,7 @@ const present=(w:World,a:LivingTarget)=>a.state!=='dead'&&!a.health?.death&&('sp
 /** Created at a known last played Core; all future endpoints remain queued until
  * an actual movement/impact invalidates them. No repeated spring chance. */
 export function spikeTrapWindow297(w:World,lastPlayedCore=effectiveCore297(w)-1):SpikeTrapWindow|undefined {
- if(Number(w.schemaVersion)!==297)throw new RangeError('Core297 trap owner requires schema297');
+ if(!isCorePhysicalSchema297(Number(w.schemaVersion)))throw new RangeError('Core297 trap owner requires schema297');
  if(!Number.isSafeInteger(lastPlayedCore)||lastPlayedCore<0||lastPlayedCore>effectiveCore297(w))throw new RangeError('Invalid trap owner origin');
  if(!w.structures.some(s=>s.kind==='spike-trap'))return;
  const start=lastPlayedCore;

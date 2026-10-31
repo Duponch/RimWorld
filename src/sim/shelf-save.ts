@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {validLinkedShelfField286} from './linked-storage-save-286.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -5,7 +6,7 @@ import {validTargetBuildingFactionShape263} from './world-target-building-263.ts
 import {isBlockMaterial} from './building-materials.ts';
 import {footprintCells} from './definitions.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
-import {validStorageItems} from './storage-filters.ts';
+import {validStorageItems,validAiCoreStorageFilters298} from './storage-filters.ts';
 import {validStorageConditions} from './storage-condition.ts';
 import {isShelfKind,shelfFixedAccepts} from './shelf-storage.ts';
 import {structureMaxHp} from './thing-damage-rules.ts';
@@ -16,9 +17,10 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 const storageKeys=new Set<string>(['furniture','plant',...Object.values(ITEM_DEFINITIONS).map(d=>d.kind)]);
 export function validShelfSettings(value:unknown,version:number):boolean {
-  if(object(value)&&object(value.filters)&&'book'in value.filters){const d=Object.getOwnPropertyDescriptor(value.filters,'book');if((version!==295&&(version!==296&&version!==297))||!d||!d.enumerable||!Object.hasOwn(d,'value')||typeof d.value!=='boolean')return false;}
+  if(object(value)&&!validAiCoreStorageFilters298(value.filters,version))return false;
+  if(object(value)&&object(value.filters)&&'book'in value.filters){const d=Object.getOwnPropertyDescriptor(value.filters,'book');if((version!==295&&(version!==296&&!isCorePhysicalSchema297(version)))||!d||!d.enumerable||!Object.hasOwn(d,'value')||typeof d.value!=='boolean')return false;}
   if(version<229||!object(value)||Reflect.ownKeys(value).some(k=>typeof k!=='string'||!['filters','priority','capacity','items','quality','hitPoints','allowFresh','allowRotten'].includes(k)))return false;
-  return object(value.filters)&&Reflect.ownKeys(value.filters).every(k=>typeof k==='string'&&storageKeys.has(k)&&(k!=='book'||(version===295||(version===296||version===297)))&&(isSchema273OrLater(version)||k!=='prosthesis')&&(version>=265||k!=='wort'&&k!=='beer')&&(version>=256||k!=='jade')&&(version>=241||k!=='uranium')&&(version>=235||k!=='plant')&&typeof value.filters![k as never]==='boolean')
+  return object(value.filters)&&Reflect.ownKeys(value.filters).every(k=>typeof k==='string'&&storageKeys.has(k)&&(k!=='book'||(version===295||(version===296||isCorePhysicalSchema297(version))))&&(isSchema273OrLater(version)||k!=='prosthesis')&&(version>=265||k!=='wort'&&k!=='beer')&&(version>=256||k!=='jade')&&(version>=241||k!=='uranium')&&(version>=235||k!=='plant')&&typeof value.filters![k as never]==='boolean')
     &&integer(value.priority,1,5)&&value.capacity===500&&validStorageItems(value.items,version)&&validStorageConditions(value,version);
 }
 /** Reciprocal building/state admission, shared by files and snapshots. */

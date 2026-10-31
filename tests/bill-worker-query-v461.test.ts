@@ -1,3 +1,4 @@
+import {mockRequestId298} from './request-id-binding298';
 import {afterEach,expect,test,vi} from 'vitest';
 import {SimulationClient} from '../src/bridge/SimulationClient';
 import type {Request,Response} from '../src/bridge/protocol';
@@ -33,8 +34,8 @@ test('client metadata settles on its correlated JSON reply without world adoptio
  const client=new Client(),port=Port.current,snapshot=vi.fn(),fault=vi.fn();client.onSnapshot=snapshot;client.onFault=fault;
  const promise=client.billWorkerOptions(11,12),request=port.requests[0]!;
  expect(request).toMatchObject({type:'bill-worker-options',structureId:11,billId:12});
- port.deliver({type:'reply',id:request.id+1,ok:true,data:JSON.stringify(options())});
- port.deliver({type:'reply',id:request.id,ok:true,data:JSON.stringify(options()),checkpoint:{epoch:99,revision:99}});
+ port.deliver({type:'reply',id:mockRequestId298(request)+1,ok:true,data:JSON.stringify(options())});
+ port.deliver({type:'reply',id:mockRequestId298(request),ok:true,data:JSON.stringify(options()),checkpoint:{epoch:99,revision:99}});
  expect(await promise).toEqual(options());expect(port.requests).toHaveLength(1);expect(snapshot).not.toHaveBeenCalled();expect(fault).not.toHaveBeenCalled();expect(client.hasActiveMap).toBe(false);
  client.dispose();
 });
@@ -42,8 +43,8 @@ test('client metadata settles on its correlated JSON reply without world adoptio
 test('client rejects malformed, wrong-target and duplicate-candidate JSON while preserving transport state',async()=>{
  const invalid:unknown[]=[null,{...options(),structureId:99},{...options(),skill:['cooking']},{...options(),extra:1},{...options(),candidates:[options().candidates[0],options().candidates[0]]},{...options(),selected:{...options().selected,level:21}}];
  const client=new Client(),port=Port.current,snapshot=vi.fn();client.onSnapshot=snapshot;
- for(const value of invalid){const result=client.billWorkerOptions(11,12),rejected=expect(result).rejects.toThrow('liste des personnes'),request=port.requests.at(-1)!;port.deliver({type:'reply',id:request.id,ok:true,data:JSON.stringify(value)});await rejected;}
- const malformed=client.billWorkerOptions(11,12),rejected=expect(malformed).rejects.toThrow('illisible');port.deliver({type:'reply',id:port.requests.at(-1)!.id,ok:true,data:'{'});await rejected;
+ for(const value of invalid){const result=client.billWorkerOptions(11,12),rejected=expect(result).rejects.toThrow('liste des personnes'),request=port.requests.at(-1)!;port.deliver({type:'reply',id:mockRequestId298(request),ok:true,data:JSON.stringify(value)});await rejected;}
+ const malformed=client.billWorkerOptions(11,12),rejected=expect(malformed).rejects.toThrow('illisible');port.deliver({type:'reply',id:mockRequestId298(port.requests.at(-1)!),ok:true,data:'{'});await rejected;
  const before=port.requests.length;await expect(client.billWorkerOptions(0,12)).rejects.toThrow('invalide');expect(port.requests).toHaveLength(before);expect(snapshot).not.toHaveBeenCalled();expect(client.hasActiveMap).toBe(false);client.dispose();
 });
 

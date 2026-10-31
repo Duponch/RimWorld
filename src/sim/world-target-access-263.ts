@@ -75,6 +75,22 @@ export function queueWorldTargetEntry263(root:CampaignState,record:WorldGroupRec
  const d=Object.getOwnPropertyDescriptor(record,'pendingEntry263');if(d?!Object.hasOwn(d,'value')||!d.writable:!Object.isExtensible(record)||'pendingEntry263'in record)return false;
  record.pendingEntry263={revision:1,requestedAtCore:root.tick*10,target:{...target}};return true;
 }
+/** Same-tile VisitSite298 is an actual StartPath/arrival command, not a quote.
+ * Stop only its route control, then accept the scalar entry in one transaction.
+ * requestedAtCore remains the historical MACRO conservation stamp used by both
+ * save/projection readers; it is not the exact physical clock of Native arrival.
+ * No clock, physiology, material owner, RNG or allocator is advanced here. */
+export function queueWorldTargetEntryAtTile298(root:CampaignState,record:WorldGroupRecord,target:WorldEntryTarget263):boolean {
+ const g=record.state;
+ if(Number(root.schemaVersion)!==298||target.kind!=='visit-site'||!root.planet||!root.worldGroups?.groups.includes(record)||record.localMapId!==null||!record.encounters261||record.pending261||record.pendingEntry263||!('members'in g)||g.lastPersonalTick!==root.tick||!worldTargetAccess263(root,target,g.tile).ok)return false;
+ const state=Object.getOwnPropertyDescriptor(record,'state'),pendingField=Object.getOwnPropertyDescriptor(record,'pendingEntry263'),arrival=Object.getOwnPropertyDescriptor(record,'arrival261');
+ if(!state||!Object.hasOwn(state,'value')||state.value!==g||!state.writable||(pendingField?!Object.hasOwn(pendingField,'value')||!pendingField.writable:!Object.isExtensible(record)||'pendingEntry263'in record)||(arrival?!Object.hasOwn(arrival,'value')||!arrival.configurable:'arrival261'in record))return false;
+ const phase=g.tile===root.planet.homeTile?'awaiting-entry' as const:'at-site' as const;
+ const stopped:typeof g={...g,destination:g.tile,route:[g.tile],segment:null,phase,stop:{kind:phase},paused:false};
+ const pending:NonNullable<WorldGroupRecord['pendingEntry263']>={revision:1,requestedAtCore:root.tick*10,target:{...target}};
+ // All three own data recipients were admitted before the first write.
+ record.state=stopped;if(arrival)delete record.arrival261;record.pendingEntry263=pending;return true;
+}
 export function pendingWorldEntry263(root:CampaignState):{groupId:number;pending:NonNullable<WorldGroupRecord['pendingEntry263']>}|null {
  if(!isSchema263OrLater(Number(root.schemaVersion)))return null;
  const record=root.worldGroups?.groups.find(r=>r.pendingEntry263);return record?.pendingEntry263?{groupId:record.state.id,pending:record.pendingEntry263}:null;

@@ -165,7 +165,7 @@ export function reconcileGroupPreparation(w:World):void {
   const piles=currentPiles();
   for(const [id,promised] of future){
     const source=piles.get(id);
-    if(!source||source.owner.type!=='ground'||source.item!==promised.item||source.foodPoison||w.schemaVersion>=258&&!materialAllowedForPlayer256(source)||source.quantity<promised.quantity){
+    if(!source||source.owner.type!=='ground'||source.item!==promised.item||source.foodPoison||w.schemaVersion>=258&&Number(w.schemaVersion)<298&&!materialAllowedForPlayer256(source)||source.quantity<promised.quantity){
       groupLog(w,'Préparation annulée : une provision promise n’est plus disponible ; les biens déjà portés sont conservés.');
       cancelGroupPreparation(w);return;
     }

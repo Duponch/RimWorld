@@ -1,5 +1,9 @@
 # Architecture et décisions
 
+**31 octobre 2026 — schéma 298 intégré.** La [chaîne de victoire spatiale](ship-victory298.md) raccorde console/information payée, cœur d’IA physique, ordinateur/capteurs, lancement et départ vivant rechargeable. Typage complet, compilation et contrôles ciblés passent ; le coût de composition ne montre pas de recul agrégé dans la cohorte mesurée, sans preuve FPS globale.
+
+Les six ensembles reprennent selon la consigne humaine ; aucun n’est clos. Les essais de fluidité sont suspendus et le défaut reste ouvert. Cloudflare495c93d0/source58fc7307 est la dernière production attestée, encore au schéma297. Les détails V492 ci-dessous décrivent les fondations et leurs limites historiques, pas une nouvelle suspension du projet.
+
 ## Architecture courante V492 — schéma 297, Source12 retenue
 
 L’intégration locale est autorisée avec une dette de performance explicite ; [statut et mesures](movement-parity-v492-status.md). Le temps physique effectif est `tick*10+phaseCore297`, avec une phase entière0–9 sauvegardée. Les acteurs, délais de déplacement et combat concernés avancent nominalement à 60 Core/s à×1. Les préfixes/suffixes macro, travail, besoins et nature restent à 6 Hz : ce n’est pas dix fois toute la simulation. `stepWorld297(n)` avance dix Core par pas local en conservant la phase. Les commandes agissent au point sûr courant sans jouer de rattrapage préalable fictif.

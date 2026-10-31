@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {validPartyNonOwner292} from './party-state-292.ts';
 import {validSownResource291} from './forestry-save-291.ts';
 import {isPlantSpeciesInVersion} from './biome-flora.ts';
@@ -18,7 +19,7 @@ export function validOrdinaryPlantLife(plant:Partial<Resource>,version:number,wo
   const life:unknown=plant.plantLife;
   if(!validInitialPlantAge256(plant,version))return false;
   if(life===undefined)return plant.sown291===true?false:!world.climate||!isPlant(plant as Resource);
-  if(version<87||!world.climate&&!((version===291||(version===292||(version===293||(version===294||(version===295||(version===296||version===297))))))&&plant.sown291===true)||!isPlant(plant as Resource)||!record(life)||!Object.keys(life).every(k=>['initialAgeCore','since','bornAt','age','darkTicks','leaflessAt','nextCheck'].includes(k)))return false;
+  if(version<87||!world.climate&&!((version===291||(version===292||(version===293||(version===294||(version===295||(version===296||isCorePhysicalSchema297(version)))))))&&plant.sown291===true)||!isPlant(plant as Resource)||!record(life)||!Object.keys(life).every(k=>['initialAgeCore','since','bornAt','age','darkTicks','leaflessAt','nextCheck'].includes(k)))return false;
   if(!integer(life.since,version>=256&&Object.hasOwn(life,'initialAgeCore')?0:(world.climate?.adoptedAt??0),world.tick)||!integer(life.age,0,world.tick-life.since)||!integer(life.darkTicks,0,life.age)||
     !integer(life.nextCheck,world.tick+1,world.tick+PLANT_LIFE_INTERVAL)||life.nextCheck%PLANT_LIFE_INTERVAL!==(plant.id!+1)%PLANT_LIFE_INTERVAL)return false;
   if(life.age!==Math.max(0,life.nextCheck-PLANT_LIFE_INTERVAL-life.since))return false;

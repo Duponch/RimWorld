@@ -1,6 +1,7 @@
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {captureEncounterHumans261} from './caravan-encounter-owners-261.ts';
 import {captureWorldPawnHumans256} from './world-pawn-human-capture-256.ts';
+import {captureEscapedShipHumans298} from './ship-escape-save-298.ts';
 import {captureLostOwners} from './world-lost-owners.ts';
 import {registeredMaps,registeredMapId,registeredMapForValidation,boundWorldGroup} from './world-map-context.ts';
 import {globalOwnerContexts,campaignOwnerKey} from './world-map-owners.ts';
@@ -13,6 +14,7 @@ import type { RelationshipPerson } from './relationship-state.ts';
  * inserts a Pawn, cargo, job or local reservation into another map context. */
 export function appendCampaignPeople(world:World,people:Map<number,RelationshipPerson>):void {
   const root=campaignAuthority(world);
+  if(root.escapedShips298)for(const [id,p] of captureEscapedShipHumans298(root).people){if(people.has(id))throw Error('Escaped human also has another physical owner');people.set(id,p);}
   const factionKnowledge=new Map<number,RelationshipPerson>();
   // Foreign faction leaders have one physical registry owner, outside every
   // map. Other contexts receive only knowledge, never another Pawn/cargo.
@@ -47,7 +49,7 @@ export function appendCampaignPeople(world:World,people:Map<number,RelationshipP
 
 export function campaignPhysicalCaptures(world:World):readonly {world:World|undefined;owners:HumanOwnershipCapture}[] {
   const root=campaignAuthority(world),other=root.worldMaps?undefined:otherCampaignMap(root);
-  const physical=(root.worldMaps?[...root.worldMaps.sites.map(m=>registeredMapForValidation(root,m.id)!),...globalOwnerContexts(root,true)]:[root,...other?[other]:[]]).map(local=>({world:local as World|undefined,owners:captureHumanOwners(local,{},false)}));return [...(root.worldMaps?[...physical,{world:undefined,owners:captureLostOwners(root)}]:physical),...(root.worldPawns?[{world:undefined,owners:captureWorldPawnHumans256(root)}]:[]),...((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion))))?[{world:undefined,owners:captureEncounterHumans261(root)}]:[])];
+  const physical=(root.worldMaps?[...root.worldMaps.sites.map(m=>registeredMapForValidation(root,m.id)!),...globalOwnerContexts(root,true)]:[root,...other?[other]:[]]).map(local=>({world:local as World|undefined,owners:captureHumanOwners(local,{},false)}));return [...(root.escapedShips298?[{world:undefined,owners:captureEscapedShipHumans298(root)}]:[]),...(root.worldMaps?[...physical,{world:undefined,owners:captureLostOwners(root)}]:physical),...(root.worldPawns?[{world:undefined,owners:captureWorldPawnHumans256(root)}]:[]),...((Number(root.schemaVersion)===261||(Number(root.schemaVersion)===262||isSchema263OrLater(Number(root.schemaVersion))))?[{world:undefined,owners:captureEncounterHumans261(root)}]:[])];
 }
 
 /** Global notifications use actual live owners. Clinical/local work guards

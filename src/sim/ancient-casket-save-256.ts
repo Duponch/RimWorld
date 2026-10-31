@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validateEquipmentOwners259} from './equipment-save.ts';
@@ -24,7 +25,7 @@ export function validateAncientCasketRecord256(c:AncientCasket256,w:AncientCaske
  const errors:string[]=[],ids=new Set<number>();
  const add=(id:number)=>{if(!integer(id,1,w.nextId-1)||ids.has(id))errors.push('Duplicate/invalid original casket Thing identity.');ids.add(id);};
 
-  if(!validAncientCasketField256(c,w.schemaVersion,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined))return ['Invalid/future casket state.'];
+  if(!validAncientCasketField256(c,w.schemaVersion,w.tick,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined))return ['Invalid/future casket state.'];
   const s=c.casket;add(c.id);
   const humans=new Set(s.humans.map(p=>p.id)),animals=new Set(s.animals.map(a=>a.id));
   for(const p of s.humans){

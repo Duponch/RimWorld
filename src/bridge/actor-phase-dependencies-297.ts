@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import type {World,Pawn,Job,MaterialPile,Structure} from '../sim/types';
 import {copyCoreData297} from './core-phase-data-297';
 import {appearanceOf} from '../sim/pawn-appearance';
@@ -122,7 +123,7 @@ function cargo(p:MaterialPile|undefined){
 /** After the ENTIRE macro suffix, plus actual prepareFull seeding. No BFS/RNG,
  * no Pawn/World/clinical record escapes; no clock or UI work counter is signed. */
 export function captureActorPhaseDependencies297(world:World):ActorPhaseDependencies297 {
- if(Number(world.schemaVersion)!==297)throw Error('Dependency capture requires actual schema297');
+ if(!isCorePhysicalSchema297(Number(world.schemaVersion)))throw Error('Dependency capture requires actual schema297');
  const pawnsById=new Map(world.pawns.map(p=>[p.id,p])),jobs=new Map(world.jobs.map(j=>[j.id,j]));
  const bodies=new Map<number,MaterialPile>(),carried=new Map<number,MaterialPile>(),gear=new Map<number,string>(),apparel=new Map<number,unknown[]>();
  for(const pile of world.piles){

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import { RECREATION_KINDS, recreationMood } from '../sim/recreation-rules';
 import { colonyExpectation } from '../sim/colony-economy';
 import type { Pawn,World } from '../sim/types';
@@ -9,7 +10,7 @@ const recreationLabels:Record<string,string> = {reading:'Lecture',chemical:'Cons
 
 export const recreationInspection = (): string => `<div class="needs"><div class="pawn-need" data-need="recreation" tabindex="0"><label for="recreation-meter">Plaisir <span id="selected-recreation"></span></label>${needGaugeMarkup('recreation')}</div></div><p id="party-participation" hidden></p><p id="recreation-tolerance" class="muted" hidden></p>`;
 export function updateRecreationInspection(root: HTMLElement, pawn: Pawn, world:World): void {
-  const joy=pawn.recreation, mood=recreationMood(joy.level), kinds=[...RECREATION_KINDS,...(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))?['reading' as const]:[]];
+  const joy=pawn.recreation, mood=recreationMood(joy.level), kinds=[...RECREATION_KINDS,...(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion))))?['reading' as const]:[]];
   root.querySelector('#selected-recreation')!.textContent=pawn.state==='dead'?'—':`${Math.round(joy.level)} %`;
   const text=kinds.map(k=>`${recreationLabels[k]} : ${(joy.tolerance[k]??0).toFixed(0)} %${joy.bored[k]?' (lassé)':''}`).join(' · ');
   root.querySelector('#recreation-tolerance')!.textContent=`Lassitude — ${text}`;

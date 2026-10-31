@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema277OrLater,isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
@@ -44,9 +45,9 @@ export function validBombWaveShape(value:unknown,version=193,coreNow297?:number)
     if(a.value.some((key,n,all)=>typeof key!=='string'||!/^pile:[1-9]\d*$/.test(key)||!integer(Number(key.slice(5)),1,Number(value.id)-1)||Number(key.slice(5))===value.sourceId||n>0&&all[n-1]>=key)||Object.hasOwn(value,'animalDeath')||Object.hasOwn(value,'shortCircuit')||Object.hasOwn(value,'emp'))return false;
   }
   // Prospective receipt admission precedes every direct scalar read.
-  if('animalDeath'in value){const a=Object.getOwnPropertyDescriptor(value,'animalDeath');if(!a?.enumerable||!Object.hasOwn(a,'value'))return false;if(a.value&&typeof a.value==='object'&&'deathAtCore297'in a.value){const d=Object.getOwnPropertyDescriptor(a.value,'deathAtCore297');if(version!==297||!d?.enumerable||!Object.hasOwn(d,'value'))return false;}}
+  if('animalDeath'in value){const a=Object.getOwnPropertyDescriptor(value,'animalDeath');if(!a?.enumerable||!Object.hasOwn(a,'value'))return false;if(a.value&&typeof a.value==='object'&&'deathAtCore297'in a.value){const d=Object.getOwnPropertyDescriptor(a.value,'deathAtCore297');if(!isCorePhysicalSchema297(version)||!d?.enumerable||!Object.hasOwn(d,'value'))return false;}}
   const variant=value.shortCircuit;
-  if(Object.hasOwn(value,'animalDeath')&&(!object(value.animalDeath)||!keys(value.animalDeath,['species','lifeStage','deathTick',...(version===297?['deathAtCore297']:[])])||Object.keys(value.animalDeath).length!==3+(Object.hasOwn(value.animalDeath,'deathAtCore297')?1:0)||!isExplosiveAnimal256(value.animalDeath.species)||!['baby','juvenile','adult'].includes(String(value.animalDeath.lifeStage))||!integer(value.animalDeath.deathTick)||Object.hasOwn(value,'shortCircuit')||Object.hasOwn(value,'emp')||Object.hasOwn(value,'instigatorKey')||(Object.hasOwn(value.animalDeath,'deathAtCore297')?(version!==297||!Number.isSafeInteger(coreNow297)||!integer(value.animalDeath.deathAtCore297,0,coreNow297)||Math.floor(Number(value.animalDeath.deathAtCore297)/10)!==value.animalDeath.deathTick||value.startedAtCore!==value.animalDeath.deathAtCore297):Number(value.startedAtCore)<Math.max(0,(Number(value.animalDeath.deathTick)-1)*10)||Number(value.startedAtCore)>Number(value.animalDeath.deathTick)*10)))return false;
+  if(Object.hasOwn(value,'animalDeath')&&(!object(value.animalDeath)||!keys(value.animalDeath,['species','lifeStage','deathTick',...(isCorePhysicalSchema297(version)?['deathAtCore297']:[])])||Object.keys(value.animalDeath).length!==3+(Object.hasOwn(value.animalDeath,'deathAtCore297')?1:0)||!isExplosiveAnimal256(value.animalDeath.species)||!['baby','juvenile','adult'].includes(String(value.animalDeath.lifeStage))||!integer(value.animalDeath.deathTick)||Object.hasOwn(value,'shortCircuit')||Object.hasOwn(value,'emp')||Object.hasOwn(value,'instigatorKey')||(Object.hasOwn(value.animalDeath,'deathAtCore297')?(!isCorePhysicalSchema297(version)||!Number.isSafeInteger(coreNow297)||!integer(value.animalDeath.deathAtCore297,0,coreNow297)||Math.floor(Number(value.animalDeath.deathAtCore297)/10)!==value.animalDeath.deathTick||value.startedAtCore!==value.animalDeath.deathAtCore297):Number(value.startedAtCore)<Math.max(0,(Number(value.animalDeath.deathTick)-1)*10)||Number(value.startedAtCore)>Number(value.animalDeath.deathTick)*10)))return false;
   if(Object.hasOwn(value,'emp')&&(!object(value.emp)||!keys(value.emp,['quality'])
     ||!WEAPON_QUALITIES.includes(value.emp.quality as WeaponQuality)||Object.hasOwn(value,'shortCircuit')
     ||typeof value.instigatorKey!=='string'||!/^pawn:[1-9]\d*$/.test(value.instigatorKey)
@@ -72,10 +73,10 @@ export function validateBombWaves(w:World,errors:string[],ids?:NumericMembership
   // Other entries may already be malformed while this entry is valid. Pair
   // checks borrow only independently validated shapes; the loop reports all
   // rejected entries without dereferencing a null or incomplete neighbor.
-  const shaped=waves.filter(other=>object(other)&&Object.hasOwn(other,'shortCircuit')&&validBombWaveShape(other,w.schemaVersion,Number(w.schemaVersion)===297?effectiveCore297(w):undefined));
+  const shaped=waves.filter(other=>object(other)&&Object.hasOwn(other,'shortCircuit')&&validBombWaveShape(other,w.schemaVersion,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined));
   let prior=0;const seen=ids??new Set([...w.pawns,...w.structures,...w.jobs,...w.resources,...w.piles].map(t=>t.id));
   for(const wave of waves){
-    if(!validBombWaveShape(wave,w.schemaVersion,Number(w.schemaVersion)===297?effectiveCore297(w):undefined)){errors.push('Invalid bomb wave shape.');continue;}
+    if(!validBombWaveShape(wave,w.schemaVersion,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined)){errors.push('Invalid bomb wave shape.');continue;}
     if(wave.shortCircuit){
       const report=w.miscIncidents?.shortCircuits?.last;
       if(!object(report)||report.outcome!=='discharge'||report.conduitId!==wave.sourceId||!object(report.center)||report.center.x!==wave.center.x||report.center.z!==wave.center.z
@@ -88,11 +89,11 @@ export function validateBombWaves(w:World,errors:string[],ids?:NumericMembership
         ||wave.shortCircuit.damage==='flame'&&wave.advancedAtCore===wave.startedAtCore&&report?.bombRadius!==undefined&&!bomb)
         errors.push('Invalid short-circuit wave pair.');
     }
-    if(wave.casketExplosion&&(waves.some(other=>other!==wave&&validBombWaveShape(other,w.schemaVersion,Number(w.schemaVersion)===297?effectiveCore297(w):undefined)&&other.sourceId===wave.sourceId)||wave.casketExplosion.ignoredThingKeys.some(key=>wave.damagedThingKeys.includes(key))))errors.push('Invalid duplicate casket source/ignored target.');
+    if(wave.casketExplosion&&(waves.some(other=>other!==wave&&validBombWaveShape(other,w.schemaVersion,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined)&&other.sourceId===wave.sourceId)||wave.casketExplosion.ignoredThingKeys.some(key=>wave.damagedThingKeys.includes(key))))errors.push('Invalid duplicate casket source/ignored target.');
     if(wave.animalDeath&&!validAnimalDeathExplosionOwner256(w,wave))errors.push('Invalid animal death explosion provenance.');
     if(wave.emp){
       const source=w.projectiles?.find(p=>p&&p.id===wave.sourceId);
-      if(source?(!validWorldProjectile(source,w,w.schemaVersion,Number(w.schemaVersion)===297?end:undefined)||source.weaponItem!=='emp-launcher'||source.quality!==wave.emp.quality||source.flight.launcherKey!==wave.instigatorKey
+      if(source?(!validWorldProjectile(source,w,w.schemaVersion,isCorePhysicalSchema297(Number(w.schemaVersion))?end:undefined)||source.weaponItem!=='emp-launcher'||source.quality!==wave.emp.quality||source.flight.launcherKey!==wave.instigatorKey
         ||source.arrival?.kind!=='impact'||source.advancedAtCore!==wave.startedAtCore
         ||Math.floor(source.arrival.point.x)!==wave.center.x||Math.floor(source.arrival.point.z)!==wave.center.z):seen.has(wave.sourceId))
         errors.push('Invalid EMP projectile provenance.');

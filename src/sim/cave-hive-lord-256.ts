@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 /** Three native insect Pawns, ordinary anatomical melee, actual map contacts.
@@ -64,7 +65,7 @@ function endLordJobs(w:World,id:number):void {
 }
 /** Actual damage/memo producer only. Return-to-defend consumes no RNG. */
 export function receiveHiveMemo256(w:World,kind:'attacked'|'burned'|'destroyed'|'despawned'|'heat-burn'|'pawn-lost',core:number,lordId?:number):void {
- if(!isSchema256Or257(w.schemaVersion)||!Number.isSafeInteger(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<0||core>w.tick*10))return;
+ if(!isSchema256Or257(w.schemaVersion)||!Number.isSafeInteger(core)||(isCorePhysicalSchema297(Number(w.schemaVersion))?core!==effectiveCore297(w):core<0||core>w.tick*10))return;
  // Replace only the local Lord header; private physical outcome views never
  // write another owner's Lord object through a shared header reference.
  if(!w.wildlife?.hiveLords)return;

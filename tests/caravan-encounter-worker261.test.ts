@@ -1,3 +1,4 @@
+import {mockRequestId298} from './request-id-binding298';
 import {afterEach,expect,test,vi} from 'vitest';
 import {pendingFixture261,preparedEncounterSource261,admitted261,away261,checkpoint261} from './helpers/caravan-encounter261-acquired.ts';
 import {deserializeCampaign,serializeCampaign} from '../src/sim/serialization.ts';
@@ -20,7 +21,7 @@ test.skipIf(process.env.TRAVEL261_ENCOUNTER_SIM!=='1')('actual Worker: cold Meet
  // are deliberately not mocked. Capturing the one interval creates no timer.
  vi.spyOn(performance,'now').mockImplementation(()=>now);vi.stubGlobal('self',scope);vi.stubGlobal('setInterval',(fn:()=>void)=>{wake=fn;return 1;});
  await import('../src/bridge/simulation.worker');
- function request(p:Request){scope.onmessage({data:p} as MessageEvent<Request>);const reply=replies.get(p.id);replies.delete(p.id);if(!reply)throw Error('Expected synchronous reply from existing Worker path');expect(faults).toEqual([]);return reply;}
+ function request(p:Request){scope.onmessage({data:p} as MessageEvent<Request>);const reply=replies.get(mockRequestId298(p));replies.delete(mockRequestId298(p));if(!reply)throw Error('Expected synchronous reply from existing Worker path');expect(faults).toEqual([]);return reply;}
  function saved(){const reply=request({type:'save',id:++id});expect(reply.ok,reply.reason).toBe(true);if(!reply.data)throw Error('Actual Worker save absent');return reply.data;}
  expect(request({type:'load',id:++id,data:input.raw}).ok).toBe(true);expect(visible?.speed).toBe(0);expect(saved()).toBe(input.raw);
  const speed=request({type:'speed',id:++id,speed:6});expect(speed.ok).toBe(false);expect(speed.reason).toMatch(/rencontre.*pause/i);expect(visible?.speed).toBe(0);expect(saved()).toBe(input.raw);

@@ -131,7 +131,7 @@ test('V361 shelf metadata cannot be exported as trader inventory or gain active 
   departure.packed=[{building,owner:{type:'inventory',pawnId:traderId}}];const before=structuredClone(bad);
   expect(validShelfTransport(bad)).toBe(false);expect(()=>deserializeWorld(JSON.stringify(bad))).toThrow(/shelf/i);expect(bad).toEqual(before);
   const decoder=new SnapshotDecoder(),encoder=new SnapshotEncoder(),first=applied(decoder,encoder.encode(w,0,1,true)),held=structuredClone(first);
-  const correct=structuredClone(encoder.encode(w,0,1,true)),packet=structuredClone(correct);packet.world=bad;
+  const correct=structuredClone(encoder.encode(w,0,1,true)),packet=structuredClone(correct);Object.assign(packet,{world:bad});
   expect(decoder.adopt(packet).status).toBe('resync');expect(first).toEqual(held);expect(applied(decoder,correct)).toEqual(w);
   for(const id of building.shelf!.cells)expect(storageCellById(w,id)).toBeUndefined();
 });

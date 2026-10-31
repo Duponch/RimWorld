@@ -1,3 +1,4 @@
+import {validAiCorePile298} from './victory-content-save-298.ts';
 import {isNovelBook295} from './book-state-295.ts';
 import { copyPileCondition } from './pile-condition.ts';
 import { groundCapacity,nearbyGround } from './ground-placement.ts';
@@ -11,6 +12,7 @@ import type { Cell,MaterialOwner,MaterialPile,World } from './types.ts';
 export function orbitalDraftPiles(w:World):MaterialPile[] {return w.piles.map(p=>({...p,owner:{...p.owner},...copyPileCondition(p)}));}
 export function orbitalTake(w:World,id:number,quantity:number,owner:MaterialOwner):boolean {
   const pile=w.piles.find(p=>p.id===id);if(!pile||!Number.isSafeInteger(quantity)||quantity<=0||quantity>pile.quantity)return false;
+  if((pile.item==='ai-core'||pile.kind==='ai-core')&&(!validAiCorePile298(pile,w.schemaVersion)||quantity!==1))return false;
   if((pile.item==='novel'||pile.kind==='book')&&(w.schemaVersion<295||pile.item!=='novel'||pile.kind!=='book'||quantity!==1||pile.quantity!==1||!isNovelBook295(pile.book)||owner.type==='job'||owner.type==='equipment'||owner.type==='apparel'||owner.type==='grave'))return false;
   let part=pile;
   if(quantity!==pile.quantity){

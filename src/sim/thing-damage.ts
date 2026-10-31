@@ -1,3 +1,5 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
+import {notifyShipRootDestruction298} from './ship-root-destruction-proof-298.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {startFirefoamWick290,registerFirefoamWave290} from './firefoam-290.ts';
 import {rebuildFirefoamPopper290} from './firefoam-rebuild-290.ts';
@@ -146,10 +148,10 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(s.kind==='ship-chunk'&&!isSchema256Or257(world.schemaVersion))return false;
   const packed=world.packed.find(p=>p.building===s),installed=world.structures.includes(s),max=structureMaxHp(s);
   if(!max&&cause!=='roof-thick'||!positive(amount)||!installed&&!packed)return false;
-  if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!Number.isSafeInteger(external.core)||(Number(world.schemaVersion)===297?external.core!==effectiveCore297(world):external.core<Math.max(0,(world.tick-1)*10)||external.core>world.tick*10)))return false;
-  const core=external?.core??(Number(world.schemaVersion)===297?effectiveCore297(world):world.tick*10),explosive=world.schemaVersion>=193&&installed&&s.kind==='mini-turret'&&!!s.turret&&miniTurretExplosive(s.id);
+  if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!Number.isSafeInteger(external.core)||(isCorePhysicalSchema297(Number(world.schemaVersion))?external.core!==effectiveCore297(world):external.core<Math.max(0,(world.tick-1)*10)||external.core>world.tick*10)))return false;
+  const core=external?.core??(isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):world.tick*10),explosive=world.schemaVersion>=193&&installed&&s.kind==='mini-turret'&&!!s.turret&&miniTurretExplosive(s.id);
   const detonates=explosive&&(external?.detonate|| (external?.rawAmount??amount)>=max-(s.damage??0));
-  const foam=(Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||Number(world.schemaVersion)===295||Number(world.schemaVersion)===296||Number(world.schemaVersion)===297)))))&&installed&&s.kind==='firefoam-popper'&&!!s.firefoam290;
+  const foam=(Number(world.schemaVersion)===290||(Number(world.schemaVersion)===291||(Number(world.schemaVersion)===292||(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||Number(world.schemaVersion)===295||Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion)))))))&&installed&&s.kind==='firefoam-popper'&&!!s.firefoam290;
   const foamDetonates=foam&&(external?.firefoamDetonate290|| (external?.rawAmount??amount)>=max-(s.damage??0));
   const emits=detonates||foamDetonates;
   if(foam&&(!Number.isSafeInteger(core+150)||foamDetonates&&(world.firefoam290?.waves.length??0)>=world.width*world.height))return false;
@@ -237,5 +239,5 @@ export function damageStructure(world:World,s:Structure,amount:number,cause:Stru
   if(foam)rebuildFirefoamPopper290(world,s);
   if(waveId!==undefined){if(foamDetonates)registerFirefoamWave290(world,s,waveId,core);else registerBombWave(world,s,waveId,core,external?.instigatorKey??s.turret?.wick?.instigatorKey);}
   for(const p of world.pawns)if(p.firefoamTask290?.structureId===s.id)reconcileFirefoamManual290(world,p);
-  commitRemovedFogBlocker256(world,fogRemoval);return true;
+  commitRemovedFogBlocker256(world,fogRemoval);notifyShipRootDestruction298(world,s);return true;
 }

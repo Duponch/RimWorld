@@ -1,6 +1,8 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {READING_POLICIES_295,effectiveReadingPolicy295} from '../sim/reading-state-295';
 import type {NativeUiState,NativeUiActions,NativePage,NativeRow,NativeControl} from './native-contract';
-import {buildNativeWorld,syncNativeWorldState} from './native-world';
+import {buildNativeWorld,syncNativeWorldState,nativePaidAiSiteFacts298,focusNativePaidAiSite298} from './native-world';
+import {effectiveCore297} from '../sim/core-phase-297';
 import {nativeArrivalRows} from './native-arrivals';
 import {nativeTextEntitiesFor} from './native-text-entities';
 import {toolDefinitions,workColumns,productionToolOrder} from './native-catalog';
@@ -142,7 +144,8 @@ function architect(state:NativeUiState,actions:NativeUiActions,world:World):Nati
  if(selected){
   rows.push({...row('architect-selected',selected.title,undefined,selected.hint),region:'details',emphasis:'heading'});
   if(materials.length>1)rows.push({...row('architect-material','Matériau',undefined,undefined,[button(`tool-${selected.id}-material`,ITEM_DEFINITIONS[state.constructionMaterial].label,()=>{}, {hint:'Matériau de la construction sélectionnée',select:{value:state.constructionMaterial,options:materials.map(material=>({value:material,label:ITEM_DEFINITIONS[material].label})),onChange:value=>{const material=materials.find(item=>item===value);if(material)actions.material(material);}}})]),region:'details',compact:true});
-  rows.push({...row('architect-rotation','Orientation',`${state.orientation*90}°`,'Q / E tourne les constructions orientables.',[button('rotate-left','↶',()=>actions.rotate(-1),{hint:'Tourner à gauche · Q'}),button('rotate-right','↷',()=>actions.rotate(1),{hint:'Tourner à droite · E'})]),region:'details',compact:true});
+  if(selected.id==='ship-computer'||selected.id==='ship-sensors')rows.push({...row('architect-rotation','Orientation','Fixe','Édifice 2 × 2 fixe, sans rotation.'),region:'details',compact:true});
+  else rows.push({...row('architect-rotation','Orientation',`${state.orientation*90}°`,'Q / E tourne les constructions orientables.',[button('rotate-left','↶',()=>actions.rotate(-1),{hint:'Tourner à gauche · Q'}),button('rotate-right','↷',()=>actions.rotate(1),{hint:'Tourner à droite · E'})]),region:'details',compact:true});
  }else rows.push({...row('architect-instruction','Choisir une construction',undefined,'Choisissez une carte du catalogue, puis désignez son emplacement sur le terrain. Q / E tourne les constructions orientables.'),region:'details'});
  const pending=world.jobs.filter(job=>job.status==='pending').length;
  rows.push({...row('architect-job-count',world.jobs.length?`${world.jobs.length} ordre(s) · ${pending} en attente`:'Aucun ordre en cours'),region:'details',emphasis:'muted'});
@@ -312,18 +315,18 @@ function paintAreaCoordinates(areaId:number):void {
  ],[button('paint-apply','Appliquer le rectangle',async()=>{await send({type:'allowed-area-paint',areaId,enabled,from:{x:fromX,z:fromZ},to:{x:toX,z:toZ}});areaEditor();})]);open(make());
 }
 function assignPanel(world:World):NativePage {
- const rows:NativeRow[]=[{id:'assign-headings',label:'Colon',value:'Activité',compact:true,columns:['Régime','Hostilité','Zone','Tenue','Auto','Port forcé','Drogues',...(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))?['Lecture']:[]].map(label=>({label}))}];
+ const rows:NativeRow[]=[{id:'assign-headings',label:'Colon',value:'Activité',compact:true,columns:['Régime','Hostilité','Zone','Tenue','Auto','Port forcé','Drogues',...(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion))))?['Lecture']:[]].map(label=>({label}))}];
  for(const pawn of world.pawns.filter(p=>isColonist(p)&&!p.prisoner)){
   const food=world.foodPolicies.find(p=>p.id===pawn.foodPolicyId),apparel=world.apparelPolicies?.find(p=>p.id===pawn.apparelPolicyId),drug=effectiveDrugPolicies265(world).find(p=>p.id===pawn.drugPolicyId)??effectiveDrugPolicies265(world)[0]!;
    const controls=[button(`assign-food-${pawn.id}`,'Régime',()=>choose(`food-choice-${pawn.id}`,`${pawn.name} · alimentation`,currentWorld().foodPolicies.map(policy=>({id:`food-${policy.id}`,label:policy.name,active:currentPawn(pawn.id).foodPolicyId===policy.id,choose:()=>send({type:'food-policy-assign',pawnId:pawn.id,policyId:policy.id})})))),button(`assign-response-${pawn.id}`,'Hostilité',()=>choose(`response-${pawn.id}`,`${pawn.name} · réaction hostile`,(['flee','ignore','attack'] as const).map(response=>({id:response,label:{flee:'Fuir',ignore:'Ignorer',attack:'Attaquer'}[response],active:(currentPawn(pawn.id).hostilityResponse??'flee')===response,choose:()=>send({type:'hostility-response',pawnId:pawn.id,response})})))),button(`assign-area-${pawn.id}`,'Zone',()=>choose(`area-choice-${pawn.id}`,`${pawn.name} · zone autorisée`,[{id:0,label:'Sans restriction'},...(currentWorld().allowedAreas??[])].map(area=>({id:`area-${area.id}`,label:area.label,active:(currentPawn(pawn.id).allowedAreaId??0)===area.id,choose:()=>send({type:'assign-allowed-area',pawnId:pawn.id,areaId:area.id||null})}))))];
   if(world.schemaVersion>=90&&apparel){controls.push(button(`assign-apparel-${pawn.id}`,'Tenue',()=>choose(`apparel-choice-${pawn.id}`,`${pawn.name} · tenue`,(currentWorld().apparelPolicies??[]).map(policy=>({id:`apparel-${policy.id}`,label:policy.label,active:currentPawn(pawn.id).apparelPolicyId===policy.id,choose:()=>send({type:'apparel-policy-assign',pawnId:pawn.id,policyId:policy.id,automatic:!!currentPawn(pawn.id).apparelAutomation})})))),button(`assign-auto-${pawn.id}`,pawn.apparelAutomation?'Auto actif':'Auto inactif',()=>{const p=currentPawn(pawn.id);return send({type:'apparel-policy-assign',pawnId:p.id,policyId:p.apparelPolicyId??apparel.id,automatic:!p.apparelAutomation});},{active:!!pawn.apparelAutomation}),button(`assign-forced-${pawn.id}`,'Libérer le port forcé',()=>send({type:'apparel-clear-forced',pawnId:pawn.id})));}
   if(world.schemaVersion>=265)controls.push(button(`assign-drug-${pawn.id}`,'Drogues',()=>choose(`drug-choice-${pawn.id}`,`${pawn.name} · drogues`,effectiveDrugPolicies265(currentWorld()).map(policy=>({id:`drug-${policy.id}`,label:policy.name,active:currentPawn(pawn.id).drugPolicyId===policy.id,choose:()=>send({type:'drug-policy-assign',pawnId:pawn.id,policyId:policy.id})})))));
-  if((Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297)))controls.push(button(`assign-reading-${pawn.id}`,'Lecture',()=>choose(`reading-choice-${pawn.id}`,`${pawn.name} · lecture`,READING_POLICIES_295.map(policy=>({id:String(policy.id),label:policy.label,active:effectiveReadingPolicy295(currentPawn(pawn.id))===policy.id,choose:()=>send({type:'reading-policy-295',pawnId:pawn.id,policyId:policy.id})})))));
+  if((Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion)))))controls.push(button(`assign-reading-${pawn.id}`,'Lecture',()=>choose(`reading-choice-${pawn.id}`,`${pawn.name} · lecture`,READING_POLICIES_295.map(policy=>({id:String(policy.id),label:policy.label,active:effectiveReadingPolicy295(currentPawn(pawn.id))===policy.id,choose:()=>send({type:'reading-policy-295',pawnId:pawn.id,policyId:policy.id})})))));
   const area=pawn.allowedAreaId?world.allowedAreas?.find(a=>a.id===pawn.allowedAreaId)?.label??'Zone inconnue':'Sans restriction';
   const response={flee:'Fuir',ignore:'Ignorer',attack:'Attaquer'}[pawn.hostilityResponse??'flee'];
   const values:Record<string,string>={food:food?.name??'Régime inconnu',response,area,apparel:apparel?.label??'Tenue indisponible',auto:pawn.apparelAutomation?'Auto actif':'Auto inactif',forced:'Libérer',drug:drug?.name??'Politique indisponible',reading:READING_POLICIES_295.find(p=>p.id===effectiveReadingPolicy295(pawn))!.label};
   const hint=[pawn.name,`Régime : ${values.food}`,`Hostilité : ${response}`,`Zone : ${area}`,`Tenue : ${values.apparel}`,values.auto,world.schemaVersion>=265?`Drogues : ${drug.name}`:'',queryPawnStatus(world,pawn).reason].filter(Boolean).join('\n');
-  const ordered=['food','response','area','apparel','auto','forced','drug',...(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))?['reading']:[]].map(action=>{
+  const ordered=['food','response','area','apparel','auto','forced','drug',...(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion))))?['reading']:[]].map(action=>{
    const original=controls.find(control=>control.id===`assign-${action}-${pawn.id}`);
    if(!original)return button(`assign-${action}-${pawn.id}-unavailable`,'—',()=>{},{disabled:true,hint:'Indisponible dans cette partie.'});
    return {...original,label:values[action]!,hint:[original.label,original.hint,hint].filter(Boolean).join('\n'),disabled:original.disabled||pawn.state==='dead'||!!pawn.health?.death||!!pawn.visitor};
@@ -358,6 +361,11 @@ function questsPanel(state:NativeUiState):NativePage {
   for(const option of request.options)rows.push(row(`trade-request-${request.id}-reward-${option.id}`,`Récompense ${option.id}`,undefined,[...option.original.map(p=>`${p.quantity} ${ITEM_DEFINITIONS[p.item].label}${p.quality?` (${QUALITY_LABELS[p.quality]})`:''}`),option.goodwill?`Relations +${option.goodwill}`:''].filter(Boolean).join(' · ')));
  }
  for(const site of source.worldSites263?.entries??[])if(site.kind==='peace-talks'){const facts=peaceTalksFacts293(source,site);rows.push(row(`peace-${site.id}`,facts.title,facts.status,`${facts.destination} ${facts.body}`,[button(`peace-${site.id}-world`,'Monde',()=>host?.panel('world'))]));}
+ for(const site of source.worldSites263?.entries??[]){
+  const paid=nativePaidAiSiteFacts298(site,effectiveCore297(source));if(!paid)continue;
+  rows.push({...row(`paid-ai-site-${site.id}`,paid.title,`Case ${site.tile} · ${paid.status}`,`${paid.deadline}. ${paid.detail}`,[button(`paid-ai-site-${site.id}-world`,'Inspecter sur le globe',async()=>{await host?.panel('world');focusNativePaidAiSite298(site.id);})]),presentation:'record'});
+  rows.push(row(`paid-ai-site-${site.id}-risk`,'Risque',paid.risk));
+ }
  rows.push(...nativeArrivalRows(state,host!));
  if(!rows.length)rows.push(row('quests-empty','Aucune quête signalée.'));
  return {id:'quests',title:'Quêtes',rows,width:7.8,onClose:()=>void host?.panel(null)};

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import type {Cell,MaterialOwner,MaterialPile,Pawn,Structure} from './types.ts';
@@ -82,7 +83,7 @@ export function ancientCasketHumanOwners256(c:AncientCasket256){return c.casket.
 export function ancientCasketHumanOwnersForWorld256(w:{schemaVersion:number;tick:number;phaseCore297?:number;structures:readonly unknown[]}){
  const out:ReturnType<typeof ancientCasketHumanOwners256>=[];
  for(const entry of w.structures){if(!entry||typeof entry!=='object')throw Error('Invalid actual structure before casket capture');if(!isAncientCasket256(entry)&&!('casket'in entry))continue;
-  if(!validAncientCasketField256(entry,w.schemaVersion,w.tick,w.schemaVersion===297?effectiveCore297(w):undefined))throw Error('Invalid actual ancient casket before owner capture');
+  if(!validAncientCasketField256(entry,w.schemaVersion,w.tick,isCorePhysicalSchema297(w.schemaVersion)?effectiveCore297(w):undefined))throw Error('Invalid actual ancient casket before owner capture');
   out.push(...ancientCasketHumanOwners256(entry as unknown as AncientCasket256));
  }return out;
 }
@@ -91,7 +92,7 @@ export function ancientCasketHumanOwnersForWorld256(w:{schemaVersion:number;tick
  * map must not archive loose aliases or silently destroy this live holder. */
 export function ancientCasketMapRemovalBoundary256(w:{schemaVersion:number;tick:number;phaseCore297?:number;structures:readonly unknown[]}):string|null {
  for(const entry of w.structures){if(!entry||typeof entry!=='object')return 'Invalid actual structure before casket removal';if(!isAncientCasket256(entry)&&!('casket'in entry))continue;
-  if(!validAncientCasketField256(entry,w.schemaVersion,w.tick,w.schemaVersion===297?effectiveCore297(w):undefined))return 'Invalid actual casket before map removal';
+  if(!validAncientCasketField256(entry,w.schemaVersion,w.tick,isCorePhysicalSchema297(w.schemaVersion)?effectiveCore297(w):undefined))return 'Invalid actual casket before map removal';
   if(ancientCasketHasContents256((entry as unknown as AncientCasket256).casket))return 'Actual nonempty casket destruction/contents transfer is not composed; original holder and map retained.';
  }return null;
 }

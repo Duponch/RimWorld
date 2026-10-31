@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import { bulletPosition,validateBulletFlight } from './bullet-flight.ts';
@@ -15,7 +16,7 @@ const samePoint=(a:{x:number;z:number},b:unknown)=>record(b)&&keys(b,['x','z'])&
 /** Unknown JSON is rejected before touching references or calling the resolver. */
 export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'height'|'tick'>,version=88,coreNow297?:number):value is WorldProjectile {
   if(!record(value)||!keys(value,['id','quality','emittedAtCore','advancedAtCore','flight','relations','arrival',...(version>=88?['weaponItem']:[])])||value.weaponItem!==undefined&&value.weaponItem!=='bolt-action-rifle'&&!(version>=193&&value.weaponItem==='mini-turret-gun')&&!(version>=197&&(value.weaponItem==='lancer-gun'||value.weaponItem==='pikeman-gun'))&&!(version>=208&&value.weaponItem==='emp-launcher'))return false;
-  const end=version===297?validationCore297(version,world.tick,coreNow297):world.tick*CORE_TICKS_PER_LOCAL;
+  const end=isCorePhysicalSchema297(version)?validationCore297(version,world.tick,coreNow297):world.tick*CORE_TICKS_PER_LOCAL;
   if(!Number.isSafeInteger(end)||!integer(value.id,1)||!integer(value.emittedAtCore,0,end)||!integer(value.advancedAtCore,value.emittedAtCore,end))return false;
   const f=value.flight,r=value.relations;
   if(!record(f)||!keys(f,['launcherKey','intendedKey','usedKey','flags','preventFriendlyFire','equipmentKey','origin','destination','speedPerCoreTick','remainingCoreTicks','completed'])||!record(f.origin)||!keys(f.origin,['x','z'])||!record(f.destination)||!keys(f.destination,['x','z']))return false;
@@ -35,7 +36,7 @@ export function validWorldProjectile(value:unknown,world:Pick<World,'width'|'hei
     const position=bulletPosition(p.flight);if(position.x<0||position.z<0||position.x>=world.width||position.z>=world.height)return false;
     const total=Math.max(1,Math.ceil(distance/profile.projectileTilesPerCoreTick)),elapsed=p.advancedAtCore-p.emittedAtCore;
     if(!p.flight.completed)return value.arrival===null&&p.advancedAtCore===end&&p.flight.remainingCoreTicks===total-elapsed;
-    const a=value.arrival;if(!record(a)||!keys(a,['kind','targetKey','point','coreTick','effect'])||!integer(a.coreTick,1,total)||a.coreTick!==elapsed||!identity(a.targetKey,version)||!samePoint(bulletPosition(p.flight),a.point)||p.advancedAtCore<=(version===297?Math.floor((end-1)/10)*10:(world.tick-1)*CORE_TICKS_PER_LOCAL))return false;
+    const a=value.arrival;if(!record(a)||!keys(a,['kind','targetKey','point','coreTick','effect'])||!integer(a.coreTick,1,total)||a.coreTick!==elapsed||!identity(a.targetKey,version)||!samePoint(bulletPosition(p.flight),a.point)||p.advancedAtCore<=(isCorePhysicalSchema297(version)?Math.floor((end-1)/10)*10:(world.tick-1)*CORE_TICKS_PER_LOCAL))return false;
     if(a.kind==='exit')return a.effect==='exit'&&a.targetKey===null&&p.flight.remainingCoreTicks===total-elapsed+1;
     if(a.kind!=='impact'||p.flight.remainingCoreTicks!==total-elapsed)return false;
     return a.targetKey===null?a.effect==='ground':String(a.targetKey).startsWith('pawn:')?a.effect==='pawn':String(a.targetKey).startsWith('animal:')?version>=77&&a.effect==='animal':String(a.targetKey).startsWith('mech:')?version>=194&&a.effect==='mech':a.effect==='unsupported-object'
@@ -50,7 +51,7 @@ export function validateProjectiles(world:World,version:number,ids:NumericMember
   if(version<55||!Array.isArray(value)||!value.length||value.length>world.width*world.height)return ['Invalid projectile collection for schema.'];
   const errors:string[]=[];let previous=0;
   for(const p of value) {
-    if(!validWorldProjectile(p,world,version,version===297?effectiveCore297(world):undefined)){errors.push('Invalid persistent projectile.');continue;}
+    if(!validWorldProjectile(p,world,version,isCorePhysicalSchema297(version)?effectiveCore297(world):undefined)){errors.push('Invalid persistent projectile.');continue;}
     if(ids.has(p.id)||p.id<=previous||p.id>=world.nextId)errors.push('Invalid projectile identity/order.');
     if(version>=193&&p.weaponItem==='mini-turret-gun'){
       const sourceId=Number(p.flight.launcherKey.slice(10)),source=world.structures.find(s=>s.id===sourceId);

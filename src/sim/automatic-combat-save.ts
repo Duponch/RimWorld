@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import { automaticPermission } from './automatic-combat-state.ts';
 import { hostileTo,isColonist } from './affiliation.ts';
@@ -11,7 +12,7 @@ export function validAutomaticAttack(v:unknown,version:number,tick:number):boole
   return v.kind==='draft'?Object.keys(v).length===1:v.kind==='response'&&Object.keys(v).length===3&&int(v.remaining,0,2)&&int(v.until,tick+1,tick+200);
 }
 export function validAttackMemory(v:unknown,version:number,tick:number,coreNow297?:number):boolean {
- const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return false;
+ const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(physicalCoreNow297))return false;
   return v===undefined||version>=60&&object(v)&&Object.keys(v).length===(Object.hasOwn(v,'suspendedTicks')?3:2)&&int(v.targetId,1)&&int(v.atCore,0,physicalCoreNow297)&&validSuspendedMemory271(v,version,tick,Math.floor(Number(v.atCore)/10));
 }
 export function automaticPost(p:Pawn):boolean {

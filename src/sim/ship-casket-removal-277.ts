@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {worldPawnsPhysicalCore297} from './world-pawn-physical-clock-297.ts';
 import {heldCore297} from './core-phase-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
@@ -87,7 +88,7 @@ function prepareVanish277(w:World,original:ShipCasketOccupant277,occupant:ShipCa
  const p=shipCasketActor277({revision:1,heldAt:w.tick,occupant:original,items:[],packed:[]})!;
  const draft=shipCasketActor277({revision:1,heldAt:w.tick,occupant,items:[],packed:[]})!;
  const root=registeredCampaign(w),state=root.worldPawns,factions=root.worldFactions,mapId=registeredMapId(w),now=w.tick*10;
- const physicalCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined;
+ const physicalCore297=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined;
  if(!state||!factions||mapId===undefined||root.tick!==w.tick||(physicalCore297===undefined?state.atCore!==now&&state.atCore!==now-10:state.atCore!==now||worldPawnsPhysicalCore297(state,w.schemaVersion)!==physicalCore297))throw Error('Actual destroyed-holder WorldPawn frontier is unavailable');
  const native=state.nativeOrder;if(!nativeWorldPawnOrderCurrent256(state,native))throw Error('Actual destroyed-holder native order is unavailable');
  const terminal=prepareShipCasketTerminal277(w,original);
@@ -123,11 +124,11 @@ function prepareVanish277(w:World,original:ShipCasketOccupant277,occupant:ShipCa
  * contents, then an optional Flame wave. Destruction never calls Open. */
 export function planShipCasketRemoval277(w:World,s:Structure,mode:'deconstruct'|'kill-finalize'|'vanish',explosion?:{core:number;instigatorKey?:BombInstigatorKey},damageRng=w.rng):ShipCasketRemoval277 {
  const no=(reason:string):ShipCasketRemoval277=>({ok:false,reason});
- if(!['deconstruct','kill-finalize','vanish'].includes(mode)||!isSchema277OrLater(w.schemaVersion)||!isShipCasket277(s)||!w.structures.includes(s)||!validShipCasketBuilding277(s,w.schemaVersion,w,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined)||s.shipCryptosleep277.heldAt>w.tick||!int(damageRng)||damageRng>0xffffffff)return no('Actual paid spatial casket required');
+ if(!['deconstruct','kill-finalize','vanish'].includes(mode)||!isSchema277OrLater(w.schemaVersion)||!isShipCasket277(s)||!w.structures.includes(s)||!validShipCasketBuilding277(s,w.schemaVersion,w,w.tick,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined)||s.shipCryptosleep277.heldAt>w.tick||!int(damageRng)||damageRng>0xffffffff)return no('Actual paid spatial casket required');
  const c=s as ShipCasket277,h=c.shipCryptosleep277,occupant=h.occupant,p=shipCasketActor277(h),tick=w.tick,heldItems=h.items,heldPacks=h.packed,itemMembers=[...h.items],packMembers=[...h.packed];
- const plannedCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined,physical297=plannedCore297===undefined?undefined:{version:297 as const,heldAtCore297:heldCore297(h,w.schemaVersion,h.heldAt),targetCore297:plannedCore297};
+ const plannedCore297=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined,physical297=plannedCore297===undefined?undefined:{version:297 as const,heldAtCore297:heldCore297(h,w.schemaVersion,h.heldAt),targetCore297:plannedCore297};
  const validInstigator=(key:unknown)=>bombInstigatorKey(key,w.schemaVersion)&&Number(key.slice(key.indexOf(':')+1))<w.nextId;
- if(explosion&&(mode!=='kill-finalize'||!int(explosion.core)||(Number(w.schemaVersion)===297?explosion.core!==effectiveCore297(w):explosion.core<Math.max(0,(tick-1)*10)||explosion.core>tick*10)||(w.bombWaves?.length??0)>=w.width*w.height||Object.hasOwn(explosion,'instigatorKey')&&!validInstigator(explosion.instigatorKey)))return no('Actual Flame owner/clock/capacity unavailable');
+ if(explosion&&(mode!=='kill-finalize'||!int(explosion.core)||(isCorePhysicalSchema297(Number(w.schemaVersion))?explosion.core!==effectiveCore297(w):explosion.core<Math.max(0,(tick-1)*10)||explosion.core>tick*10)||(w.bombWaves?.length??0)>=w.width*w.height||Object.hasOwn(explosion,'instigatorKey')&&!validInstigator(explosion.instigatorKey)))return no('Actual Flame owner/clock/capacity unavailable');
  const jobs=w.jobs.filter(j=>j.deconstruction?.structureId===c.id||j.repair?.structureId===c.id||j.fixBreakdown?.structureId===c.id),jobIds=new Set(jobs.map(j=>j.id));
  if(mode==='deconstruct'){
   const job=jobs.find(j=>j.deconstruction?.structureId===c.id),worker=job?w.pawns.find(p=>p.id===job.reservedBy&&p.jobId===job.id):undefined;
@@ -225,8 +226,8 @@ export function planShipCasketRemoval277(w:World,s:Structure,mode:'deconstruct'|
 }
 
 export function damageShipCasket277(w:World,s:Structure,amount:number,cause:StructureDamageCause,rng:number,external?:StructureDamageContext):boolean {
- if(!isSchema277OrLater(w.schemaVersion)||!isShipCasket277(s)||!w.structures.includes(s)||!validShipCasketBuilding277(s,w.schemaVersion,w,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined)||s.shipCryptosleep277.heldAt>w.tick||!int(amount)||amount===0||!int(rng)||rng>0xffffffff)return false;
- const core=external?.core??(Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10);if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!int(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)||Object.hasOwn(external,'instigatorKey')&&(!bombInstigatorKey(external.instigatorKey,w.schemaVersion)||Number(external.instigatorKey.slice(external.instigatorKey.indexOf(':')+1))>=w.nextId)))return false;
+ if(!isSchema277OrLater(w.schemaVersion)||!isShipCasket277(s)||!w.structures.includes(s)||!validShipCasketBuilding277(s,w.schemaVersion,w,w.tick,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined)||s.shipCryptosleep277.heldAt>w.tick||!int(amount)||amount===0||!int(rng)||rng>0xffffffff)return false;
+ const core=external?.core??(isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10);if(external&&(!Number.isFinite(external.rawAmount)||external.rawAmount<0||!int(core)||(isCorePhysicalSchema297(Number(w.schemaVersion))?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10)||Object.hasOwn(external,'instigatorKey')&&(!bombInstigatorKey(external.instigatorKey,w.schemaVersion)||Number(external.instigatorKey.slice(external.instigatorKey.indexOf(':')+1))>=w.nextId)))return false;
  const max=SHIP_CASKET_CONTENT_277.maxHitPoints,before=s.damage??0,damage=before+amount;if(!int(damage)||!Number.isSafeInteger(core+150))return false;
  if(external?.detonate&&(!s.casketWick||s.casketWick.endCore>core))return false;
  const detonates=!!external?.detonate||(external?.rawAmount??amount)>=max-before;

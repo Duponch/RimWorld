@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {spikeTrapWindow297} from './spike-traps-297.ts';
 import {combatTargetByKey,type LivingTarget,type LivingTargetKey} from './combat-target.ts';
@@ -16,7 +17,7 @@ const actors=(w:World):LivingTarget[]=>[...w.pawns,...w.wildlife?.animals??[],..
 const present=(w:World,a:LivingTarget)=>a.state!=='dead'&&!a.health?.death&&('species'in a?!animalCarrier(w,a.id):'mechKind'in a||!carrierOf(w,a.id));
 /** Spatial cleanup is pure with respect to chance/RNG, also used after paused
  * ownership commands and before a snapshot with deaths or departing actors. */
-export function reconcileSpikeTrapContacts(w:World,atCore=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10):void {
+export function reconcileSpikeTrapContacts(w:World,atCore=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10):void {
  if(w.schemaVersion<226)return;
  const capture=captureSpikeTrapContacts(w,atCore);
  for(const [index,s] of capture.traps){const keys=new Set((capture.actors.get(index)??[]).map(spikeTrapTargetKey));
@@ -59,7 +60,7 @@ export interface SpikeTrapWindow {advance:(core:number)=>boolean;refresh:()=>voi
  * departures. A real combat mutation refreshes candidates against live edges;
  * stagger cannot make an old queued arrival trigger before its new end. */
 export function spikeTrapWindow(w:World):SpikeTrapWindow|undefined {
- if(Number(w.schemaVersion)===297)return spikeTrapWindow297(w);
+ if(isCorePhysicalSchema297(Number(w.schemaVersion)))return spikeTrapWindow297(w);
  if(w.schemaVersion<226||!w.structures.some(s=>s.kind==='spike-trap'))return;
  const start=Math.max(0,(w.tick-1)*10),end=w.tick*10;
  let current=start,queue=new Map<number,Set<LivingTargetKey>>(),traps=new Map<number,Structure>();

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {POSE_SLEEP,POSE_DEAD,POSE_FIGHT_READY,READING_ACTIVITY295,seatedOnFurniture,workActivity,animationPose,humanCorpseVisualStage,humanWorkContact297} from '../bridge/actor-phase-dependencies-297';
 export {humanCorpseVisualStage} from '../bridge/actor-phase-dependencies-297';
 import type {CoreActorScene297} from '../bridge/core-phase-projection-297';
@@ -1160,7 +1161,7 @@ export class PawnLayer {
     this.travelOrigin=origin;
     this.travelTime.value=localTimeSeconds(timeline.tick,origin);
     const playback=this.playback435.beginFrame(timeline);if(this.playback435.retrying)this.travelKeys.clear();
-    const spring=Number(world.schemaVersion)===297;if(spring)this.ensureSpring297(humans.length);
+    const spring=isCorePhysicalSchema297(Number(world.schemaVersion));if(spring)this.ensureSpring297(humans.length);
     let dirty=false;
     humans.forEach((pawn,i)=>{
       const prepared=playback?this.playback435.select(i,timeline,timeline.tick,origin):undefined;

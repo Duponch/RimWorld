@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {medicalCivilTick271} from './suspended-human-clock-271.ts';
 import {createAnimalMedicalRecord256} from './animal-clinical-age-v256.ts';
@@ -42,7 +43,7 @@ function invalidRecord(world:World,actor:LivingTarget,record:MedicalRecord):bool
 export function planSpikeTrapImpact(world:World,key:LivingTargetKey,material:ConstructionMaterial,atCore:number,rngStart=world.rng):SpikeTrapImpactPlan|undefined {
   const multiplier=SHARP[material],target=combatTargetByKey(world,key);
   if(world.schemaVersion<226||multiplier===undefined||!target||target.state==='dead'||target.health?.death
-    ||!uint32(world.rng)||!uint32(rngStart)||!Number.isSafeInteger(atCore)||(Number(world.schemaVersion)===297?atCore!==effectiveCore297(world):atCore<Math.max(0,(world.tick-1)*10)||atCore>world.tick*10)
+    ||!uint32(world.rng)||!uint32(rngStart)||!Number.isSafeInteger(atCore)||(isCorePhysicalSchema297(Number(world.schemaVersion))?atCore!==effectiveCore297(world):atCore<Math.max(0,(world.tick-1)*10)||atCore>world.tick*10)
     ||isAnimalTarget(target)&&animalCarrier(world,target.id)||!isAnimalTarget(target)&&!isMechanoidTarget(target)&&carrierOf(world,target.id))return;
   if(target.health&&invalidRecord(world,target,target.health))return;
   try {
@@ -78,7 +79,7 @@ export function planSpikeTrapImpact(world:World,key:LivingTargetKey,material:Con
     if(invalidRecord(world,actor,record)||validateInterruptedCargo(draft).length)return;
     const plan:SpikeTrapImpactPlan=Object.freeze({key,atCore,rngBefore:world.rng,rngAfter:draft.rng,factor,damage,penetration,
       impacts:Object.freeze(impacts.map(i=>structuredClone(i))),record:structuredClone(record),destroyedAfter:structuredClone(draft.destroyed)});
-    prepared.set(plan,{world,tick:world.tick,...Number(world.schemaVersion)===297?{core297:effectiveCore297(world)}:{},adopt:projection.finish().adopt});return plan;
+    prepared.set(plan,{world,tick:world.tick,...isCorePhysicalSchema297(Number(world.schemaVersion))?{core297:effectiveCore297(world)}:{},adopt:projection.finish().adopt});return plan;
   }catch(error){
     // Bounded record/ledger exhaustion and invalid ownership are a refused
     // transaction, never partial damage or consumption of the real stream.
@@ -94,6 +95,6 @@ export function planSpikeTrapImpact(world:World,key:LivingTargetKey,material:Con
  * and rebuilding in the same synchronous transaction after this guarded step. */
 export function commitSpikeTrapImpact(world:World,plan:SpikeTrapImpactPlan):boolean {
   const p=prepared.get(plan);
-  if(!p||p.world!==world||p.tick!==world.tick||Number(world.schemaVersion)===297&&p.core297!==effectiveCore297(world)||world.rng!==plan.rngBefore||!p.adopt())return false;
+  if(!p||p.world!==world||p.tick!==world.tick||isCorePhysicalSchema297(Number(world.schemaVersion))&&p.core297!==effectiveCore297(world)||world.rng!==plan.rngBefore||!p.adopt())return false;
   world.rng=plan.rngAfter;prepared.delete(plan);return true;
 }

@@ -1,6 +1,7 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {validStorageSettings} from './designation.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
-import {validStorageItems,validNovelStorageFilters295} from './storage-filters.ts';
+import {validStorageItems,validNovelStorageFilters295,validAiCoreStorageFilters298} from './storage-filters.ts';
 import {isSchema286OrLater} from './schema-compatibility-257.ts';
 import {SCHEMA_VERSION} from './types.ts';
 import {validStorageConditions} from './storage-condition.ts';
@@ -17,10 +18,10 @@ function dataRecord(value:unknown,allowUndefined=false,depth=0):value is Record<
  return Reflect.ownKeys(value).every(key=>{const d=Object.getOwnPropertyDescriptor(value,key)!;return typeof key==='string'&&d.enumerable===true&&Object.hasOwn(d,'value')&&(d.value===undefined?allowUndefined:d.value===null||typeof d.value!=='object'||dataRecord(d.value,false,depth+1));});
 }
 export function validLinkedShelfPolicy286(value:unknown,version:number=SCHEMA_VERSION):value is ShelfStorageSettings{
- return isSchema286OrLater(version)&&dataRecord(value)&&['filters','priority','capacity'].every(k=>Object.hasOwn(value,k))&&Reflect.ownKeys(value).every(k=>typeof k==='string'&&keys.includes(k))&&dataRecord(value.filters)&&validNovelStorageFilters295(value.filters,version)
+ return isSchema286OrLater(version)&&dataRecord(value)&&['filters','priority','capacity'].every(k=>Object.hasOwn(value,k))&&Reflect.ownKeys(value).every(k=>typeof k==='string'&&keys.includes(k))&&dataRecord(value.filters)&&validNovelStorageFilters295(value.filters,version)&&validAiCoreStorageFilters298(value.filters,version)
   &&Object.entries(value.filters).every(([key,v])=>filterKeys.has(key)&&typeof v==='boolean')
   &&Number.isInteger(value.priority)&&Number(value.priority)>=1&&Number(value.priority)<=5&&value.capacity===500
-  &&validStorageItems(value.items,(version===295||(version===296||version===297))?295:286)&&validStorageConditions(value,286);
+  &&validStorageItems(value.items,version===298?298:(version===295||(version===296||isCorePhysicalSchema297(version)))?295:286)&&validStorageConditions(value,286);
 }
 /** No effective/hidden/caller record shares a mutable policy leaf. */
 export function cloneLinkedShelfPolicy286(value:ShelfStorageSettings):ShelfStorageSettings{

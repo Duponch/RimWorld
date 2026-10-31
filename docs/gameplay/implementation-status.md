@@ -1,5 +1,9 @@
 # Ce qui est jouable et ce qui manque
 
+**31 octobre 2026 — schéma 298 intégré.** La [chaîne de victoire spatiale](../development/ship-victory298.md) raccorde console/information payée, cœur d’IA physique, ordinateur/capteurs, lancement et départ vivant rechargeable. Typage complet, compilation et contrôles ciblés passent ; le coût de composition ne montre pas de recul agrégé dans la cohorte mesurée, sans preuve FPS globale.
+
+Les six ensembles reprennent selon la consigne humaine ; aucun n’est clos. Les essais de fluidité sont suspendus et le défaut reste ouvert. Cloudflare495c93d0/source58fc7307 est la dernière production attestée, encore au schéma297. Les détails V492 ci-dessous décrivent les fondations et leurs limites historiques, pas une nouvelle suspension du projet.
+
 ## État courant — V492 Source12, schéma 297, intégration locale effectuée
 
 Source12 rapproche la locomotion humaine de la référence RimWorld1.6 : base nominale4,6 cases/s, coût flottant et diagonale capturés par segment, reclic conservant normalement l’arête déjà payée, première arête engageable au point sûr de la commande validée, et arrêt explicite au temps physique confirmé. Les anciens segments chargés gardent leur durée historique ; les nouvelles durées ne réécrivent pas le passé. Le lissage présente les acteurs confirmés séparément du dernier World complet. Ce périmètre ne prouve pas une identité totale de tous les comportements.

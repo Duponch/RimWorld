@@ -1,3 +1,4 @@
+import {factionCommsTask298} from './faction-comms-state-298.ts';
 import {firefoamManualServiceCell290} from './firefoam-manual-290.ts';
 import {isShipCasket277} from './ship-casket-state-277.ts';
 import {shipCasketInteraction277} from './ship-casket-geometry-277.ts';
@@ -19,6 +20,7 @@ export function serviceCell(pawn: Pawn,world?:Pick<World,'structures'>): Cell | 
   if(pawn.openCasket&&world){const c=world.structures.find(s=>s.id===pawn.openCasket!.casketId);if(c&&isAncientCasket256(c))return ancientCasketInteraction256(c);}
   if(pawn.need?.kind==='eat'&&pawn.need.paste&&(pawn.need.phase==='pickup'||pawn.need.phase==='collect'))return pawn.need.paste.spot;
   if(pawn.feed?.paste&&(pawn.feed.phase==='pickup'||pawn.feed.phase==='collect'))return pawn.feed.paste.spot;
+  const comms298=factionCommsTask298(pawn);if(comms298)return comms298.spot;
   if(pawn.orbitalTrade)return pawn.orbitalTrade.spot;
   if(pawn.brewing)return pawn.brewing.spot;
   if(pawn.deepWork)return pawn.deepWork.spot;

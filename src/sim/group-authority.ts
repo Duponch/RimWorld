@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {isSchema274OrLater} from './schema-compatibility-257.ts';
 import {quoteGroupGift274,prepareGroupGift274} from './group-gift-274.ts';
 export {quoteGroupGift274} from './group-gift-274.ts';
@@ -6,6 +7,7 @@ import {newGroupAdmissionRevision259,autoCapturePatient259} from './group-human-
 import {estimateGroupTravel} from './group-travel-estimate.ts';
 import {regularGroupFreight258} from './group-freight-contract-258.ts';
 import {materialAllowedForPlayer256} from './material-permission-256.ts';
+import {captureCaravanSourceAccess298} from './caravan-source-access-298.ts';
 import {groupHumanAdmissionReason257,groupHasAdmission257,groupHumanHandler257,previewGroupHumanPreparation257,releaseGroupHumanPassengers257} from './group-human-admission-257.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {ITEM_DEFINITIONS} from './items.ts';
@@ -33,7 +35,7 @@ import { captureHumanOwners } from './human-owners.ts';
 import { isColonist } from './affiliation.ts';
 import { biologicalYears } from './human-age.ts';
 import { scoutActiveTask, scoutPreparationReason, scoutUnstable, collectiveMobilePreparationReason256 } from './caravan-trip.ts';
-import { reservedSource } from './materials.ts';
+import { reservedSource,reservedSourcesByPile } from './materials.ts';
 import { candidateAccess } from './candidate-access.ts';
 import { blockedCells, inBounds, workNeighbours } from './pathfinding.ts';
 import { captureStandability } from './furniture-travel.ts';
@@ -80,12 +82,21 @@ export function groupFormationAuthority(w:World,preparing=false,origins?:Readonl
     if(connectivityQuota<0)throw Error('Group connectivity quota exceeded');
     return result;
   };
+  const newSources=Number(w.schemaVersion)>=298&&!preparing?captureCaravanSourceAccess298(w):undefined;
+
   return {
     requireResident:w.schemaVersion<255&&!w.expeditionSite,reachable,stand:c=>inBounds(w,c.x,c.z)&&!blocked[c.z*w.width+c.x]&&stand(c),
     namespace:world=>({byId:new Map(captureHumanOwners(world).slots.map(s=>[s.id,{pawn:s.pawn,local:s.kind==='map'}]))}),
     memberReason:(world,p)=>groupMemberReason(world,p,preparing),
     residentCapable:(_world,p)=>isColonist(p)&&!p.prisoner&&!p.visitor&&!['dead','downed'].includes(p.state)&&!p.mental?.crisis,
-    sourceReason:(world,pile)=>world.schemaVersion>=258&&!materialAllowedForPlayer256(pile)?'Ce bien est interdit.':pile.owner.type!=='ground'||pile.foodPoison||pile.item==='pemmican'&&!freshGroupProvision(pile,world.tick)?'Choisissez une provision saine au sol.':undefined,
+    sourceReason:(world,pile)=>{
+      if(Number(world.schemaVersion)>=298){
+        const place=newSources?.(pile);if(place)return place;
+        // Engaged promises no longer re-read Home, storage or fog. Their
+        // existing loading preflight checks live reservations separately.
+      }else if(world.schemaVersion>=258&&!materialAllowedForPlayer256(pile))return 'Ce bien est interdit.';
+      return pile.owner.type!=='ground'||pile.foodPoison||pile.item==='pemmican'&&!freshGroupProvision(pile,world.tick)?'Choisissez une provision saine au sol.':undefined;
+    },
     reservedQuantity:(world,id,exceptGroupId)=>{
       const own=world.group&&'manifest' in world.group&&world.group.id===exceptGroupId?groupReservedSources(world.group).get(id)??0:0;
       return reservedSource(world,id)-own;
@@ -107,8 +118,12 @@ export function groupMemberChoices(w:World):readonly GroupMemberChoice[] {
   });
 }
 export function groupSourceChoices(w:World):readonly GroupSourceChoice[] {
-  return w.piles.filter(p=>p.owner.type==='ground'&&(regularGroupFreight258(p,w.schemaVersion)&&(!['wood','steel'].includes(p.item)||!w.group||freightGroup(w.group))||w.schemaVersion>=256&&groupCaravanFood256(p.item)||['survival-meal','silver','cloth','muffalo-wool',...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!w.group||freightGroup(w.group))?['wood','steel']:[]),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA&&(!w.group||mixedGroupProvisions(w.group))?['pemmican']:[])].includes(p.item))).map(p=>{
-    const reserved=reservedSource(w,p.id);return {pile:p,reserved,available:Math.max(0,p.quantity-reserved),...w.schemaVersion>=258&&!materialAllowedForPlayer256(p)?{reason:'Ce bien est interdit.'}:p.foodPoison?{reason:'Provision contaminée.'}:p.item==='pemmican'&&!freshGroupProvision(p,w.tick)?{reason:'Provision périmée.'}:{}};
+  const current=Number(w.schemaVersion)>=298,place=current?captureCaravanSourceAccess298(w):undefined;
+  const reservations=current?reservedSourcesByPile(w):undefined;
+  const own=current&&w.group&&'manifest'in w.group?groupReservedSources(w.group):undefined;
+  const reservedFor=(p:MaterialPile)=>reservations?(reservations.get(p.id)??0)-(own?.get(p.id)??0):reservedSource(w,p.id);
+  return w.piles.filter(p=>p.owner.type==='ground'&&(regularGroupFreight258(p,w.schemaVersion)&&(!['wood','steel'].includes(p.item)||!w.group||freightGroup(w.group))||w.schemaVersion>=256&&groupCaravanFood256(p.item)||['survival-meal','silver','cloth','muffalo-wool',...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA&&(!w.group||freightGroup(w.group))?['wood','steel']:[]),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA&&(!w.group||mixedGroupProvisions(w.group))?['pemmican']:[])].includes(p.item))&&(!place||!place(p)&&reservedFor(p)===0)).map(p=>{
+    const reserved=reservedFor(p);return {pile:p,reserved,available:Math.max(0,p.quantity-reserved),...!current&&w.schemaVersion>=258&&!materialAllowedForPlayer256(p)?{reason:'Ce bien est interdit.'}:p.foodPoison?{reason:'Provision contaminée.'}:p.item==='pemmican'&&!freshGroupProvision(p,w.tick)?{reason:'Provision périmée.'}:{}};
   });
 }
 function viewMass(mass:GroupMassCapture,items:readonly MaterialPile[],tick:number,mixed:boolean):GroupMassView {
@@ -248,7 +263,7 @@ export function applyGroupCommand(w:World,c:GroupCommand):CommandResult {
     const animals=(c.animalIds??[]).map(id=>w.wildlife?.animals.find(a=>a.id===id));if(animals.some(a=>!a||groupAnimalReason256(w,a)))return fail('Les animaux à décharger doivent être présents et disponibles.');
     const ids=new Set([...c.memberIds,...c.animalIds??[]]),items=w.piles.filter(p=>p.owner.type==='inventory'&&ids.has(p.owner.pawnId));
     const packs=w.packed.filter(p=>p.owner.type==='inventory'&&ids.has(p.owner.pawnId));if(!validCaravanBedrollPacks256(packs,[...members as Pawn[],...animals.filter((a):a is import('./wildlife-state.ts').WildAnimal=>!!a)],w.nextId,w.schemaVersion))return fail('Couchage porté inadmissible.');
-    if(!items.length&&!packs.length||items.some(p=>!(p.item==='novel'&&(Number(w.schemaVersion)===295||(Number(w.schemaVersion)===296||Number(w.schemaVersion)===297))&&regularGroupFreight258(p,w.schemaVersion))&&!(w.schemaVersion>=265&&['hops','wort','beer'].includes(p.item))&&!(w.schemaVersion>=256&&groupCaravanFood256(p.item))&&!['survival-meal','silver','cloth','muffalo-wool','medicine','component',...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?['wood','steel']:[]),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?['pemmican']:[])].includes(p.item)))return fail('Aucune provision admissible à décharger.');
+    if(!items.length&&!packs.length||items.some(p=>!(p.item==='ai-core'&&regularGroupFreight258(p,w.schemaVersion))&&!(p.item==='novel'&&(Number(w.schemaVersion)===295||(Number(w.schemaVersion)===296||isCorePhysicalSchema297(Number(w.schemaVersion))))&&regularGroupFreight258(p,w.schemaVersion))&&!(w.schemaVersion>=265&&['hops','wort','beer'].includes(p.item))&&!(w.schemaVersion>=256&&groupCaravanFood256(p.item))&&!['survival-meal','silver','cloth','muffalo-wool','medicine','component',...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?['wood','steel']:[]),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?['pemmican']:[])].includes(p.item)))return fail('Aucune provision admissible à décharger.');
     if(!Number.isSafeInteger(w.planet.nextGroupId+1))return fail('Le registre des groupes est plein.');
     w.group={id:w.planet.nextGroupId++,startedAt:w.tick,destination:w.planet.homeTile,ledger:emptyGroupLedger(),...(w.schemaVersion>=GROUP_PROVISIONS_SCHEMA?{provisions:newGroupProvisions()}:{}),...(w.schemaVersion>=GROUP_FREIGHT_SCHEMA?{freight:newGroupFreight()}:{}),phase:'unloading',memberIds:[...c.memberIds].sort((a,b)=>a-b),...c.animalIds?.length?{animalIds:[...c.animalIds]}:{},pendingPileIds:items.map(p=>p.id),...packs.length?{pendingPackedIds:packs.map(p=>p.building.id)}:{}};return {ok:true};
   }

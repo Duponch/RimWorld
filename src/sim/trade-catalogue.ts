@@ -23,6 +23,7 @@ function gear(baseMarketValue:number,maxHitPoints:number,visitorHandles:boolean,
   return value(baseMarketValue,visitorHandles,{healthAffectsPrice:true,maxHitPoints,hasQuality:true,sellPriceFactor:weapon?.2:1,...extra});
 }
 export const TRADE_CATALOGUE:Readonly<Partial<Record<ItemId,TradeCatalogueEntry>>>=Object.freeze({
+  'ai-core':value(4000,false,{healthAffectsPrice:true,maxHitPoints:100,playerCanBuy:false,playerCanSell:true}),
   novel:gear(160,60,false),
   'prosthetic-arm':value(258,false,{healthAffectsPrice:true,maxHitPoints:50}),
   'prosthetic-leg':value(258,false,{healthAffectsPrice:true,maxHitPoints:50}),

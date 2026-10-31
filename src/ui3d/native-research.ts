@@ -1,14 +1,14 @@
 import type {NativeControl,NativePage,NativeRow,NativeUiActions} from './native-contract';
 import type {World} from '../sim/types';
-import {intellectualSkill,researchPrerequisite,researchUnlocked,RESEARCH_SCALE,type ResearchProject} from '../sim/research';
+import {intellectualSkill,needsHighTechBench,needsResearchAnalyzer,researchPrerequisite,researchUnlocked,RESEARCH_SCALE,type ResearchProject} from '../sim/research';
 import {researchProjects,type ProjectNode} from '../ui/research-projects';
 import {captureResearchStationIssues,readResearchReadiness,type ResearchStationIssue} from '../ui/research-readiness';
-import {researchGraphLinks,researchNodePosition,researchPrerequisiteLabels,RESEARCH_GRAPH_WIDTH,RESEARCH_GRAPH_HEIGHT,RESEARCH_NODE_WIDTH,RESEARCH_NODE_HEIGHT} from '../ui/research-tree';
+import {researchGraphLinks,researchNodePosition,researchPrerequisiteLabels,RESEARCH_GRAPH_WIDTH,RESEARCH_NODE_WIDTH,RESEARCH_NODE_HEIGHT} from '../ui/research-tree';
 
-const minimumSchema:Partial<Record<ResearchProject,number>>={'tree-sowing':291,firefoam:290,'ship-cryptosleep':277,'ship-engine':276,'ship-basics':275,'ship-reactor':275,prosthetics:273,cryptosleep:271,'long-blades':270,brewing:265,'geothermal-power':264,pemmican:248,'biofuel-refining':218,'nutrient-paste':217,'deep-drilling':215,'ground-scanner':215,'sterile-materials':211,'vitals-monitor':211,'drug-production':206,'medicine-production':206,hydroponics:203,'gun-turrets':193,'tube-television':190,'packaged-survival-meals':188,'hospital-bed':187,autodoors:143};
+const minimumSchema:Partial<Record<ResearchProject,number>>={'long-range-mineral-scanner':298,'ship-computer':298,'ship-sensors':298,'tree-sowing':291,firefoam:290,'ship-cryptosleep':277,'ship-engine':276,'ship-basics':275,'ship-reactor':275,prosthetics:273,cryptosleep:271,'long-blades':270,brewing:265,'geothermal-power':264,pemmican:248,'biofuel-refining':218,'nutrient-paste':217,'deep-drilling':215,'ground-scanner':215,'sterile-materials':211,'vitals-monitor':211,'drug-production':206,'medicine-production':206,hydroponics:203,'gun-turrets':193,'tube-television':190,'packaged-survival-meals':188,'hospital-bed':187,autodoors:143};
 const issueLabels:Record<ResearchStationIssue,string>={bench:'Bureau de recherche construit requis','advanced-bench':'Bureau de recherche avancé construit requis',power:'Alimentation active du bureau compatible requise',analyzer:'Multi-analyseur alimenté à proximité requis'};
 const nodeColors={done:'#bacb9c',active:'#d9ae60',locked:'#d0c3ac',available:'#b8c39a'} as const;
-const helpText='Construisez un bureau de recherche dans Architecte → Production, puis affectez un colon dans Travail. Les recherches avancées exigent un bureau alimenté ; Fabrication exige aussi un multi-analyseur alimenté à proximité. L’électricité est disponible au départ.';
+const helpText='Construisez un bureau de recherche dans Architecte → Production, puis affectez un colon dans Travail. Les recherches avancées exigent un bureau alimenté ; Les exigences du bureau et du multi-analyseur sont indiquées dans chaque dossier. L’électricité est disponible au départ.';
 // The legacy data placed Prothèses and Armure de reconnaissance on the same
 // card. Move only Prothèses into the unused last-row slot; keep the graph bounds
 // and the legacy coordinates/routes untouched for their existing renderer.
@@ -31,10 +31,10 @@ const nativeGraphLinks=researchGraphLinks.map(link=>link.from==='machining'&&lin
   const from=nodePositions.get(link.from)!,to=nodePositions.get(link.to)!;
   return {...link,path:link.path.map((point,index)=>index===0?{x:from.x*graphSpacing+point.x-from.x,y:from.y*graphSpacing+point.y-from.y}:index===link.path.length-1?{x:to.x*graphSpacing+point.x-to.x,y:to.y*graphSpacing+point.y-to.y}:{x:point.x*graphSpacing,y:point.y*graphSpacing})};
 });
-const catalogues=new Map<number,{projects:readonly ProjectNode[];links:typeof researchGraphLinks}>();
+const catalogues=new Map<number,{projects:readonly ProjectNode[];links:typeof researchGraphLinks;height:number}>();
 function catalogue(schema:number){
   let result=catalogues.get(schema);
-  if(!result){const projects=researchProjects.filter(project=>schema>=(minimumSchema[project.id]??0)),ids=new Set(projects.map(project=>project.id));result={projects,links:nativeGraphLinks.filter(link=>ids.has(link.from)&&ids.has(link.to))};catalogues.set(schema,result);}
+  if(!result){const projects=researchProjects.filter(project=>minimumSchema[project.id]===298?schema===298:schema>=(minimumSchema[project.id]??0)),ids=new Set(projects.map(project=>project.id));result={projects,links:nativeGraphLinks.filter(link=>ids.has(link.from)&&ids.has(link.to)),height:Math.ceil(Math.max(740,...projects.map(project=>researchNodePosition(project).y+RESEARCH_NODE_HEIGHT+22)))};catalogues.set(schema,result);}
   return result;
 }
 let selectedProject:ResearchProject|undefined;
@@ -52,7 +52,7 @@ export function buildNativeResearch(world:World,actions:NativeUiActions,onRefres
   const state=actions.readState?.(),identity=`${state?.epoch??''}:${world.seed}:${world.width}:${world.height}`;
   if(identity!==ownerIdentity||world.tick<lastTick){selectedProject=undefined;helpOpen=false;ownerIdentity=identity;}
   lastTick=world.tick;
-  const {projects,links}=catalogue(world.schemaVersion);
+  const {projects,links,height:graphHeight}=catalogue(world.schemaVersion);
   const selected=projects.find(project=>project.id===selectedProject)??projects.find(project=>project.id===world.research?.project)
     ??projects.find(project=>project.id==='complex-clothing')??projects[0]!;
   selectedProject=selected.id;
@@ -77,6 +77,7 @@ export function buildNativeResearch(world:World,actions:NativeUiActions,onRefres
     detail('research-selected-title',selected.title,undefined,{emphasis:'heading'}),
     detail('research-selected-status',selectedFacts.status,undefined,{emphasis:selectedFacts.done?'normal':'muted'}),
     detail('research-selected-description',selected.detail),
+    detail('research-equipment','Poste',needsResearchAnalyzer(selected.id)?'Bureau haute technologie + multi-analyseur reliés et alimentés':needsHighTechBench(selected.id)?'Bureau haute technologie alimenté':'Bureau simple ou haute technologie',{labelWidth:76}),
     detail('research-prerequisite','Prérequis',prerequisite(selected.id),{labelWidth:76,hint:selectedFacts.missing?`Nécessite ${selectedFacts.missing}`:'Prérequis acquis'}),
     detail('research-selected-progress','Progression',undefined,{meter:{value:selectedPoints,max:selected.cost,label:`${selectedPoints.toFixed(1)} / ${selected.cost}`,color:'#7e9860'},hint:`${selectedPoints.toFixed(1)} / ${selected.cost} points`}),
     detail('research-selected-action','',undefined,{controlStyle:'button',controls:[button('research-start',selectedFacts.done?'Recherche terminée':selectedFacts.isActive?'Recherche en cours':'Lancer la recherche',()=>start(selected.id),{icon:'recherches',disabled:selectedFacts.disabled,hint:`${selected.title}\n${selectedFacts.hint}`})]}),
@@ -109,6 +110,6 @@ export function buildNativeResearch(world:World,actions:NativeUiActions,onRefres
         button(`research-${project.id}-start`,'▶',()=>start(project.id),{disabled:current.disabled,active:current.isActive,hint:`Lancer ${project.title}\n${current.hint}`})]});
   }
   return {id:'research',title:'Recherche',layout:'research',width:1420,height:780,rows,
-    research:{width:Math.ceil(RESEARCH_GRAPH_WIDTH*graphSpacing),height:Math.ceil(RESEARCH_GRAPH_HEIGHT*graphSpacing),selected:selected.id,links},
+    research:{width:Math.ceil(RESEARCH_GRAPH_WIDTH*graphSpacing),height:Math.ceil(graphHeight*graphSpacing),selected:selected.id,links},
     onClose:()=>void actions.panel(null)};
 }

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import {validCapturedCoreMove297} from './core-move-save-297.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
@@ -55,7 +56,7 @@ function validTravel(p:Pawn,w:World):boolean {
  const m=p.motion;if(m==null)return p.moveCooldown===0;
  return !!m&&typeof m==='object'&&!('stop297'in m)&&cell(m.from,w)&&cell(m.to,w)&&same(m.to,p)&&step(m.from,m.to)===1
   &&Number.isFinite(m.start)&&Number.isFinite(m.end)&&m.start>=0&&m.start<=effectiveLocal297(w)
-  &&validCapturedCoreMove297(m,w.schemaVersion)&&validStunIntervals(m.stuns,w.schemaVersion,m.start,w.tick,w.schemaVersion===297?effectiveCore297(w):undefined)&&validSlowIntervals(m.stagger,w.schemaVersion,m.start,w.tick,w.schemaVersion===297?effectiveCore297(w):undefined)
+  &&validCapturedCoreMove297(m,w.schemaVersion)&&validStunIntervals(m.stuns,w.schemaVersion,m.start,w.tick,isCorePhysicalSchema297(w.schemaVersion)?effectiveCore297(w):undefined)&&validSlowIntervals(m.stagger,w.schemaVersion,m.start,w.tick,isCorePhysicalSchema297(w.schemaVersion)?effectiveCore297(w):undefined)
   &&(m.speedFactor===undefined||Number.isFinite(m.speedFactor)&&m.speedFactor>=MIN_PAWN_SPEED_V87&&m.speedFactor<=1)
   &&validCapturedTravelDelay(m.terrainDelay,w.schemaVersion)&&Math.abs(m.end-travelEnd(m))<=1e-7
   &&Math.abs(p.moveCooldown-Math.max(0,m.end-effectiveLocal297(w)))<=1e-7;

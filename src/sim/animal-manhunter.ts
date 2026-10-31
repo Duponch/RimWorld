@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {permanentManhunterTarget261,permanentManhunterTargets261} from './animal-scaria-261.ts';
@@ -31,10 +32,10 @@ export function recoverAnimalManhunter(w:World,a:WildAnimal):void {
     if(shooting||melee){p.path=[];p.planCooldown=0;if(p.state!=='dead'&&p.state!=='downed')p.state=(p.motion?.end??0)>w.tick?'moving':'idle';}
   }
 }
-export function startAnimalManhunter(w:World,a:WildAnimal,core=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10,permanent261=false):boolean {
+export function startAnimalManhunter(w:World,a:WildAnimal,core=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10,permanent261=false):boolean {
   if(permanent261&&(Number(w.schemaVersion)!==261&&(Number(w.schemaVersion)!==262&&!isSchema263OrLater(Number(w.schemaVersion)))))return false;
   if(w.schemaVersion<183||!w.wildlife?.animals.includes(a)||a.domestic||a.manhunter||a.retaliation||a.state==='dead'||a.state==='downed'
-    ||!Number.isSafeInteger(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<0||core>w.tick*10)||animalBody(a).capacities.moving<=0
+    ||!Number.isSafeInteger(core)||(isCorePhysicalSchema297(Number(w.schemaVersion))?core!==effectiveCore297(w):core<0||core>w.tick*10)||animalBody(a).capacities.moving<=0
     ||!actualAnimalMeleeProfile256(a).some(t=>!a.health||(t.sourceParts??[t.sourcePart]).some(part=>!partMissing(a.health!,part))))return false;
   if(a.health)cancelToxicVomit256(a.health);
   delete a.confusion;if(a.wander)delete a.wander.job;
@@ -49,7 +50,7 @@ export function animalManhunterTarget(w:World,a:WildAnimal){
   return p&&p.state!=='dead'&&p.state!=='downed'&&!carrierOf(w,p.id)?p:undefined;
 }
 /** Once per confirmed tick, including ticks inside a captured movement edge. */
-export function advanceAnimalManhunter(w:World,a:WildAnimal,core=Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10):void {
+export function advanceAnimalManhunter(w:World,a:WildAnimal,core=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10):void {
   const m=a.manhunter;if(!m)return;
   if(a.state==='dead'){recoverAnimalManhunter(w,a);return;}
   if(a.state==='downed'){if(!m.permanent261)recoverAnimalManhunter(w,a);else{delete m.targetId;delete m.door;a.path=[];}return;}

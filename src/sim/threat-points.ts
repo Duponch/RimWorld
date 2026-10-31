@@ -128,3 +128,23 @@ export function loseThreatAdaptationForColonistLoss(adaptationDays: number, post
   if (!validFinite(adaptationDays, -60, 100) || !Number.isSafeInteger(postPopulation) || postPopulation < 0) throw new RangeError('Invalid adaptation loss.');
   return Math.max(-60, adaptationDays - curve(COLONIST_LOSS, postPopulation));
 }
+
+/** A separate input for the prospective paid World target. The historical
+ * home-map API/body above is unchanged. Contributions are already weighted
+ * by actual health and casket ownership; World random factor is exactly One.
+ * Existing local adaptation/minimum remain explicit Cassandra-partial inputs. */
+export interface WeightedWorldThreatInput298 {
+ readonly knownWealth:number;readonly colonistContribution:number;
+ readonly animalHealthPower:number;readonly elapsedDays:number;
+ readonly adaptationDays:number;readonly seedBucket:number;
+}
+export function computeWeightedWorldThreatPoints298(input:WeightedWorldThreatInput298):ThreatPointsResult&{animalPoints:number} {
+ const {knownWealth,colonistContribution,animalHealthPower,elapsedDays,adaptationDays,seedBucket}=input;
+ if(!validFinite(knownWealth,0)||!validFinite(colonistContribution,0)||!validFinite(animalHealthPower,0)
+  ||!validFinite(elapsedDays,0)||!validFinite(adaptationDays,-60,100)||!Number.isSafeInteger(seedBucket))throw new RangeError('Invalid known World threat-points input.');
+ const wealthPoints=curve(WEALTH_POINTS,knownWealth),colonistPoints=curve(COLONIST_POINTS,knownWealth)*colonistContribution;
+ const animalPoints=animalHealthPower*.08,adaptationFactor=curve(ADAPT_FACTOR,adaptationDays),timeFactor=curve(TIME_FACTOR,elapsedDays);
+ const unclampedPoints=(wealthPoints+colonistPoints+animalPoints)*adaptationFactor*.6*timeFactor;
+ const minimum=minimumThreatPoints(elapsedDays,seedBucket);
+ return {points:Math.min(10000,Math.max(minimum,unclampedPoints)),wealthPoints,colonistPoints,animalPoints,adaptationFactor,timeFactor,minimum,unclampedPoints};
+}

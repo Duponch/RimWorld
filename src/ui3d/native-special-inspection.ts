@@ -36,7 +36,8 @@ import { isShipCasket277 } from '../sim/ship-casket-state-277';
 import { shipCasketActorCapable277, shipCasketIntent277 } from '../sim/ship-casket-intent-277';
 import { shipCasketOccupantLabel277 } from '../sim/ship-casket-task-277';
 import { readShipReactorStart275 } from '../sim/ship-reactor-runtime-275';
-import { isShipPartKind277 } from '../sim/ship-casket-graph-277';
+import {isShipPartKind298} from '../sim/ship-graph-298';
+import {isShipComputerSensorsKind298} from '../sim/ship-computer-sensors-content-298';
 import { indexShipParts276, readShipAssembly276 } from '../sim/ship-part-reader-276';
 import { animalBody } from '../sim/wildlife-health';
 import { animalNutritionMax } from '../sim/animal-life';
@@ -274,7 +275,7 @@ function shipAssemblyPage(scope: Scope, structureId: number): void {
   if (!index.ok) throw Error('L’assemblage physique est indisponible.');
   const report = readShipAssembly276(index.index, structureId); if (!report.ok) throw Error('Les pièces reliées ne peuvent pas être inspectées.');
   const rows = report.requirements.map((requirement, index) => row(`ship-requirement-${index}`, requirement.label, `${requirement.present} / ${requirement.required}`));
-  rows.push(row('ship-reactors-running', 'Réacteurs opérationnels', `${report.parts.filter(part => part.kind === 'ship-reactor' && part.source.shipReactor275?.state === 'running').length} / ${report.counts.reactor}`), row('ship-occupied-caskets', 'Caissons spatiaux occupés', `${report.occupiedCaskets} / ${report.counts.casket}`), row('ship-development', 'Embarquement et lancement restent en développement.'));
+  rows.push(row('ship-reactors-running', 'Réacteurs opérationnels', `${report.parts.filter(part => part.kind === 'ship-reactor' && part.source.shipReactor275?.state === 'running').length} / ${report.counts.reactor}`), row('ship-occupied-caskets', 'Caissons spatiaux occupés', `${report.occupiedCaskets} / ${report.counts.casket}`), row('ship-development', Number(world.schemaVersion)===298?'Seuls les occupants des caissons reliés partiront.':'Embarquement et lancement restent en développement.'));
   show(`Vaisseau relié · ${report.partIds.length} pièces`, rows);
 }
 
@@ -284,6 +285,7 @@ export function nativeSpecialRows(state: NativeUiState, nativeActions: NativeUiA
   lastState = state; actions = nativeActions; const world = state.world; if (!world) return [];
   const scope = scopeOf(state), selected = state.selectedObjects[0], pawn = world.pawns.find(pawn => pawn.id === state.selectedPawnIds[0]), structure = selected?.kind === 'structure' ? world.structures.find(structure => structure.id === selected.id) : undefined;
   const cell = pawn ?? state.selectedCell ?? structure, rows: NativeRow[] = [];
+  if(structure?.kind==='comms-console'&&Number(world.schemaVersion)===298&&actions.openFactionComms298)rows.push({id:'special-faction-comms298',label:'Communications de faction',controls:[button('special-faction-comms298','Appeler une faction…',()=>actions.openFactionComms298?.(structure.id))]});
   if(pawn?.visitor&&actions.openVisitorTrade) rows.push({id:'special-visitor-trade',label:'Échanges avec les visiteurs',controls:[button('special-visitor-trade','Ouvrir le commerce',()=>actions.openVisitorTrade?.())]});
   if (cell && (!pawn || pawn.state !== 'dead') && knownPosition256(world, cell)) rows.push({ id: 'special-environment', label: 'Pièce et hygiène', controls: [button('special-environment', 'Environnement et nettoyage', () => environmentPage(scope, { x: cell.x, z: cell.z }))] });
   const pile = selected?.kind === 'pile' ? world.piles.find(pile => pile.id === selected.id) : undefined;
@@ -294,8 +296,10 @@ export function nativeSpecialRows(state: NativeUiState, nativeActions: NativeUiA
     if (zone) rows.push({ id: 'special-crop-species', label: zone.basinId === undefined ? 'Culture de la zone' : 'Culture hydroponique', value: growingPlantLabel291(zone.plant), detail: growingCultureHelp(zone.plant, world), controls: growingCultureChoices(zone, world).map(plant => button(`crop-${plant}`, growingPlantLabel291(plant), async () => { const current = assertScope(scope).growingZones.find(zone => zone.id === selected.id); if (!current) throw Error('La zone a disparu.'); await send({ type: 'growing-policy', zoneId: current.id, plant, allowSow: current.allowSow, allowCut: current.allowCut }); }, false, zone.plant === plant)) });
   }
   if (!structure || !knownBuilding256(world, structure)) return rows;
-  if (isShipPartKind277(structure.kind) && world.schemaVersion >= 276) rows.push({ id: 'special-ship-assembly', label: 'Assemblage du vaisseau', controls: [button('special-ship-assembly', 'Inspecter les pièces reliées', () => shipAssemblyPage(scope, structure.id))] });
+  if (isShipPartKind298(structure.kind) && world.schemaVersion >= 276) rows.push({ id: 'special-ship-assembly', label: 'Assemblage du vaisseau', controls: [button('special-ship-assembly', 'Inspecter les pièces reliées', () => shipAssemblyPage(scope, structure.id))] });
+  if(isShipComputerSensorsKind298(structure.kind))rows.push(row('special-ship-fixed','Pièce de vaisseau fixe','2 × 2 · terrain lourd · extérieur sans toit'),row('special-ship-transmitter','Réseau électrique','Transmet le courant · aucune consommation propre'));
   if (!targetBuildingPlayerUse263(world, structure)) return rows;
+  if(Number(world.schemaVersion)===298&&structure.kind==='ship-computer'&&actions.launchShip298)rows.push({id:'special-ship-launch298',label:'Départ du vaisseau',controls:[{...button('special-ship-launch298','Lancer…',()=>{assertScope(scope);actions.launchShip298?.(structure.id);}),icon:'rocket'}]});
   if (structure.kind === 'comms-console' && actions.openOrbitalTrade) rows.push({id:'special-orbital-trade',label:'Communications orbitales',controls:[button('special-orbital-trade','Appeler un vaisseau',()=>actions.openOrbitalTrade?.(structure.id))]});
   if (structure.kind === 'pen-marker') {
     const region=penRegion(world,structure.id);

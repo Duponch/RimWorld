@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {hiveAttackTarget256,advanceHiveStructureMelee256} from './cave-hive-lord-256.ts';
 import {notifyDuckFlightJob256} from './duck-flight-runtime-256.ts';
 import {wildlifeRandom} from './wildlife-state.ts';
@@ -71,7 +72,7 @@ export function moveAnimalMelee(w:World,a:WildAnimal,nav:()=>ReturnType<typeof a
   if(!target)return false;
   if(!a.retaliation||a.retaliation.untilCore<=w.tick*10){notifyDuckFlightJob256(w,a,'AttackMelee',()=>wildlifeRandom(w.wildlife!));a.retaliation={targetId:target.id,untilCore:w.tick*10+200};}
   if(meleeContact(w,a,target,blocked())){a.path=[];a.state='idle';return true;}
-  const n=nav();a.path=approach(w,a,combatCell297(Number(w.schemaVersion),target,Number(w.schemaVersion)===297?effectiveCore297(w):0),n,blocked())??[];
+  const n=nav();a.path=approach(w,a,combatCell297(Number(w.schemaVersion),target,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):0),n,blocked())??[];
   if(a.path.length)moveAnimal(w,a,n.step,animalBody(a).capacities.moving);else a.state='idle';
   return true;
 }

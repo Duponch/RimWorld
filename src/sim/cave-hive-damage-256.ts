@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {planNaturalHiveLoss256} from './cave-hive-loss-256.ts';
@@ -32,7 +33,7 @@ export function notifyRemovedHiveProp256(w:World,s:Structure,core:number,collaps
 export function damageCaveHiveProp256(w:World,s:Structure,amount:number,cause:StructureDamageCause,rng:number,external?:StructureDamageContext):boolean {
  const max=s.kind==='insect-hive'?130:s.kind==='glow-pod'?50:0,pack=w.packed.find(p=>p.building===s),spawned=w.structures.includes(s);
  if(!max||!isSchema256Or257(w.schemaVersion)||!spawned&&!pack||!Number.isSafeInteger(amount)||amount<1||!validCaveHiveBuilding256(s,256,w,!!pack))return false;
- const core=external?.core??(Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10);if(!Number.isSafeInteger(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))return false;
+ const core=external?.core??(isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10);if(!Number.isSafeInteger(core)||(isCorePhysicalSchema297(Number(w.schemaVersion))?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))return false;
  const next=(s.damage??0)+amount;
  if(next<max){s.damage=next;if(cause!=='fire')w.rng=rng;
   if(s.kind==='insect-hive'){const lord=findActualHiveLord256(w,s)?.id;if(lord!==undefined){if(hiveInstigatorFaction256(w,external?.instigatorKey).hasFaction&&cause!=='roof'&&cause!=='roof-thick')receiveHiveMemo256(w,'attacked',core,lord);if(cause==='fire'&&max-next<max*.3)receiveHiveMemo256(w,'burned',core,lord);}}return true;

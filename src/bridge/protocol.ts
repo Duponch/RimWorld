@@ -2,6 +2,7 @@ import type {SettlementLimit,CampaignSummary} from '../sim/world-map-state';
 import type { ThreatPauseMode, ThreatSpeedOptions } from './urgent-threats';
 import type { Command } from '../sim/types';
 import type { SnapshotMessage } from './snapshots';
+import type {ShipRuntimeRequest298,ShipRuntimeResponse298,ShipOwnerReplyMetadata298} from './ship-countdown-wire-298.ts';
 
 export interface CampEntryProgressMessage256 {type:'camp-entry-progress';id:number;groupId:number;progress:import('../sim/camp-map-assembly-256').CampMapProgress256}
 export interface WorldDraftPreviewMessage256 {
@@ -12,6 +13,7 @@ export interface WorldDraftPreviewMessage256 {
  settlements:readonly import('../ui/world-creation-contract').WorldCreationSettlement256[];
 }
 export type Request =
+  | ShipRuntimeRequest298
   | {id:number;type:'world-draft-generate';generation:number;request:import('../ui/world-creation-contract').WorldCreationRequest256}
   | {id:number;type:'world-draft-cancel';generation:number;operationId?:number}
   | {id:number;type:'world-draft-confirm';request:import('../ui/world-creation-contract').WorldCreationSiteRequest256;geographyId:number}
@@ -30,7 +32,7 @@ export type Request =
 
 export interface CaravanEncounterProgressMessage261 {type:'caravan-encounter-progress';groupId:number;phase:string;reason?:string}
 export interface CaravanTradeArrivalMessage261 {type:'caravan-trade-arrival';groupId:number;settlementId:number;factionId:number;postId:number;checkpoint:{epoch:number;revision:number}}
-export type Response =
+export type Response = (
   | import('./core-phase-projection-297').CorePhaseEnvelope297
   | CaravanTradeArrivalMessage261
   | CaravanEncounterProgressMessage261
@@ -40,7 +42,7 @@ export type Response =
   | SnapshotMessage<true>
   | CampaignOnlyMessage
   | { type: 'reply'; id: number; ok: boolean; data?: string; reason?: string; outcome?: 'refused' | 'unknown'; checkpoint?: { epoch: number; revision: number } }
-  | SimulationFault;
+  | SimulationFault) & ShipOwnerReplyMetadata298 | ShipRuntimeResponse298;
 
 /** A fatal stop does not promise that the last tick was rolled back. */
 export interface SimulationFault {
@@ -53,7 +55,7 @@ export interface SimulationFault {
 
 export interface SimulationRequestStatus {
   id: number;
-  type: Request['type'];
+  type: Extract<Request,{id:number}>['type'];
   state: 'waiting' | 'settled';
   message?: string;
 }

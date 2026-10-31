@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {validCapturedCoreMove297} from '../sim/core-move-save-297.ts';
 import {MotionRecorder,type PawnTrack} from './motion-tracks.ts';
 import type {PresentationSegment} from '../sim/travel-timing.ts';
@@ -11,7 +12,7 @@ function dense(v:unknown):v is unknown[]{if(!Array.isArray(v)||Object.getPrototy
 const exact=(v:Data,keys:string[])=>Object.keys(v).length===keys.length&&Object.keys(v).every(k=>keys.includes(k));
 function validPresentationStop297(v:Data,version:number):boolean {
  if(!('stop297'in v))return true;
- if(version!==297||v.stop297!==true||!exact(v,['from','to','start','end','fromFraction','toFraction','stop297'])||!record(v.from)||!record(v.to)||!exact(v.from,['x','z'])||!exact(v.to,['x','z']))return false;
+ if(!isCorePhysicalSchema297(version)||v.stop297!==true||!exact(v,['from','to','start','end','fromFraction','toFraction','stop297'])||!record(v.from)||!record(v.to)||!exact(v.from,['x','z'])||!exact(v.to,['x','z']))return false;
  return typeof v.from.x==='number'&&Number.isFinite(v.from.x)&&typeof v.from.z==='number'&&Number.isFinite(v.from.z)&&v.from.x===v.to.x&&v.from.z===v.to.z&&typeof v.start==='number'&&Number.isFinite(v.start)&&v.start>=0&&v.end===v.start&&Number.isSafeInteger(v.start*10)&&v.fromFraction===0&&v.toFraction===0;
 }
 function copy(v:unknown,depth=0,version?:number):unknown {
@@ -29,7 +30,7 @@ function same(a:unknown,b:unknown):boolean {
 }
 function freezeCopied(v:unknown):unknown {const result=copy(v);const freeze=(x:unknown):void=>{if(x&&typeof x==='object'){for(const key of Object.keys(x))freeze((x as Data)[key]);Object.freeze(x);}};freeze(result);return result;}
 function segment(v:unknown,version:number):v is PresentationSegment {
- if(!record(v)||Object.keys(v).some(k=>!['from','to','start','end','terrainDelay','speedFactor','stagger','stuns','animalFlight','snowEntryPending','edgeStart','fromFraction','toFraction',...(version===297?['coreMove297','coreMoveWalk297','stop297']:[])].includes(k)))return false;
+ if(!record(v)||Object.keys(v).some(k=>!['from','to','start','end','terrainDelay','speedFactor','stagger','stuns','animalFlight','snowEntryPending','edgeStart','fromFraction','toFraction',...(isCorePhysicalSchema297(version)?['coreMove297','coreMoveWalk297','stop297']:[])].includes(k)))return false;
  if(!validCapturedCoreMove297(v,version)||!validPresentationStop297(v,version))return false;
  for(const name of ['from','to']){const c=v[name];if(!record(c)||!exact(c,['x','z'])||typeof c.x!=='number'||!Number.isFinite(c.x)||typeof c.z!=='number'||!Number.isFinite(c.z))return false;}
  if(typeof v.start!=='number'||!Number.isFinite(v.start)||typeof v.end!=='number'||!Number.isFinite(v.end)||v.end<v.start)return false;

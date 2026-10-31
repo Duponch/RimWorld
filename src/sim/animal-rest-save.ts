@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import {validCapturedCoreMove297} from './core-move-save-297.ts';
 import { isColonist } from './affiliation.ts';
@@ -40,12 +41,12 @@ export function validAnimalCarrierMotion(w:World,a:WildAnimal,version:number):bo
   const m=a.motion;
   const spatialPatient=isSchema277OrLater(version)&&a.path.length===0&&['idle','downed','dead'].includes(a.state)
     &&!a.meal&&!a.predation&&!a.mating&&!a.flee&&!a.threat&&!a.retaliation&&!a.strike&&!a.animalRest;
-  if(version<221||!a.domestic&&!spatialPatient||!m||!object(m)||!keys(m,['from','to','start','end'],['speedFactor','terrainDelay','stagger','stuns',...(version>=239?['snowEntryPending']:[]),...(version===297?['coreMove297','coreMoveWalk297']:[])]))return false;
+  if(version<221||!a.domestic&&!spatialPatient||!m||!object(m)||!keys(m,['from','to','start','end'],['speedFactor','terrainDelay','stagger','stuns',...(version>=239?['snowEntryPending']:[]),...(isCorePhysicalSchema297(version)?['coreMove297','coreMoveWalk297']:[])]))return false;
   const cell=(v:unknown):v is {x:number;z:number}=>object(v)&&keys(v,['x','z'])&&Number.isSafeInteger(v.x)&&Number(v.x)>=0&&Number(v.x)<w.width&&Number.isSafeInteger(v.z)&&Number(v.z)>=0&&Number(v.z)<w.height;
   if(!cell(m.from)||!cell(m.to)||!same(a,m.to)||!Number.isFinite(m.start)||m.start<0||m.start>effectiveLocal297(w)||!Number.isFinite(m.end)||m.end<=m.start
     ||Math.max(Math.abs(m.from.x-m.to.x),Math.abs(m.from.z-m.to.z))!==1
     ||m.speedFactor!==undefined&&(!Number.isFinite(m.speedFactor)||m.speedFactor<MIN_PAWN_SPEED_V87||m.speedFactor>1)
-    ||!validCapturedCoreMove297(m,version)||!validCapturedTravelDelay(m.terrainDelay,version)||!validSlowIntervals(m.stagger,version,m.start,w.tick,version===297?effectiveCore297(w):undefined)||!validStunIntervals(m.stuns,version,m.start,w.tick,version===297?effectiveCore297(w):undefined)
+    ||!validCapturedCoreMove297(m,version)||!validCapturedTravelDelay(m.terrainDelay,version)||!validSlowIntervals(m.stagger,version,m.start,w.tick,isCorePhysicalSchema297(version)?effectiveCore297(w):undefined)||!validStunIntervals(m.stuns,version,m.start,w.tick,isCorePhysicalSchema297(version)?effectiveCore297(w):undefined)
     ||Math.abs(m.end-travelEnd(m))>1e-7)return false;
   const carrier=animalCarrier(w,a.id);
   if(carrier&&!sameAnimalCarrierEdge(m,carrier.motion))return false;

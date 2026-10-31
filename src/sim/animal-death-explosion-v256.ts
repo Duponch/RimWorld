@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {animalCarrier} from './animal-rest-state.ts';
 import {animalLifeStage} from './animal-life.ts';
@@ -13,12 +14,12 @@ const none=Object.freeze({commit:()=>{}});
 /** Actual living-to-dead transition only. The retained local dead actor is the
  * same corpse owner that corpses.ts later materializes with this same ID.
  * A carried death never becomes a delayed explosion when deposited. */
-export function planAnimalDeathExplosion256(world:World,animal:WildAnimal,record:MedicalRecord,core=Number(world.schemaVersion)===297?effectiveCore297(world):world.tick*10,atPhysicalCell=false):{commit:()=>void} {
+export function planAnimalDeathExplosion256(world:World,animal:WildAnimal,record:MedicalRecord,core=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):world.tick*10,atPhysicalCell=false):{commit:()=>void} {
  if(world.schemaVersion<256||!isExplosiveAnimal256(animal.species)||animal.state==='dead'||animal.health?.death||!record.death||animalCarrier(world,animal.id))return none;
  if(!world.wildlife?.animals.includes(animal)||record.body!==animal.species||!Number.isSafeInteger(record.animalBirthTick)||record.death.tick!==world.tick
-  ||!Number.isSafeInteger(core)||(Number(world.schemaVersion)===297?core!==effectiveCore297(world):core<Math.max(0,(world.tick-1)*10)||core>world.tick*10)||!Number.isSafeInteger(world.nextId+1)||(world.bombWaves?.length??0)>=world.width*world.height
+  ||!Number.isSafeInteger(core)||(isCorePhysicalSchema297(Number(world.schemaVersion))?core!==effectiveCore297(world):core<Math.max(0,(world.tick-1)*10)||core>world.tick*10)||!Number.isSafeInteger(world.nextId+1)||(world.bombWaves?.length??0)>=world.width*world.height
   ||world.bombWaves?.some(w=>w.animalDeath&&w.sourceId===animal.id))throw RangeError('Cannot reserve animal death explosion.');
- const proof:AnimalDeathExplosion256={species:animal.species,lifeStage:animalLifeStage({...animal,ageTicks:record.tick-record.animalBirthTick!}),deathTick:record.death.tick,...Number(world.schemaVersion)===297?{deathAtCore297:core}:{}};
+ const proof:AnimalDeathExplosion256={species:animal.species,lifeStage:animalLifeStage({...animal,ageTicks:record.tick-record.animalBirthTick!}),deathTick:record.death.tick,...isCorePhysicalSchema297(Number(world.schemaVersion))?{deathAtCore297:core}:{}};
  // New local thermal exposure belongs to the occupied cell until its edge
  // completes. Historical impact producers keep their existing anchor.
  const cell=atPhysicalCell&&animal.motion&&animal.motion.end>world.tick?animal.motion.from:animal;
@@ -27,7 +28,7 @@ export function planAnimalDeathExplosion256(world:World,animal:WildAnimal,record
  const draft={...world,...world.thermal?{thermal:structuredClone(world.thermal)}:{}},layout=reconcileTemperature(draft);
  const region=draft.thermal?.regions[layout.indices[center.z*world.width+center.x]!];
  if(region){region.temperature=Math.min(1000,region.temperature+15*wave.cells.length/region.cells.length);if(!Number.isFinite(region.temperature))throw RangeError('Invalid animal explosion heat.');}
- const plannedCore=Number(world.schemaVersion)===297?effectiveCore297(world):undefined;let used=false;
+ const plannedCore=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):undefined;let used=false;
  return {commit:()=>{
   if(used||plannedCore!==undefined&&plannedCore!==effectiveCore297(world)||world.nextId!==nextId||world.bombWaves!==waves)throw RangeError('Stale animal death explosion plan.');used=true;
   world.nextId++;world.bombWaves=[...(waves??[]),wave];if(draft.thermal)world.thermal=draft.thermal;else delete world.thermal;

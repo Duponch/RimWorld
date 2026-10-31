@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveLocal297} from './core-phase-297.ts';
 import {markTerrainCellChanged} from './terrain-mutation-journal.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
@@ -55,7 +56,7 @@ export function stepSnowSurface(w:World,layout:ThermalLayout):void {
 }
 /** The right belongs to a real autonomous edge, never to its carried mirror. */
 export function finishSnowStep(w:World,a:{x:number;z:number;motion?:TravelSegment|null},bodySize=1):void {
- const m=a.motion;if(!m?.snowEntryPending||m.end>(Number(w.schemaVersion)===297?effectiveLocal297(w):w.tick))return;
+ const m=a.motion;if(!m?.snowEntryPending||m.end>(isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveLocal297(w):w.tick))return;
  delete m.snowEntryPending;if(w.snow)setSnowDepth(w,m.to.z*w.width+m.to.x,compactedSnowDepth(snowDepthAt(w,m.to.z*w.width+m.to.x),bodySize));
 }
 export function finishSnowSteps(w:World):void {if(!w.snow)return;for(const p of w.pawns)finishSnowStep(w,p);for(const a of w.wildlife?.animals??[])finishSnowStep(w,a,animalBodySize(a));}

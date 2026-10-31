@@ -1,3 +1,4 @@
+import {mockRequestId298} from './request-id-binding298';
 // Current297 analogue of the unchanged V488 historical suite. No legacy load bypass.
 // Real Runtime, physical Engine, clocks, Macro observers, Full codec and phase staging.
 // Only the monotonic wall clock and task delivery are controlled; no Native authority.
@@ -77,7 +78,7 @@ function harness(closeAfter=3,raid=false){
    }else assert.deepEqual(physical(projection.world),physical(world));
    phaseRows.push({world,packet:owned});publications.push({kind:'phase',core:projection.core,at:now,audio:owned.audioCues});order.push('phase:'+projection.core);
   });
- const request=(value:any)=>{const request={...value,id:++id} as Request,before=rows.length;scope.onmessage({data:request});const reply=messages.findLast((r):r is Extract<Response,{type:'reply'}>=>r.type==='reply'&&r.id===request.id);assert.ok(reply,'The real Runtime must reply');return {reply,rows:rows.slice(before),id:request.id};};
+ const request=(value:any)=>{const request={...value,id:++id} as Request,before=rows.length;scope.onmessage({data:request});const reply=messages.findLast((r):r is Extract<Response,{type:'reply'}>=>r.type==='reply'&&r.id===mockRequestId298(request));assert.ok(reply,'The real Runtime must reply');return {reply,rows:rows.slice(before),id:mockRequestId298(request)};};
  const saved=()=>{const result=request({type:'save'});assert.equal(result.reply.ok,true,result.reply.reason);assert.equal(typeof result.reply.data,'string');return result.reply.data!;};
  assert.equal(request({type:'load',data:input.raw,threatPauseMode:'major'}).reply.ok,true);
  const initial=saved(),oracle=deserializeCampaign(initial),core=effectiveCore297(oracle);assert.equal(core,0);assert.equal(request({type:'speed',speed:6}).reply.ok,true);

@@ -1,4 +1,5 @@
 /** Shared contact pickup without merging away a receipt identity. */
+import {validAiCorePile298} from './victory-content-save-298.ts';
 import type { MaterialPile, Pawn, World } from './types.ts';
 import { copyPileCondition } from './pile-condition.ts';
 
@@ -20,6 +21,7 @@ export function planInventoryPickup(world:World,source:MaterialPile,pawnId:numbe
   const carrier=world.pawns.find(p=>p.id===pawnId);
   if(!world.piles.includes(source)||source.owner.type!=='ground'||!Number.isSafeInteger(quantity)||quantity<1||quantity>source.quantity
     ||!Number.isSafeInteger(pawnId)||pawnId<1||!carrier)return undefined;
+  if((source.kind==='ai-core'||source.item==='ai-core')&&(!validAiCorePile298(source,world.schemaVersion)||quantity!==1))return undefined;
   const split=quantity<source.quantity;
   if(split&&(world.piles.length>=32768||!Number.isSafeInteger(world.nextId+1)))return undefined;
   const carried=split?{...source,id:world.nextId,quantity,owner:{type:'inventory' as const,pawnId},...copyPileCondition(source)}:source;
@@ -27,6 +29,7 @@ export function planInventoryPickup(world:World,source:MaterialPile,pawnId:numbe
     expectedNextId:world.nextId,expectedTick:world.tick,carrier,quantity,pawnId,carried,split};
 }
 export function inventoryPickupCurrent(world:World,plan:InventoryPickupPlan):boolean {
+  if((plan.source.kind==='ai-core'||plan.source.item==='ai-core')&&(!validAiCorePile298(plan.source,world.schemaVersion)||plan.quantity!==1||plan.split||plan.carried!==plan.source))return false;
   return world.tick===plan.expectedTick&&world.pawns.includes(plan.carrier)&&plan.carrier.id===plan.pawnId
     &&world.piles===plan.expectedPiles&&world.piles.length===plan.expectedPileCount&&world.nextId===plan.expectedNextId&&world.piles.includes(plan.source)
     &&JSON.stringify(plan.source)===plan.expectedSource;

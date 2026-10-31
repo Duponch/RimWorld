@@ -1,3 +1,4 @@
+import {mockRequestId298} from './request-id-binding298';
 import {campaignAuthority} from '../src/sim/secondary-site-context';
 import {revolverProfile} from '../src/sim/ranged-statistics';
 // New frontier publication policy. Historical V7 12+1 files remain immutable separate oracles.
@@ -105,12 +106,12 @@ export function frontierHarness(options:QuietOptions={}){
    }else assert.deepEqual(physical(projection.world),physical(world));
    phaseRows.push({world,packet:owned,fullWorld:projection.world,actorCore:projection.core});publications.push({kind:'phase',core:projection.core,at:now,audio:owned.audioCues});order.push('phase:'+projection.core);
   });
- const request=(value:any)=>{const request={...value,id:++id} as Request,before=rows.length;scope.onmessage({data:request});const reply=messages.findLast((r):r is Extract<Response,{type:'reply'}>=>r.type==='reply'&&r.id===request.id);assert.ok(reply,'The real Runtime must reply');
+ const request=(value:any)=>{const request={...value,id:++id} as Request,before=rows.length;scope.onmessage({data:request});const reply=messages.findLast((r):r is Extract<Response,{type:'reply'}>=>r.type==='reply'&&r.id===mockRequestId298(request));assert.ok(reply,'The real Runtime must reply');
   // A successful replacement revokes the old physical borrow even if its
   // Motion projection/shape still resembles the newly loaded map. A refused
   // load leaves the current owner and its existing proven borrow unchanged.
   if(request.type==='load'&&reply.ok){authorityGeneration++;physicalBorrowGeneration=undefined;actualPhysicalWorld=undefined;actualCampaignRoot=undefined;}
-  return {reply,rows:rows.slice(before),id:request.id};};
+  return {reply,rows:rows.slice(before),id:mockRequestId298(request)};};
  const saved=()=>{const result=request({type:'save'});assert.equal(result.reply.ok,true,result.reply.reason);assert.equal(typeof result.reply.data,'string');return result.reply.data!;};
  assert.equal(request({type:'load',data:input.raw,threatPauseMode:'major'}).reply.ok,true);
  const initial=saved(),oracle=deserializeCampaign(initial),core=effectiveCore297(oracle);assert.equal(core,0);assert.equal(request({type:'speed',speed:options.speed??6}).reply.ok,true);

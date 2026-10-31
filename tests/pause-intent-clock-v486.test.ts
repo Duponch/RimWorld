@@ -1,3 +1,4 @@
+import {mockRequestId298} from './request-id-binding298';
 // Actual Runtime/Core/codec. V488 supersedes advance-old; stamp validation remains compatible.
 import {afterEach,expect,test,vi} from 'vitest';
 import {startSimulationWorker} from '../src/bridge/simulation-runtime';
@@ -30,7 +31,7 @@ function harness(closeAfter=3,raid=false){
  const drain=()=>{for(let i=0;posted.length&&i<64;i++)posted.shift()!();expect(posted).toHaveLength(0);};
  const encoder=new SnapshotEncoder<true>({structureDelta:true,minimumStructures:1000}),encode=encoder.encode.bind(encoder);vi.spyOn(encoder,'encode').mockImplementation((w,ms,speed,checkpoint)=>{if(failPause&&speed===0)throw Error('intent-publication-failure');return encode(w,ms,speed,checkpoint);});
  const scope={onmessage:undefined as unknown as(e:MessageEvent<Request>)=>void};startSimulationWorker(scope as unknown as DedicatedWorkerGlobalScope,message=>{messages.push(structuredClone(message));order.push(message.type==='reply'?'reply:'+message.id:message.type);},encoder,(w,packet)=>{rows.push({world:structuredClone(w),packet:structuredClone(packet)});order.push('publication:'+w.tick+':'+packet.speed);},()=>motion);
- const deliver=(request:Request)=>{const before=rows.length;scope.onmessage({data:request} as MessageEvent<Request>);const reply=messages.findLast((r):r is Extract<Response,{type:'reply'}>=>r.type==='reply'&&r.id===request.id);if(!reply)throw Error('Actual runtime reply absent');return {reply,rows:rows.slice(before),id:request.id};};
+ const deliver=(request:Request)=>{const before=rows.length;scope.onmessage({data:request} as MessageEvent<Request>);const reply=messages.findLast((r):r is Extract<Response,{type:'reply'}>=>r.type==='reply'&&r.id===mockRequestId298(request));if(!reply)throw Error('Actual runtime reply absent');return {reply,rows:rows.slice(before),id:mockRequestId298(request)};};
  const request=(value:FutureSpeed|Omit<Extract<Request,{type:'save'}>,'id'>|Omit<Extract<Request,{type:'load'}>,'id'>)=>deliver({...value,id:++id} as Request);
  // Deliberate CPU-handler boundary: define the descriptor without spreading or
  // reading pauseIntent. No claim that an accessor survives native structuredClone.

@@ -1,26 +1,27 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import type {World} from './types.ts';
 export interface PhaseWorld297 {readonly tick:number;readonly schemaVersion:number;readonly phaseCore297?:number}
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 /** LIVE validated state only; forwards real campaign fields, grants no owner. */
 export function effectiveCore297(w:PhaseWorld297):number {
  const version=Number(w.schemaVersion),tick=w.tick;
- if(!integer(tick)||!integer(version,1,297))throw Error('Invalid live physical clock');
+ if(!integer(tick)||!integer(version,1,298))throw Error('Invalid live physical clock');
  const core=tick*10;if(!integer(core))throw Error('Physical clock exhausted');
- if(version!==297)return core; // Do not read a future field on historical Worlds.
+ if(!isCorePhysicalSchema297(version))return core; // Do not read a future field on historical Worlds.
  const phase=w.phaseCore297;if(!integer(phase,0,9)||!integer(core+phase))throw Error('Invalid committed physical phase');return core+phase;
 }
 export const effectiveLocal297=(w:PhaseWorld297):number=>effectiveCore297(w)/10;
 /** Shape callers with a civil timestamp need an EXPLICIT physical owner proof.
  * Missing proof is rejected in297; it is not borrowed from an unrelated root. */
 export function validationCore297(version:number,civilTick:number,coreNow297?:number):number {
- if(!integer(version,1,297))return NaN;
- if(version!==297)return civilTick*10;
+ if(!integer(version,1,298))return NaN;
+ if(!isCorePhysicalSchema297(version))return civilTick*10;
  return integer(civilTick)&&integer(coreNow297)&&Math.floor(coreNow297/10)===civilTick?coreNow297:NaN;
 }
 export function validPhaseCore297(raw:unknown,version:number,localBody=false):boolean {
- if(!raw||typeof raw!=='object'||Array.isArray(raw)||!integer(version,1,297))return false;
+ if(!raw||typeof raw!=='object'||Array.isArray(raw)||!integer(version,1,298))return false;
  const present='phaseCore297'in raw;
- if(version!==297||localBody)return !present;
+ if(!isCorePhysicalSchema297(version)||localBody)return !present;
  const p=Object.getOwnPropertyDescriptor(raw,'phaseCore297'),t=Object.getOwnPropertyDescriptor(raw,'tick');
  return !!p&&p.enumerable===true&&Object.hasOwn(p,'value')&&integer(p.value,0,9)&&!!t&&t.enumerable===true&&Object.hasOwn(t,'value')&&integer(t.value)&&integer(t.value*10+p.value);
 }
@@ -36,10 +37,10 @@ export function suspensionDeltas297(heldAt:number,targetCivil:number,physical?:S
 }
 /** Optional prospective holder field. Absence is the historical phase0 capture. */
 export function heldCore297(holder:unknown,version:number,heldAt:number):number {
- if(!integer(version,1,297)||!holder||typeof holder!=='object'||Array.isArray(holder)||!integer(heldAt)||!integer(heldAt*10))return NaN;
+ if(!integer(version,1,298)||!holder||typeof holder!=='object'||Array.isArray(holder)||!integer(heldAt)||!integer(heldAt*10))return NaN;
  const present='heldAtCore297'in holder;if(!present)return heldAt*10;
- const d=Object.getOwnPropertyDescriptor(holder,'heldAtCore297');return version===297&&!!d&&d.enumerable===true&&Object.hasOwn(d,'value')&&integer(d.value)&&Math.floor(d.value/10)===heldAt?d.value:NaN;
+ const d=Object.getOwnPropertyDescriptor(holder,'heldAtCore297');return isCorePhysicalSchema297(version)&&!!d&&d.enumerable===true&&Object.hasOwn(d,'value')&&integer(d.value)&&Math.floor(d.value/10)===heldAt?d.value:NaN;
 }
 
 /** Call ONLY inside the real occupied-holder capture transaction. */
-export function captureOccupiedHeldCore297(w:PhaseWorld297):{heldAtCore297:number} {if(Number(w.schemaVersion)!==297)throw Error('Prospective held clock before297');return {heldAtCore297:effectiveCore297(w)};}
+export function captureOccupiedHeldCore297(w:PhaseWorld297):{heldAtCore297:number} {if(!isCorePhysicalSchema297(Number(w.schemaVersion)))throw Error('Prospective held clock before297');return {heldAtCore297:effectiveCore297(w)};}

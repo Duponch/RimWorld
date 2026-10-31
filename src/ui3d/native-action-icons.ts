@@ -1,7 +1,7 @@
 import {drawHandBlob,drawHandPaintedIcon,drawHandRect,drawMarkerLine,seededRandom} from './prototype-art';
 
 type OriginalIcon='architecte'|'travail'|'planning'|'assignations'|'animaux'|'faune'|'recherches'|'quetes'|'monde'|'historique'|'factions'|'menu'|'ordres'|'zones';
-export type NativeActionIconKind=OriginalIcon|'wall'|'floor'|'floor-remove'|'bridge'|'bridge-remove'|'chair'|'bed'|'medical-bed'|'animal-bed'|'table'|'shelf'|'door'|'fence'|'flag'|'grave'|'thermometer'|'flame'|'lamp'|'horseshoe'|'chess'|'television'|'workbench'|'anvil'|'sword'|'gun'|'shield'|'shirt'|'power'|'wire'|'battery'|'solar'|'wind'|'rocket'|'reactor'|'casket'|'mine'|'haul'|'axe'|'harvest'|'scissors'|'uninstall'|'deconstruct'|'cancel'|'growing'|'growing-remove'|'stockpile'|'stockpile-remove'|'roof'|'roof-remove'|'roof-ignore'|'home'|'home-remove'|'snow'|'snow-remove'|'pot'|'food'|'barrel'|'drop'|'drill'|'radar'|'chip'|'cross'|'limb'|'paint'|'foam'|'play'|'pause'|'save'|'load'|'export'|'copy'|'paste'|'back'|'rotate-left'|'rotate-right'|'information'|'plus'|'minus'|'check'|'fallback';
+export type NativeActionIconKind=OriginalIcon|'wall'|'floor'|'floor-remove'|'bridge'|'bridge-remove'|'chair'|'bed'|'medical-bed'|'animal-bed'|'table'|'shelf'|'door'|'fence'|'flag'|'grave'|'thermometer'|'flame'|'lamp'|'horseshoe'|'chess'|'television'|'workbench'|'anvil'|'sword'|'gun'|'shield'|'shirt'|'power'|'wire'|'battery'|'solar'|'wind'|'rocket'|'reactor'|'casket'|'computer'|'sensors'|'mine'|'haul'|'axe'|'harvest'|'scissors'|'uninstall'|'deconstruct'|'cancel'|'growing'|'growing-remove'|'stockpile'|'stockpile-remove'|'roof'|'roof-remove'|'roof-ignore'|'home'|'home-remove'|'snow'|'snow-remove'|'pot'|'food'|'barrel'|'drop'|'drill'|'radar'|'chip'|'cross'|'limb'|'paint'|'foam'|'play'|'pause'|'save'|'load'|'export'|'copy'|'paste'|'back'|'rotate-left'|'rotate-right'|'information'|'plus'|'minus'|'check'|'fallback';
 
 // Semantic IDs belong to the catalogue, never to text translated for display.
 // Every delivered tool/project has an explicit entry or a floor-material rule.
@@ -18,6 +18,7 @@ const families:Readonly<Record<string,NativeActionIconKind>>={
   'hydroponics-basin':'growing','deep-drill':'drill','ground-scanner':'radar','orbital-beacon':'radar','comms-console':'television','nutrient-paste-dispenser':'pot',hopper:'stockpile','research-bench':'recherches','hi-tech-research-bench':'recherches','multi-analyzer':'radar',
   'tailor-bench':'shirt','electric-tailor-bench':'shirt','drug-lab':'recherches','electric-crematorium':'flame','electric-smelter':'flame','fueled-smithy':'anvil','electric-smithy':'anvil',brewery:'barrel','fermenting-barrel':'barrel','biofuel-refinery':'drop','art-bench':'paint','machining-table':'workbench','fabrication-bench':'chip','crafting-spot':'workbench','fueled-stove':'pot','electric-stove':'pot','butcher-table':'food','butcher-spot':'food',stonecutter:'mine',
   growing:'growing','remove-growing':'growing-remove',stockpile:'stockpile','remove-stockpile':'stockpile-remove','build-roof':'roof','remove-roof':'roof-remove','ignore-roof':'roof-ignore','snow-clear':'snow','remove-snow-clear':'snow-remove',home:'home','remove-home':'home-remove',
+  'ai-core':'chip','ship-computer':'computer','ship-sensors':'sensors','long-range-mineral-scanner':'radar',
   'ship-cryptosleep-casket':'casket','ship-beam':'rocket','ship-reactor':'reactor','ship-engine':'rocket',
   'tree-sowing':'faune',firefoam:'foam','ship-cryptosleep':'casket','ship-basics':'rocket',prosthetics:'limb',cryptosleep:'casket','long-blades':'sword',brewing:'barrel','geothermal-power':'power','biofuel-refining':'drop','nutrient-paste':'pot','deep-drilling':'drill','sterile-materials':'floor','drug-production':'recherches','medicine-production':'cross',hydroponics:'growing','gun-turrets':'gun','complex-furniture':'chair',stonecutting:'mine',smithing:'anvil',machining:'workbench',gunsmithing:'gun','complex-clothing':'shirt',pemmican:'food','packaged-survival-meals':'food',autodoors:'door','plate-armor':'shield','flak-armor':'shield',batteries:'battery','solar-power':'solar','air-conditioning':'thermometer',microelectronics:'chip',fabrication:'workbench','advanced-fabrication':'chip','recon-armor':'shield',
   'cryptosleep-casket':'casket',
@@ -123,6 +124,14 @@ export function drawNativeActionIcon(ctx:CanvasRenderingContext2D,id:string,cx:n
       blob(0,-.21,.1,ink);for(const angle of[-Math.PI/2,Math.PI/6,Math.PI*5/6]){const x=Math.cos(angle),y=Math.sin(angle);polygon([[x*.1,y*.1-.21],[x*.79-y*.12,y*.79+x*.12-.21],[x*.62+y*.1,y*.62-x*.1-.21]]);}line(0,-.1,-.09,.77);line(0,-.1,.12,.77);break;
     case 'rocket':
       polygon([[0,-.83],[-.36,-.3],[-.31,.47],[.31,.47],[.36,-.3]]);blob(0,-.13,.15,'#a2afb0');polygon([[-.3,.11],[-.64,.58],[-.3,.48]]);polygon([[.3,.11],[.64,.58],[.3,.48]]);line(-.13,.55,-.18,.86);line(.11,.54,.14,.86);break;
+    case 'computer':
+      polygon([[-.72,-.62],[.63,-.66],[.7,.22],[-.65,.24]],'#91a9a8');rect(-.51,-.46,1.03,.49,'#566e7b');
+      line(-.29,-.28,-.09,-.28);line(.05,-.28,.3,-.28);line(-.24,-.13,.22,-.13);
+      polygon([[-.61,.3],[.62,.27],[.78,.63],[-.76,.66]]);line(-.5,.48,.48,.47);line(-.26,.4,-.26,.55);line(.07,.39,.07,.54);line(.35,.39,.35,.54);break;
+    case 'sensors':
+      polygon([[-.79,-.55],[-.25,-.2],[.24,-.28],[.68,-.73],[.5,-.02],[.04,.32],[-.47,.14]],'#9bb4b0');
+      line(-.65,-.43,.38,-.04);line(-.23,-.23,.16,.22);line(.04,.3,-.1,.67,1.3);line(-.45,.71,.43,.71);
+      line(.23,-.3,.58,-.58);blob(.61,-.61,.075,'#cfb16f');line(.71,-.79,.86,-.9);break;
     case 'reactor':
       blob(0,0,.68);blob(0,0,.15,ink);for(const angle of[-Math.PI/2,Math.PI/6,Math.PI*5/6]){const x=Math.cos(angle),y=Math.sin(angle);polygon([[x*.28-y*.08,y*.28+x*.08],[x*.56-y*.25,y*.56+x*.25],[x*.56+y*.25,y*.56-x*.25]],'#d5a64f');}break;
     case 'mine':

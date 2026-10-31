@@ -4,6 +4,8 @@ import {researchProjects,type ProjectNode} from './research-projects';
 /** Existing research hierarchy and geometry, shared by the legacy reader and
  * native meshes. Importing this module does not construct a UI or read a World. */
 export const researchLinks:readonly (readonly [ResearchProject,ResearchProject])[]=[
+  ['microelectronics','long-range-mineral-scanner'],['machining','long-range-mineral-scanner'],
+  ['ship-basics','ship-computer'],['ship-basics','ship-sensors'],['long-range-mineral-scanner','ship-sensors'],
   ['ship-basics','ship-cryptosleep'],['cryptosleep','ship-cryptosleep'],
   ['advanced-fabrication','ship-basics'],['ship-basics','ship-reactor'],['ship-basics','ship-engine'],
   ['machining','prosthetics'],['multi-analyzer','cryptosleep'],
@@ -22,6 +24,8 @@ export const RESEARCH_NODE_WIDTH=142,RESEARCH_NODE_HEIGHT=66,RESEARCH_GRAPH_WIDT
 export const RESEARCH_GRAPH_HEIGHT=Math.ceil(Math.max(740,...researchProjects.map(project=>22+(project.y-20)*.66+RESEARCH_NODE_HEIGHT+22)));
 export const researchNodePosition=(project:Pick<ProjectNode,'x'|'y'>)=>({x:20+(project.x-24)*.82,y:22+(project.y-20)*.66});
 export const researchPrerequisiteLabels:ReadonlyMap<ResearchProject,readonly string[]>=new Map<ResearchProject,string[]>([
+  ['long-range-mineral-scanner',['Microélectronique','Usinage']],
+  ['ship-computer',['Construction de vaisseau']],['ship-sensors',['Construction de vaisseau','Scanner minéral longue portée']],
   ['firefoam',['Électricité (acquise au départ)']],
   ['ship-cryptosleep',['Construction de vaisseau','Cryptosommeil']],
   ['ship-basics',['Fabrication avancée']],['ship-reactor',['Construction de vaisseau']],['ship-engine',['Construction de vaisseau']],
@@ -47,6 +51,13 @@ function linkCommands(fromId:ResearchProject,toId:ResearchProject):ResearchPathC
   const source=byId.get(fromId),target=byId.get(toId);
   if(!source||!target)throw new Error('Recherche absente du graphe livré.');
   const from=researchNodePosition(source),to=researchNodePosition(target),w=RESEARCH_NODE_WIDTH,h=RESEARCH_NODE_HEIGHT;
+  // New long links use the empty outer gutter instead of crossing old cards.
+  // Authored once at module load; no World or per-frame route computation.
+  if(toId==='long-range-mineral-scanner'){
+    const lane=fromId==='microelectronics'?6:12,x=from.x+w/2,y=from.y+h+8,targetX=to.x+w/2,targetY=to.y-8;
+    return [{kind:'M',point:point(x,from.y+h)},{kind:'L',point:point(x,y)},{kind:'L',point:point(lane,y)},
+      {kind:'L',point:point(lane,targetY)},{kind:'L',point:point(targetX,targetY)},{kind:'L',point:point(targetX,to.y)}];
+  }
   if(toId==='tube-television'){
     const y1=from.y+h/2,y2=to.y+h/2;
     return [{kind:'M',point:point(from.x,y1)},{kind:'L',point:point(6,y1)},{kind:'L',point:point(6,y2)},{kind:'L',point:point(to.x,y2)}];

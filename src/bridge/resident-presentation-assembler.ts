@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {validPhaseCore297} from '../sim/core-phase-297';
 import {validCorePathBudget297} from '../sim/core-path-budget-297';
 import {validWallDoorHistoricalTransport296,validWallDoorWorld296,validWallDoorResidentNamespace296} from '../sim/wall-door-save-296.ts';
@@ -196,7 +197,7 @@ function localShape(raw:unknown,checkpoint:boolean,sparseStructures:boolean,reus
  if(!validShipReactorHistoricalTransport275(raw,raw.schemaVersion))return 'future ship reactor';
  if(!validGiftHistoricalTransport274(raw,raw.schemaVersion))return 'future diplomatic gift';
  if(!integer(raw.tick))return 'tick';
- if(!validPhaseCore297(raw,raw.schemaVersion)||!validCorePathBudget297(raw,raw.schemaVersion,raw.tick,raw.schemaVersion===297?Number(raw.phaseCore297):0,true))return 'physical clock/local path-budget owner';
+ if(!validPhaseCore297(raw,raw.schemaVersion)||!validCorePathBudget297(raw,raw.schemaVersion,raw.tick,isCorePhysicalSchema297(raw.schemaVersion)?Number(raw.phaseCore297):0,true))return 'physical clock/local path-budget owner';
  if(!integer(raw.nextId,1))return 'nextId';
  if(!integer(raw.width,1,MAX_EXTENDED_MAP_SIZE)||!integer(raw.height,1,MAX_EXTENDED_MAP_SIZE))return 'dimensions';
  if(!integer(raw.seed,0,0xffffffff)||!integer(raw.rng,0,0xffffffff))return 'seed/rng uint32';
@@ -267,7 +268,7 @@ export class ResidentPresentationAssembler {
   if(!integer(raw.schemaVersion,1,SCHEMA_VERSION)||!integer(raw.tick)||!integer(raw.nextId,1)||!integer(raw.rng,0,0xffffffff)||!Number.isSafeInteger(raw.civilTick)||!projectionReferences(raw,false)
    ||!validSmoothFloorsHistoricalTransport281(raw,raw.schemaVersion)||!validPrisonerSurgeryHistoricalTransport280(raw,raw.schemaVersion)||!validGiftHistoricalTransport274(raw,raw.schemaVersion)||!validApparelTradeHistoricalTransport279(raw,raw.schemaVersion)||!validApparelReservesHistoricalTransport278(raw,raw.schemaVersion)||!validShipCasketHistoricalTransport277(raw,raw.schemaVersion)||!validShipPartHistoricalTransport276(raw,raw.schemaVersion)||!validShipReactorHistoricalTransport275(raw,raw.schemaVersion)||!rows(raw.events)||!rows(raw.people)||!rows(raw.lossContexts)||!rows(raw.lostMemories)||!rows(raw.incidents)
    ||own(raw,'tiles')||own(raw,'resources')||own(raw,'piles')||own(raw,'pawns')||own(raw,'structures')||own(raw,'jobs')||own(raw,'worldMaps')||own(raw,'worldGroups'))return fail();
-  if(!validPhaseCore297(raw,Number(raw.schemaVersion))||!validCorePathBudget297(raw,Number(raw.schemaVersion),Number(raw.tick),raw.schemaVersion===297?Number(raw.phaseCore297):0,false))return fail('Physical mapless clock or unexpected local path budget');
+  if(!validPhaseCore297(raw,Number(raw.schemaVersion))||!validCorePathBudget297(raw,Number(raw.schemaVersion),Number(raw.tick),isCorePhysicalSchema297(raw.schemaVersion)?Number(raw.phaseCore297):0,false))return fail('Physical mapless clock or unexpected local path budget');
   const geographic=this.geography.prepare(raw,packet.geography,own(packet,'geography'),packet.epoch!==this.epoch);if(!geographic.ok)return fail();
   const summary={...geographic.state},view=groupWorld(summary,null),calendar=summary.planet?.revision===3?summary.calendarOrigin:undefined;
   if(!view||!validPeaceTalksBindings293(summary)||!validFirefoamWorld290(summary)||!validBillPauseWorld289(summary)||!validAnimalThermalRefugeWorld288(summary)||!validAnimalAreaWorld287(summary)||!validResidentTradeRequests284(view,summary)||!validLinkedStorageProjection286(summary)||!validBillWorkerWorld283(view)||!validCoupleProjection285(view)||!this.chronology(view,packet.epoch,calendar)||acceptExtra&&!acceptExtra(view)||!this.geography.canCommit(geographic))return fail();
@@ -289,7 +290,7 @@ export class ResidentPresentationAssembler {
   if(header==='invalid'||packet.type!=='snapshot'||packet.kind!=='checkpoint'&&packet.kind!=='delta')return fail('Invalid resident publication header');
   const unknown=Object.keys(packet).find(key=>!['type','kind','epoch','revision','stepMs','speed','world','geography','explorationApproachers','urgentThreats','motion','audioCues','corePhase297','baseRevision','tiles','resources','piles','structures'].includes(key));
   if(unknown)return fail('Unknown resident publication field: '+unknown);
-  if(own(packet,'corePhase297')&&Number(packet.world?.schemaVersion)!==297)return fail('Future physical header on historical resident World');
+  if(own(packet,'corePhase297')&&!isCorePhysicalSchema297(Number(packet.world?.schemaVersion)))return fail('Future physical header on historical resident World');
   const checkpoint=packet.kind==='checkpoint',sparseStructures=!checkpoint&&own(packet,'structures');
   const malformed=localShape(packet.world,checkpoint,sparseStructures,!checkpoint&&canReuseResidentAuxiliaryStockpiles(packet,this.current));if(malformed)return fail('Invalid resident shape: '+malformed);
   if(!validNovelHistoricalTransport295(packet,packet.world.schemaVersion))return fail('Invalid or future resident Novel/reading data');

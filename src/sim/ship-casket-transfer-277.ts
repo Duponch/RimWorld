@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,heldCore297,captureOccupiedHeldCore297,suspensionDeltas297,type SuspensionClock297} from './core-phase-297.ts';
 import {prepareShipCasketDespawn277,prepareShipCasketSpawn277} from './ship-casket-notifications-277.ts';
 import {isSchema277OrLater} from './schema-compatibility-257.ts';
@@ -42,7 +43,7 @@ function completedService277(w:World,c:ShipCasket277,o:ShipCasketOccupant277){
 /** Admission consumes the real completed500-Core service. All originals remain
  * on their old owner until this single synchronous commit. */
 export function planShipCasketEntry277(w:World,c:ShipCasket277,o:ShipCasketOccupant277):ShipCasketTransferPlan277 {
- const preparedCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined;
+ const preparedCore297=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined;
  const a=actor(o),actual=shipCasketSubject277(w,ref(o));
  if(!installed(w,c)||c.shipCryptosleep277.occupant||!actual||actor(actual)!==a||!shipCasketLiving277(o))return fail('L’occupant doit être le véritable original local vivant.');
  if(o.kind!=='mechanical'&&a.health&&medicalCivilTick271(a.health)!==w.tick)return fail('La dernière étape médicale du patient doit être achevée.');
@@ -54,7 +55,7 @@ export function planShipCasketEntry277(w:World,c:ShipCasket277,o:ShipCasketOccup
  const drops=o.kind==='human'?planPawnDrops(w,new Set([a.id])):undefined;if(drops===null)return fail('La cargaison de travail doit pouvoir être déposée.');
  const tick=w.tick,rng=w.rng,nextId=w.nextId,h=c.shipCryptosleep277,pawns=w.pawns,piles=w.piles,packs=w.packed,animals=w.wildlife?.animals,mechs=w.mechanoids,text=JSON.stringify([o,items,packed]),building=JSON.stringify([c.id,c.x,c.z,c.orientation,c.footprint,c.material]);let done=false;
  return {ok:true,commit(){
-  if(done||Number(w.schemaVersion)===297&&effectiveCore297(w)!==preparedCore297||!installed(w,c)||c.shipCryptosleep277!==h||h.occupant||w.tick!==tick||w.rng!==rng||w.nextId!==nextId||w.pawns!==pawns||w.piles!==piles||w.packed!==packs||w.wildlife?.animals!==animals||w.mechanoids!==mechs||JSON.stringify([o,items,packed])!==text||JSON.stringify([c.id,c.x,c.z,c.orientation,c.footprint,c.material])!==building||!service.current()||!notification.current())return false;
+  if(done||isCorePhysicalSchema297(Number(w.schemaVersion))&&effectiveCore297(w)!==preparedCore297||!installed(w,c)||c.shipCryptosleep277!==h||h.occupant||w.tick!==tick||w.rng!==rng||w.nextId!==nextId||w.pawns!==pawns||w.piles!==piles||w.packed!==packs||w.wildlife?.animals!==animals||w.mechanoids!==mechs||JSON.stringify([o,items,packed])!==text||JSON.stringify([c.id,c.x,c.z,c.orientation,c.footprint,c.material])!==building||!service.current()||!notification.current())return false;
   const found=shipCasketSubject277(w,ref(o));if(!found||actor(found)!==a)return false;
   const nowItems=w.piles.filter(p=>personal(p,a.id)),nowPacks=w.packed.filter(p=>p.owner.type==='inventory'&&p.owner.pawnId===a.id);
   if(nowItems.length!==items.length||nowItems.some((p,i)=>p!==items[i])||nowPacks.length!==packed.length||nowPacks.some((p,i)=>p!==packed[i]))return false;
@@ -68,7 +69,7 @@ export function planShipCasketEntry277(w:World,c:ShipCasket277,o:ShipCasketOccup
    if(p.wander)delete p.wander.job;if(p.health){cancelToxicVomit256(p.health);cancelCryptosleepVomit256(p.health);}p.nextDecision=tick;
   }else{cancelMechanoidRanged(o.mech);cancelMelee(o.mech);o.mech.moveCooldown=0;o.mech.planCooldown=0;for(const duty of [o.mech.raid,o.mech.temple,o.mech.site263])if(duty)duty.goal=null;}
   done=true;delete a.motion;a.path=[];if(a.state!=='downed')a.state='idle';a.shipCryptosleepHeldAt277=tick;
-  c.shipCryptosleep277={revision:1,heldAt:tick,...Number(w.schemaVersion)===297?captureOccupiedHeldCore297(w):{},occupant:o,items,packed};
+  c.shipCryptosleep277={revision:1,heldAt:tick,...isCorePhysicalSchema297(Number(w.schemaVersion))?captureOccupiedHeldCore297(w):{},occupant:o,items,packed};
   if(o.kind==='human')w.pawns=w.pawns.filter(p=>p!==a);else if(o.kind==='animal')w.wildlife!.animals=w.wildlife!.animals.filter(p=>p!==a);else w.mechanoids=w.mechanoids!.filter(p=>p!==a);
   w.piles=w.piles.filter(p=>!items.includes(p));w.packed=w.packed.filter(p=>!packed.includes(p));if(!notification.commit())throw Error('Spatial casket despawn changed during synchronous commit');refreshStock(w);return true;
  }};
@@ -76,7 +77,7 @@ export function planShipCasketEntry277(w:World,c:ShipCasket277,o:ShipCasketOccup
 /** Ejection is actorless. Destruction uses the same original-owner preflight
  * but owns its separate injury/destruction operation and never gains sickness. */
 export function planShipCasketRelease277(w:World,c:ShipCasket277,mode:'eject'|'deconstruct'|'kill-finalize'='eject'):ShipCasketTransferPlan277 {
- const preparedCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined;
+ const preparedCore297=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined;
  if(!installed(w,c)||!c.shipCryptosleep277.occupant)return fail('Un véritable caisson spatial occupé est requis.');
  const h=c.shipCryptosleep277,o=h.occupant!,a=actor(o),items=h.items,packed=h.packed;
  if(a.shipCryptosleepHeldAt277!==h.heldAt||shipCasketSubject277(w,ref(o))||w.piles.some(p=>items.some(q=>q.id===p.id))||w.packed.some(p=>packed.some(q=>q.building.id===p.building.id)))return fail('L’occupant ou ses vrais biens ont changé de propriétaire.');
@@ -86,11 +87,11 @@ export function planShipCasketRelease277(w:World,c:ShipCasket277,mode:'eject'|'d
  if(w.pawns.length>=w.width*w.height||w.piles.length+items.length>32768||w.packed.length+packed.length>32768||o.kind==='animal'&&!w.wildlife)return fail('La capacité de la carte ne permet pas cette sortie.');
  let notification:ReturnType<typeof prepareShipCasketSpawn277>;try{notification=prepareShipCasketSpawn277(w,o);}catch(error){return fail(String(error));}
  let clock:ReturnType<typeof prepareShipCasketResume277>,goods:ReturnType<typeof prepareShipCasketPossessionsResume277>;
- const physical297:SuspensionClock297|undefined=Number(w.schemaVersion)===297?{version:297,heldAtCore297:heldCore297(h,297,h.heldAt),targetCore297:preparedCore297!}:undefined;
+ const physical297:SuspensionClock297|undefined=isCorePhysicalSchema297(Number(w.schemaVersion))?{version:297,heldAtCore297:heldCore297(h,297,h.heldAt),targetCore297:preparedCore297!}:undefined;
  try{clock=prepareShipCasketResume277(o,h.heldAt,w.tick,physical297);goods=prepareShipCasketPossessionsResume277(items,packed,w.tick-h.heldAt,physical297);}catch(error){return fail(String(error));}
  const tick=w.tick,rng=w.rng,nextId=w.nextId,text=stamp(o,c),pawns=w.pawns,piles=w.piles,packs=w.packed,animals=w.wildlife?.animals,mechs=w.mechanoids;let done=false;
  return {ok:true,commit(){
-  if(done||Number(w.schemaVersion)===297&&effectiveCore297(w)!==preparedCore297||!installed(w,c)||c.shipCryptosleep277!==h||h.occupant!==o||w.tick!==tick||w.rng!==rng||w.nextId!==nextId||w.pawns!==pawns||w.piles!==piles||w.packed!==packs||w.wildlife?.animals!==animals||w.mechanoids!==mechs||stamp(o,c)!==text||!clock.current()||!goods.current()||!notification.current()||occupied(cell)||!canStandAt(w,cell))return false;
+  if(done||isCorePhysicalSchema297(Number(w.schemaVersion))&&effectiveCore297(w)!==preparedCore297||!installed(w,c)||c.shipCryptosleep277!==h||h.occupant!==o||w.tick!==tick||w.rng!==rng||w.nextId!==nextId||w.pawns!==pawns||w.piles!==piles||w.packed!==packs||w.wildlife?.animals!==animals||w.mechanoids!==mechs||stamp(o,c)!==text||!clock.current()||!goods.current()||!notification.current()||occupied(cell)||!canStandAt(w,cell))return false;
   done=true;if(!clock.commit()||!goods.commit())throw Error('Spatial casket originals changed during synchronous commit');
   delete a.shipCryptosleepHeldAt277;Object.assign(a,cell);
   if(o.kind==='human')w.pawns=[...w.pawns,o.pawn];else if(o.kind==='animal')w.wildlife!.animals=[...w.wildlife!.animals,o.animal];else w.mechanoids=[...w.mechanoids??[],o.mech];

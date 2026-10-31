@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {foggedCell256} from './exploration-state-256.ts';
@@ -48,6 +49,6 @@ export function siteAmbushTriggered263(w:World,s:WorldSiteAmbush263):boolean {
  * Save the real notification if the remaining engine phase has not run yet. */
 export function notifySiteAmbushExplosion263(w:World,cell:Cell,core:number):void {
  const s=w.worldSiteThreat263;if(!isSchema263OrLater(Number(w.schemaVersion))||!s||s.phase!=='armed'||s.kind!=='ambush-hidden'||!inside(cell,s.trigger))return;
- if(!Number.isSafeInteger(core)||(Number(w.schemaVersion)===297?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))throw Error('Actual Site ambush explosion clock required');
+ if(!Number.isSafeInteger(core)||(isCorePhysicalSchema297(Number(w.schemaVersion))?core!==effectiveCore297(w):core<Math.max(0,(w.tick-1)*10)||core>w.tick*10))throw Error('Actual Site ambush explosion clock required');
  s.explosionAtCore??=core;
 }

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {validPhaseCore297} from '../sim/core-phase-297';
 import {ResidentMotionRecorder} from './resident-motion';
 /// <reference lib="webworker" />
@@ -98,7 +99,7 @@ class FixedPresentationEncoder extends TerrainJournalSnapshotEncoder {
  }
  override encode(world:World,stepMs:number,speed:number,checkpoint=false):SnapshotMessage<true> {
   if(this.pending){this.clearNatural();this.forcePublicationCheckpoint();}
-  const supported=Number(world.schemaVersion)===296||Number(world.schemaVersion)===297&&validPhaseCore297(world,297);
+  const supported=Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion))&&validPhaseCore297(world,Number(world.schemaVersion));
   if(!supported)this.committed=undefined;
   const prior=this.committed;
   const possible=!!prior&&prior.world===world&&Object.is(prior.tick,world.tick)&&Object.is(prior.schema,world.schemaVersion)&&Object.is(prior.seed,world.seed)&&prior.width===world.width&&prior.height===world.height&&prior.nextId===world.nextId;

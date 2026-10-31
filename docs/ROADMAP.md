@@ -1,5 +1,9 @@
 # Plan de développement
 
+**31 octobre 2026 — schéma 298 intégré.** La [chaîne de victoire spatiale](development/ship-victory298.md) raccorde console/information payée, cœur d’IA physique, ordinateur/capteurs, lancement et départ vivant rechargeable. Typage complet, compilation et contrôles ciblés passent ; le coût de composition ne montre pas de recul agrégé dans la cohorte mesurée, sans preuve FPS globale.
+
+Les six ensembles reprennent selon la consigne humaine ; aucun n’est clos. Les essais de fluidité sont suspendus et le défaut reste ouvert. Cloudflare495c93d0/source58fc7307 est la dernière production attestée, encore au schéma297. Les détails V492 ci-dessous décrivent les fondations et leurs limites historiques, pas une nouvelle suspension du projet.
+
 ## Priorité actuelle
 
 Source12 testée est intégrée localement sous schéma 297 ; typage, contrôles ciblés et compilation sont acquis, avec trois rouges historiques conservés. L’utilisateur accepte provisoirement la perte de 9,98–11,28 % de débit à ×6 ; **PERF-V492-X6 : l’optimisation du débit et la réactivité complète restent des problèmes ouverts**, sans nouvelle série automatique présumée. Les rythmes ×1/×3 sont tenus dans les fenêtres acquises, sans gratuité CPU ; ×4 n’a pas été mesuré. [Décision et preuves](development/movement-parity-v492-status.md).

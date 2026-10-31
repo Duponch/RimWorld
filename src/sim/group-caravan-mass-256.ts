@@ -1,3 +1,6 @@
+import {validAiCorePile298} from './victory-content-save-298.ts';
+import {AI_CORE_CONTENT_298} from './ai-core-content-298.ts';
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {validNovelPile295} from './book-save-295.ts';
 import {isSchema273OrLater} from './schema-compatibility-257.ts';
 import {additionalGroupFreightMass258,groupPackedMassGrams258} from './group-freight-mass-258.ts';
@@ -18,7 +21,8 @@ export type GroupWithTravelPacked256=AwayGroup&{packed?:PackedFurniture[]};
 /** This new contract alone admits real gathered fruits. It does not broaden
  * mass/possession admission of a historical group or an individual trip. */
 export function groupCaravanUnitMass256(item:MaterialPile['item'],freight:boolean,version:number=256):number|undefined {
- if(item==='novel')return (version===295||(version===296||version===297))?500:undefined;
+ if(item==='ai-core')return version===298?AI_CORE_CONTENT_298.massGrams:undefined;
+ if(item==='novel')return (version===295||(version===296||isCorePhysicalSchema297(version)))?500:undefined;
  if(isProstheticItem273(item))return isSchema273OrLater(version)?commercialItemMassGrams(item,version):undefined;
  if(isSmithingApparel267(item))return version>=267?commercialItemMassGrams(item,version):undefined;
  if(item==='hops'||item==='wort'||item==='beer')return version>=265?commercialItemMassGrams(item,version):undefined;
@@ -28,7 +32,8 @@ export function groupCaravanUnitMass256(item:MaterialPile['item'],freight:boolea
 }
 /** Preserve the actual inner payload where mass belongs to a Thing, not ItemId. */
 export function groupCaravanPileMass256(pile:MaterialPile,freight:boolean,version:number):number|undefined {
- if(pile.item==='novel'||pile.kind==='book'||'book'in pile)return (version===295||(version===296||version===297))&&pile.item==='novel'&&validNovelPile295(pile,version)?500:undefined;
+ if(pile.kind==='ai-core'||pile.item==='ai-core')return validAiCorePile298(pile,version)?AI_CORE_CONTENT_298.massGrams:undefined;
+ if(pile.item==='novel'||pile.kind==='book'||'book'in pile)return (version===295||(version===296||isCorePhysicalSchema297(version)))&&pile.item==='novel'&&validNovelPile295(pile,version)?500:undefined;
  return version>=258&&pile.item==='minified-tree'?physicalTravelUnitMass(pile,version):groupCaravanUnitMass256(pile.item,freight,version);
 }
 /** Core-only current human life stage has BodySize1. Pack-animal/child/DLC

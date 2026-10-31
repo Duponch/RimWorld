@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {removedMapCore297} from './retired-map-clock-297.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -23,7 +24,7 @@ const originalHolderLinks=(value:object)=>{const seal=sealRemovalOriginal259(val
 export function validHeldCasketEnvelope259(state:WorldPawnsState256,version:number,nowCore:number,nextId:number):boolean{
  const d=Object.getOwnPropertyDescriptor(state,'heldCaskets259');if(!d)return !('heldCaskets259'in state);
  if((version!==259&&version!==260&&(version!==261&&(Number(version)!==262&&!isSchema263OrLater(Number(version)))))||!d.enumerable||!Object.hasOwn(d,'value')||!dense(d.value,nextId))return false;
- return d.value.every(r=>exact(r,['originMapId','registeredAtCore','enteredAtAbsCore','context','casket'])&&int(r.originMapId)&&int(r.registeredAtCore,0,nowCore)&&(version===297||r.registeredAtCore%10===0)&&int(r.enteredAtAbsCore)&&!!r.context&&typeof r.context==='object'&&validAncientCasketBuilding256(r.casket,version,{...(r.context as WorldGroupRecord['context']),nextId},Math.floor(r.registeredAtCore/10),version===297?r.registeredAtCore:undefined));
+ return d.value.every(r=>exact(r,['originMapId','registeredAtCore','enteredAtAbsCore','context','casket'])&&int(r.originMapId)&&int(r.registeredAtCore,0,nowCore)&&(isCorePhysicalSchema297(version)||r.registeredAtCore%10===0)&&int(r.enteredAtAbsCore)&&!!r.context&&typeof r.context==='object'&&validAncientCasketBuilding256(r.casket,version,{...(r.context as WorldGroupRecord['context']),nextId},Math.floor(r.registeredAtCore/10),isCorePhysicalSchema297(version)?r.registeredAtCore:undefined));
 }
 type ValidationRoot=Readonly<Pick<World,'schemaVersion'|'tick'|'nextId'|'planet'|'worldMaps'|'worldFactions'|'campaignMap'>>&Partial<Readonly<Pick<World,'phaseCore297'|'worldGroups'>>>;
 const pending=new WeakMap<HeldWorldCasket259,()=>boolean>();
@@ -38,13 +39,13 @@ export function validateHeldWorldCaskets259(state:WorldPawnsState256,root:Valida
   if(removedAt===undefined?!pending.get(e)?.():removedMapCore297(retired??proof!,root.schemaVersion)!==e.registeredAtCore)errors.push('Retained casket lacks its actual map-removal receipt');
   const context=e.context,c=context.climate,site=context.site,tile=retired?.tile??proof?.tile;
   if(!validGroupMapContext(context,Math.floor(e.registeredAtCore/10),root.schemaVersion,root)||c?.revision!==4||site?.revision!==3||tile!==undefined&&(site.tileId!==tile||c.tileId!==tile))errors.push('Retained casket actual origin context refused');
-  if(c?.revision!==4||e.enteredAtAbsCore!==(c.calendarOrigin+Math.floor(e.registeredAtCore/10)-c.adoptedAt)*10-geographicLongitudeOffsetCore256(c.definition.longitude)+(Number(root.schemaVersion)===297?e.registeredAtCore%10:0))errors.push('Retained casket absolute removal clock refused');
+  if(c?.revision!==4||e.enteredAtAbsCore!==(c.calendarOrigin+Math.floor(e.registeredAtCore/10)-c.adoptedAt)*10-geographicLongitudeOffsetCore256(c.definition.longitude)+(isCorePhysicalSchema297(Number(root.schemaVersion))?e.registeredAtCore%10:0))errors.push('Retained casket absolute removal clock refused');
   const archive=root.worldGroups?.abandonedContents.find(a=>a.mapId===e.originMapId);
   if(archive&&JSON.stringify(archive.context)!==JSON.stringify(context))errors.push('Retained casket differs from its actual removed-map context');
-  if(!validAncientCasketBuilding256(e.casket,root.schemaVersion,{...context,nextId:root.nextId},Math.floor(e.registeredAtCore/10),Number(root.schemaVersion)===297?e.registeredAtCore:undefined)||!ancientCasketHasContents256(e.casket.casket))errors.push('Invalid retained physical casket header');
+  if(!validAncientCasketBuilding256(e.casket,root.schemaVersion,{...context,nextId:root.nextId},Math.floor(e.registeredAtCore/10),isCorePhysicalSchema297(Number(root.schemaVersion))?e.registeredAtCore:undefined)||!ancientCasketHasContents256(e.casket.casket))errors.push('Invalid retained physical casket header');
   const allocator=root.worldMaps?.nextAncientCasketGroupId??projection?.nextAncientCasketGroupId;
   if(allocator!==undefined&&e.casket.casket.groupId!==-1&&e.casket.casket.groupId>=allocator)errors.push('Retained casket exceeds real group allocator');
-  errors.push(...validateAncientCasketRecord256(e.casket,{...context,nextId:root.nextId,schemaVersion:root.schemaVersion,tick:Math.floor(e.registeredAtCore/10),...Number(root.schemaVersion)===297?{phaseCore297:e.registeredAtCore%10}:{},worldFactions:root.worldFactions}));
+  errors.push(...validateAncientCasketRecord256(e.casket,{...context,nextId:root.nextId,schemaVersion:root.schemaVersion,tick:Math.floor(e.registeredAtCore/10),...isCorePhysicalSchema297(Number(root.schemaVersion))?{phaseCore297:e.registeredAtCore%10}:{},worldFactions:root.worldFactions}));
   for(const id of ancientCasketThingOccurrences256(e.casket)){if(ids.has(id))errors.push('Retained casket Thing has another actual owner');ids.add(id);}
   for(const p of e.casket.casket.humans){if(humanIds.has(p.id))errors.push('Retained casket human duplicated');humanIds.add(p.id);}
  }
@@ -66,11 +67,11 @@ export function prepareHeldCasketRemoval259(root:CampaignState,map:World,mapId:n
  const prior=state.heldCaskets259,old=prior?[...prior]:[],priorCurrent:(stage:0|1|2)=>boolean=prior?capture(prior):()=>true,tick=root.tick;
  const context:WorldGroupRecord['context']={seed:map.seed,width:map.width,height:map.height,...map.climate?{climate:map.climate}:{},...map.site?{site:map.site}:{},...map.scenario?{scenario:map.scenario}:{}};
  const contextCurrent=originalHolderLinks(context);
- const records:HeldWorldCasket259[]=originals.map(casket=>({originMapId:mapId,registeredAtCore:Number(root.schemaVersion)===297?effectiveCore297(root):tick*10,enteredAtAbsCore:absolute,context:structuredClone(context),casket}));
+ const records:HeldWorldCasket259[]=originals.map(casket=>({originMapId:mapId,registeredAtCore:isCorePhysicalSchema297(Number(root.schemaVersion))?effectiveCore297(root):tick*10,enteredAtAbsCore:absolute,context:structuredClone(context),casket}));
  const receiptLinks=records.map(capture);
  const recipientsMutable=()=>{if(!records.length)return true;const local=Object.getOwnPropertyDescriptor(map,'structures'),held=Object.getOwnPropertyDescriptor(state,'heldCaskets259');return !!local&&Object.hasOwn(local,'value')&&local.writable===true&&(held?Object.hasOwn(held,'value')&&held.writable===true:Object.isExtensible(state));};
- const core=Number(root.schemaVersion)===297?effectiveCore297(root):tick*10;
- const current=(stage:0|1|2=phase)=>recipientsMutable()&&root.tick===tick&&map.tick===tick&&(Number(root.schemaVersion)!==297||effectiveCore297(root)===core&&effectiveCore297(map)===core)&&root.worldPawns===state&&state.heldCaskets259===prior&&priorCurrent(stage)&&map.seed===context.seed&&map.width===context.width&&map.height===context.height&&map.climate===context.climate&&map.site===context.site&&map.scenario===context.scenario&&contextCurrent()&&receiptLinks.every(check=>check(stage))&&map.structures===structures&&structures.length===all.length&&structures.every((s,i)=>s===all[i])&&links.every(check=>check(stage))&&registeredMap(root,mapId)===map;
+ const core=isCorePhysicalSchema297(Number(root.schemaVersion))?effectiveCore297(root):tick*10;
+ const current=(stage:0|1|2=phase)=>recipientsMutable()&&root.tick===tick&&map.tick===tick&&(!isCorePhysicalSchema297(Number(root.schemaVersion))||effectiveCore297(root)===core&&effectiveCore297(map)===core)&&root.worldPawns===state&&state.heldCaskets259===prior&&priorCurrent(stage)&&map.seed===context.seed&&map.width===context.width&&map.height===context.height&&map.climate===context.climate&&map.site===context.site&&map.scenario===context.scenario&&contextCurrent()&&receiptLinks.every(check=>check(stage))&&map.structures===structures&&structures.length===all.length&&structures.every((s,i)=>s===all[i])&&links.every(check=>check(stage))&&registeredMap(root,mapId)===map;
  if(!recipientsMutable())throw Error('Retained casket recipients are not mutable');
  for(const e of records)pending.set(e,()=>current());
  const validation={...state,...records.length?{heldCaskets259:[...old,...records]}:{}};

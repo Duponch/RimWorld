@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {worldPawnsPhysicalCore297} from './world-pawn-physical-clock-297.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
@@ -18,9 +19,9 @@ export function actualWorldPawnGCReader259(root:CampaignState):WorldPawnGCReader
   if(!rows.length)return {commit(){}};
   // No original or receipt changes until ALL actual retention and destruction
   // preflights succeeded. Generic GC owns final membership/native-slot removal.
-  const before=state.discardedMechanical259,owners=state.owners.slice(),at=state.atCore,physical=Number(root.schemaVersion)===297?worldPawnsPhysicalCore297(state,297):at;
+  const before=state.discardedMechanical259,owners=state.owners.slice(),at=state.atCore,physical=isCorePhysicalSchema297(Number(root.schemaVersion))?worldPawnsPhysicalCore297(state,297):at;
   const writable=(o:object,k:string)=>{const d=Object.getOwnPropertyDescriptor(o,k);return d?Object.hasOwn(d,'value')&&d.writable===true:Object.isExtensible(o);};
-  if(Number(root.schemaVersion)===297&&(!Number.isSafeInteger(physical)||physical!==effectiveCore297(root)))throw Error('Mechanical GC requires its actual owned physical frontier');
+  if(isCorePhysicalSchema297(Number(root.schemaVersion))&&(!Number.isSafeInteger(physical)||physical!==effectiveCore297(root)))throw Error('Mechanical GC requires its actual owned physical frontier');
   if(!writable(state,'owners')||!writable(state,'discardedMechanical259'))throw Error('Mechanical GC needs its mutable actual registry');
   const records:DiscardedMechanical259[]=[],seals=rows.map(row=>JSON.stringify(row));
   for(const row of rows){
@@ -29,7 +30,7 @@ export function actualWorldPawnGCReader259(root:CampaignState):WorldPawnGCReader
    records.push({id:row.actor.id,mechKind:row.actor.mechKind,factionId:row.factionId!,originMapId:row.originMapId,enteredAtAbsCore:row.enteredAtAbsCore,discardedAtCore:physical});
   }
   let used=false;return {commit(){
-   if(used||!writable(state,'owners')||!writable(state,'discardedMechanical259')||rows.some(r=>!writable(r,'destroyed')||!writable(r,'mode')||Object.hasOwn(r,'free')&&!Object.getOwnPropertyDescriptor(r,'free')?.configurable)||root.worldPawns!==state||root.tick*10!==at||Number(root.schemaVersion)===297&&(effectiveCore297(root)!==physical||worldPawnsPhysicalCore297(state,297)!==physical)||state.atCore!==at||state.discardedMechanical259!==before||state.owners.length!==owners.length||state.owners.some((r,i)=>r!==owners[i])||rows.some((r,i)=>JSON.stringify(r)!==seals[i])||rows.some(r=>{const f=facts(r);return f.keep.length||f.unknown.length||f.relatedIds.length||f.memoryIds.length;}))throw Error('Stale actual mechanical GC destruction');
+   if(used||!writable(state,'owners')||!writable(state,'discardedMechanical259')||rows.some(r=>!writable(r,'destroyed')||!writable(r,'mode')||Object.hasOwn(r,'free')&&!Object.getOwnPropertyDescriptor(r,'free')?.configurable)||root.worldPawns!==state||root.tick*10!==at||isCorePhysicalSchema297(Number(root.schemaVersion))&&(effectiveCore297(root)!==physical||worldPawnsPhysicalCore297(state,297)!==physical)||state.atCore!==at||state.discardedMechanical259!==before||state.owners.length!==owners.length||state.owners.some((r,i)=>r!==owners[i])||rows.some((r,i)=>JSON.stringify(r)!==seals[i])||rows.some(r=>{const f=facts(r);return f.keep.length||f.unknown.length||f.relatedIds.length||f.memoryIds.length;}))throw Error('Stale actual mechanical GC destruction');
    used=true;
    // Thing.Destroy(Vanish) is the existing literal row.destroyed authority,
    // distinct from medical Kill. Discard drops that same payload in GC's

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveLocal297} from './core-phase-297.ts';
 import { mergeSlowIntervals,travelEnd } from './travel-timing.ts';
 import { syncPatient } from './rescue-state.ts';
@@ -11,6 +12,6 @@ export function applyMeleeStun(world:World,pawn:Pawn,core:number):void {
   pawn.stun={sinceCore:previous&&previous.untilCore>=core?previous.sinceCore:core,untilCore:Math.max(previous?.untilCore??0,core+45)};
   if(world.schemaVersion<198&&pawn.shooting?.stance?.phase==='aim')pawn.shooting.stance=null;
   const m=pawn.motion;
-  if(m&&m.end>core/10){pawn.motion={...m,stuns:mergeSlowIntervals([...(m.stuns??[]),{start:Math.max(m.start,core/10),end:pawn.stun.untilCore/10}])};pawn.motion.end=travelEnd(pawn.motion);pawn.moveCooldown=Math.max(0,pawn.motion.end-(Number(world.schemaVersion)===297?effectiveLocal297(world):world.tick));syncPatient(world,pawn);}
+  if(m&&m.end>core/10){pawn.motion={...m,stuns:mergeSlowIntervals([...(m.stuns??[]),{start:Math.max(m.start,core/10),end:pawn.stun.untilCore/10}])};pawn.motion.end=travelEnd(pawn.motion);pawn.moveCooldown=Math.max(0,pawn.motion.end-(isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveLocal297(world):world.tick));syncPatient(world,pawn);}
 }
 export const isStunned=(pawn:Pawn,core:number):boolean=>!!pawn.stun&&pawn.stun.untilCore>core;

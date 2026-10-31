@@ -1,4 +1,5 @@
 import type { StockpileCell,StorageSettings,World } from './types.ts';
+import {validAiCoreStorageFilters298} from './storage-filters.ts';
 
 type StorageWorld=Pick<World,'stockpiles'>;
 export const stockpileZoneId=(cell:StockpileCell):number=>cell.zoneId??cell.id;
@@ -79,6 +80,7 @@ export function patchStockpilePolicy(cell:StockpileCell,settings:StorageSettings
 export function validStockpileZones(world:Pick<World,'stockpiles'|'nextId'>,version:number):boolean {
   const policies=new Map<number,StockpileCell>();
   for(const cell of world.stockpiles){
+    if(!validAiCoreStorageFilters298(cell.filters,version))return false;
     if(version<219){if(Object.hasOwn(cell,'zoneId'))return false;continue;}
     const zoneId=cell.zoneId===undefined?cell.id:cell.zoneId;
     if(!Number.isSafeInteger(zoneId)||zoneId<1||zoneId>=world.nextId)return false;

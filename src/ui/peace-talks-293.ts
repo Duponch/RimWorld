@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import type {World} from '../sim/types';
 import type {PeaceTalksSite293,PeaceTalksOutcome293} from '../sim/peace-talks-state-293';
 import {ITEM_DEFINITIONS} from '../sim/items';
@@ -27,8 +28,8 @@ export function createPeaceTalks293(host:HTMLElement) {
  const rows=new Map<number,{element:HTMLElement;title:HTMLElement;destination:HTMLElement;status:HTMLElement;body:HTMLElement;letter:HTMLButtonElement}>();
  const put=(node:HTMLElement,value:string)=>{if(node.textContent!==value)node.textContent=value;};let current:PeaceTalksPresentation293|undefined;
  return {update(world:PeaceTalksPresentation293){
-  current=world;section.hidden=(Number(world.schemaVersion)!==293&&(Number(world.schemaVersion)!==294&&(Number(world.schemaVersion)!==295&&(Number(world.schemaVersion)!==296&&Number(world.schemaVersion)!==297))));
-  const sites=(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))))?world.worldSites263?.entries.filter((s):s is PeaceTalksSite293=>s.kind==='peace-talks')??[]:[],ids=new Set(sites.map(s=>s.id));
+  current=world;section.hidden=(Number(world.schemaVersion)!==293&&(Number(world.schemaVersion)!==294&&(Number(world.schemaVersion)!==295&&(Number(world.schemaVersion)!==296&&!isCorePhysicalSchema297(Number(world.schemaVersion))))));
+  const sites=(Number(world.schemaVersion)===293||(Number(world.schemaVersion)===294||(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion))))))?world.worldSites263?.entries.filter((s):s is PeaceTalksSite293=>s.kind==='peace-talks')??[]:[],ids=new Set(sites.map(s=>s.id));
   for(const [id,row]of rows)if(!ids.has(id)){row.element.remove();row.letter.remove();rows.delete(id);}empty.hidden=sites.length>0;
   for(const site of sites){let row=rows.get(site.id);if(!row){
    const element=doc.createElement('article'),title=doc.createElement('h4'),destination=doc.createElement('p'),status=doc.createElement('p'),body=doc.createElement('p'),letter=doc.createElement('button');

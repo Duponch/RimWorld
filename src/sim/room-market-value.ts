@@ -1,3 +1,5 @@
+import {SHIP_COMPUTER_CONTENT_298,SHIP_SENSORS_CONTENT_298} from './ship-computer-sensors-content-298.ts';
+import {AI_CORE_CONTENT_298} from './ai-core-content-298.ts';
 import {SHIP_CASKET_CONTENT_277} from './ship-casket-content-277.ts';
 import {hasSmoothedStoneSubstrate281,SMOOTHED_STONE_FACTS_281} from './smooth-floor-terrain-281.ts';
 import {SHIP_BEAM_CONTENT_276,SHIP_ENGINE_CONTENT_276} from './ship-part-content-276.ts';
@@ -34,17 +36,18 @@ interface BuildingValueDef {
   readonly gold: number;
   readonly component: number;
   readonly advancedComponent: number;
+  readonly aiCore?:number;
   /** Neutral Core WorkToBuild, or WorkToMake for a sculpture, before stuff. */
   readonly work: number;
   readonly quality: boolean;
   readonly passability: Passability;
 }
 const def = (stuff: number, work: number, passability: Passability,
-  fixed: Readonly<{uranium?:number; wood?: number; steel?: number; plasteel?: number; gold?: number; component?: number; 'advanced-component'?: number}> = {},
+  fixed: Readonly<{uranium?:number; wood?: number; steel?: number; plasteel?: number; gold?: number; component?: number; 'advanced-component'?: number;'ai-core'?:number}> = {},
   quality = false): BuildingValueDef => Object.freeze({
     stuff, work, passability, quality,
     wood: fixed.wood ?? 0, steel: fixed.steel ?? 0, plasteel: fixed.plasteel ?? 0, gold: fixed.gold ?? 0,
-    uranium:fixed.uranium??0,component: fixed.component ?? 0, advancedComponent: fixed['advanced-component'] ?? 0,
+    uranium:fixed.uranium??0,component: fixed.component ?? 0, advancedComponent: fixed['advanced-component'] ?? 0,...fixed['ai-core']?{aiCore:fixed['ai-core']}:{},
   });
 
 /** Resolved Core building Defs. An explicit zero prevents a new kind from
@@ -53,6 +56,8 @@ const def = (stuff: number, work: number, passability: Passability,
 const BUILDINGS: Readonly<Record<StructureKind, BuildingValueDef>> = Object.freeze({
  'firefoam-popper':def(0,1500,'pass-through',{steel:75,component:1}),
  'ship-cryptosleep-casket':def(0,SHIP_CASKET_CONTENT_277.coreWork,'pass-through',Object.fromEntries(SHIP_CASKET_CONTENT_277.ingredients.map(c=>[c.item,c.quantity]))),
+ 'ship-computer':def(0,SHIP_COMPUTER_CONTENT_298.coreWork,'impassable',Object.fromEntries(SHIP_COMPUTER_CONTENT_298.ingredients.map(c=>[c.item,c.quantity]))),
+ 'ship-sensors':def(0,SHIP_SENSORS_CONTENT_298.coreWork,'impassable',Object.fromEntries(SHIP_SENSORS_CONTENT_298.ingredients.map(c=>[c.item,c.quantity]))),
  'ship-beam':def(0,SHIP_BEAM_CONTENT_276.coreWork,'impassable',Object.fromEntries(SHIP_BEAM_CONTENT_276.ingredients.map(c=>[c.item,c.quantity]))),
  'ship-engine':def(0,SHIP_ENGINE_CONTENT_276.coreWork,'impassable',Object.fromEntries(SHIP_ENGINE_CONTENT_276.ingredients.map(c=>[c.item,c.quantity]))),
  'ship-reactor':def(0,65000,'impassable',{steel:350,plasteel:280,uranium:70,'advanced-component':8}),
@@ -167,7 +172,8 @@ export function structureRoomMarketValue(structure: Structure): number {
   const factors = material ? FURNITURE_MATERIALS[material] : undefined;
   if (material && !factors) throw new RangeError(`Unmapped building material: ${material}`);
   const stuffValue = d.stuff * (material ? MATERIAL_VALUE[material] : UNKNOWN_STUFF_VALUE);
-  const fixedValue = d.wood * MATERIAL_VALUE.wood + d.steel * MATERIAL_VALUE.steel + d.plasteel * 9 + d.uranium * 6 + d.gold * 10 + d.component * 32 + d.advancedComponent * 200;
+  let fixedValue = d.wood * MATERIAL_VALUE.wood + d.steel * MATERIAL_VALUE.steel + d.plasteel * 9 + d.uranium * 6 + d.gold * 10 + d.component * 32 + d.advancedComponent * 200;
+  if(d.aiCore)fixedValue+=d.aiCore*AI_CORE_CONTENT_298.baseMarketValue;
   const work = isSculptureKind(structure.kind)&&isSculptureMaterial(material)
     ? sculptureWorkToMakeCore(structure.kind,material)
     : d.work * (factors?.workFactor ?? 1) + (factors?.workOffset ?? 0);

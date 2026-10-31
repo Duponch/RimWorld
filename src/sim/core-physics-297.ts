@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {detectFirefoam290,advanceFirefoamWick290} from './firefoam-290.ts';
 import {mechRaidGroups261} from './mechanical-raid-groups-261.ts';
 import { advanceMechanoidCombat } from './mechanoid-combat.ts';
@@ -32,7 +33,7 @@ export interface CoreStepResult297 {
 /** Created at the last committed Core. Engine changes the real World phase and
  * advances movement BEFORE calling this synchronous physical owner. */
 export function createCorePhysics297(world:World) {
-  if(Number(world.schemaVersion)!==297)throw new RangeError('Core297 owner requires schema297');
+  if(!isCorePhysicalSchema297(Number(world.schemaVersion)))throw new RangeError('Core297 owner requires schema297');
   let lastCore=effectiveCore297(world),dirty=true;
   const projectiles=createCoreProjectileStepper297(world);
   const captureOwners=()=>{
@@ -62,7 +63,7 @@ export function createCorePhysics297(world:World) {
   };
   return {invalidate,advance(core:number,externalContacts?:SpikeTrapWindow):CoreStepResult297 {
     // These guards precede pruning, chance draws, owner counters or capture adoption.
-    if(!Number.isSafeInteger(core)||core!==lastCore+1||core!==effectiveCore297(world)||Number(world.schemaVersion)!==297)throw new RangeError('Invalid next physical Core');
+    if(!Number.isSafeInteger(core)||core!==lastCore+1||core!==effectiveCore297(world)||!isCorePhysicalSchema297(Number(world.schemaVersion)))throw new RangeError('Invalid next physical Core');
     const contactsDirty=dirty;
     if(dirty){captured=captureOwners();disturbance=disturbanceEvents(world);
       dirty=false;

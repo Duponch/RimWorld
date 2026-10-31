@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {validationCore297} from './core-phase-297.ts';
 import {isSchema263OrLater} from '../sim/schema-compatibility-257.ts';
 import {validPermanentManhunter261} from './animal-scaria-261.ts';
@@ -15,14 +16,14 @@ type BoundaryWorld=Pick<World,'tick'|'nextId'|'pawns'|'structures'|'raids'|'widt
 /** Recovery survives loss of its door and mental state. It still owns a
  * valid past contact and cannot borrow a live actor's global identity. */
 function validDoorStrike(w:BoundaryWorld,version:number,a:WildAnimal,coreNow297?:number):boolean {
-  const core=version===297?validationCore297(version,w.tick,coreNow297):w.tick*10;if(version===297&&!Number.isSafeInteger(core))return false;
+  const core=isCorePhysicalSchema297(version)?validationCore297(version,w.tick,coreNow297):w.tick*10;if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(core))return false;
  const actualHiveStrike=validHiveStructureStrike256(w,version,a,coreNow297);if(actualHiveStrike!==undefined)return actualHiveStrike;
   const s=a.strike;if(s?.structure===undefined)return true;
   if(version<183||!isAnimalSpecies(a.species)||!Array.isArray(a.path)||!object(s)||!keys(s,['targetId','atCore','untilCore','tool','outcome','structure'])
     ||!object(s.structure)||!keys(s.structure,['x','z'])||!int(s.structure.x,0,w.width-1)||!int(s.structure.z,0,w.height-1)
     ||!int(s.targetId,1,w.nextId-1)||!int(s.atCore,0,core)||!int(s.untilCore,core+1)
     ||s.outcome!=='hit'||!actualAnimalMeleeProfile256(a).some(t=>t.id===s.tool&&s.untilCore-s.atCore===t.cooldownCore)
-    ||!['idle','sleeping'].includes(a.state)||a.path.length||(a.motion?.end??0)>(version===297?core/10:w.tick)||a.meal)return false;
+    ||!['idle','sleeping'].includes(a.state)||a.path.length||(a.motion?.end??0)>(isCorePhysicalSchema297(version)?core/10:w.tick)||a.meal)return false;
   const door=w.structures.find(d=>d.id===s.targetId),c=s.structure;
   if(door&&(!isRoomDoor(door.kind)||door.x!==c.x||door.z!==c.z))return false;
   return ![w.pawns,w.jobs,w.piles,w.resources,w.wildlife?.animals??[]].some(items=>items.some(i=>i.id===s.targetId))
@@ -30,7 +31,7 @@ function validDoorStrike(w:BoundaryWorld,version:number,a:WildAnimal,coreNow297?
 }
 /** Closed sparse shape, with no navigation or medical mutation at transport. */
 export function validAnimalManhunter(w:BoundaryWorld,version:number,a:WildAnimal,coreNow297?:number):boolean {
-  const core=version===297?validationCore297(version,w.tick,coreNow297):w.tick*10;if(version===297&&!Number.isSafeInteger(core))return false;
+  const core=isCorePhysicalSchema297(version)?validationCore297(version,w.tick,coreNow297):w.tick*10;if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(core))return false;
   if(!validDoorStrike(w,version,a,coreNow297)||!validPermanentManhunter261(a,version))return false;
   const m:unknown=a.manhunter;if(m===undefined)return true;
   if(version<183||!object(m)||!keys(m,['startedAtCore','rng','zeroRestTicks','exhausted','targetId','door',...((version===261||(Number(version)===262||isSchema263OrLater(Number(version))))?['permanent261']:[])])

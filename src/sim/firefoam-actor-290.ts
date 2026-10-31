@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {carrierOf} from './rescue-state.ts';
 import {animalCarrier} from './animal-rest-state.ts';
 import {shipCasketCarrierOf277} from './ship-casket-carry-277.ts';
@@ -21,7 +22,7 @@ export function firefoamExposedActor290(w:World,key:LivingTargetKey):boolean {
  return key.startsWith('pawn:')?!carrierOf(w,id):key.startsWith('animal:')?!animalCarrier(w,id):!shipCasketCarrierOf277(w,{kind:'mechanical',id});
 }
 function recipient(w:World,key:LivingTargetKey):{actor:LivingTarget;record:MedicalRecord;fresh:boolean}|undefined {
- if((Number(w.schemaVersion)!==290&&(Number(w.schemaVersion)!==291&&(Number(w.schemaVersion)!==292&&(Number(w.schemaVersion)!==293&&(Number(w.schemaVersion)!==294&&(Number(w.schemaVersion)!==295&&(Number(w.schemaVersion)!==296&&Number(w.schemaVersion)!==297)))))))||typeof key!=='string'||!/^(pawn|animal|mech):[1-9]\d*$/.test(key)||!Number.isSafeInteger(w.tick)||w.tick<0)return;
+ if((Number(w.schemaVersion)!==290&&(Number(w.schemaVersion)!==291&&(Number(w.schemaVersion)!==292&&(Number(w.schemaVersion)!==293&&(Number(w.schemaVersion)!==294&&(Number(w.schemaVersion)!==295&&(Number(w.schemaVersion)!==296&&!isCorePhysicalSchema297(Number(w.schemaVersion)))))))))||typeof key!=='string'||!/^(pawn|animal|mech):[1-9]\d*$/.test(key)||!Number.isSafeInteger(w.tick)||w.tick<0)return;
  if(!firefoamExposedActor290(w,key))return;
  const actor=combatTargetByKey(w,key);if(!actor||actor.state==='dead'||actor.shipCryptosleepHeldAt277!==undefined||'cryptosleepHeldAt271'in actor&&actor.cryptosleepHeldAt271!==undefined)return;
  const health=Object.getOwnPropertyDescriptor(actor,'health');
@@ -52,7 +53,7 @@ export function applyFirefoamActor290(w:World,key:LivingTargetKey):boolean {
 /** Current living installed originals only. Sparse clinical tick stays intact.
  * Optional beginning-of-step IDs exclude arrivals with no local interval. */
 export function advanceLocalMechFirefoam290(w:World,activeIds?:ReadonlySet<number>):void {
- if((Number(w.schemaVersion)!==290&&(Number(w.schemaVersion)!==291&&(Number(w.schemaVersion)!==292&&(Number(w.schemaVersion)!==293&&(Number(w.schemaVersion)!==294&&(Number(w.schemaVersion)!==295&&(Number(w.schemaVersion)!==296&&Number(w.schemaVersion)!==297))))))))return;
+ if((Number(w.schemaVersion)!==290&&(Number(w.schemaVersion)!==291&&(Number(w.schemaVersion)!==292&&(Number(w.schemaVersion)!==293&&(Number(w.schemaVersion)!==294&&(Number(w.schemaVersion)!==295&&(Number(w.schemaVersion)!==296&&!isCorePhysicalSchema297(Number(w.schemaVersion))))))))))return;
  for(const m of w.mechanoids??[])if((!activeIds||activeIds.has(m.id))&&m.state!=='dead'&&m.shipCryptosleepHeldAt277===undefined&&m.health&&!m.health.death)advanceCoveredInFirefoam290(m.health,10);
 }
 /** Short-lived campaign frontier only, never persisted or read by rendering. */

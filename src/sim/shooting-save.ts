@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import type {NumericMembershipLookup} from './numeric-membership.ts';
 import { huntingPermission } from './hunting-state.ts';
@@ -14,7 +15,7 @@ const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const integer=(v:unknown,min:number,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 const keys=(v:Record<string,unknown>,allowed:string[])=>Object.keys(v).every(k=>allowed.includes(k));
 export function validShootingShape(value:unknown,version:number,tick:number,coreNow297?:number):boolean {
- const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return false;
+ const physicalCoreNow297=validationCore297(version,tick,coreNow297);if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(physicalCoreNow297))return false;
   if(value===undefined)return true;
   if(version<56||!record(value)||!keys(value,['order','stance'])||value.order===null&&value.stance===null)return false;
   if(value.order!==null&&(!record(value.order)||!keys(value.order,['targetId','weaponId','startedDowned',...(version>=60?['auto']:[]),...(version>=79?['hunt']:[])])||!integer(value.order.targetId,1)||!integer(value.order.weaponId,1)||typeof value.order.startedDowned!=='boolean'||!validAutomaticAttack(value.order.auto,version,tick)||value.order.hunt!==undefined&&(value.order.hunt!==true||value.order.auto!==undefined||value.order.startedDowned!==false)))return false;
@@ -64,7 +65,7 @@ function historicalTargetKind(w:World,id:number):'pawn'|'animal'|'mech'|undefine
 export function validateShooting(world:World,version:number=world.schemaVersion,registeredIds?:NumericMembershipLookup):string[] {
   const errors:string[]=[];
   for(const p of world.pawns)if(p.shooting!==undefined) {
-    if(!validShootingShape(p.shooting,version,world.tick,version===297?effectiveCore297(world):undefined)||!validShootingLeanOwner(p,world,version)||!validStunShape(p.stun,version,world.tick,45,version===297?effectiveCore297(world):undefined)){errors.push('Invalid shooting state for schema.');continue;}
+    if(!validShootingShape(p.shooting,version,world.tick,isCorePhysicalSchema297(version)?effectiveCore297(world):undefined)||!validShootingLeanOwner(p,world,version)||!validStunShape(p.stun,version,world.tick,45,isCorePhysicalSchema297(version)?effectiveCore297(world):undefined)){errors.push('Invalid shooting state for schema.');continue;}
     const {order,stance}=p.shooting;
     const suspended=version>=198&&stance?.phase==='aim'&&!!p.stun&&effectiveCore297(world)<p.stun.untilCore;
     if(order){const weapon=equippedWeapon(world,p);if(!weapon||!isRangedWeaponItem(weapon.item)||order.hunt&&weapon.item==='emp-launcher'||stance?.phase==='aim'&&(stance.weaponItem??'revolver')!==weapon.item)errors.push('Invalid ranged weapon/aim profile.');}
@@ -84,8 +85,8 @@ export function validateShooting(world:World,version:number=world.schemaVersion,
         }
       }
     }
-    if(stance&&(p.motion?.end??0)>(version===297?effectiveLocal297(world):world.tick))errors.push('Shooting stance during a captured edge.');
-    if(!stance&&!p.melee?.strike&&!p.stun&&(!order||!p.motion||(p.motion.end<=(version===297?effectiveLocal297(world):world.tick))))errors.push('Shooting wait without active travel.');
+    if(stance&&(p.motion?.end??0)>(isCorePhysicalSchema297(version)?effectiveLocal297(world):world.tick))errors.push('Shooting stance during a captured edge.');
+    if(!stance&&!p.melee?.strike&&!p.stun&&(!order||!p.motion||(p.motion.end<=(isCorePhysicalSchema297(version)?effectiveLocal297(world):world.tick))))errors.push('Shooting wait without active travel.');
   }
   return errors;
 }

@@ -24,6 +24,22 @@ export function forwardCampaignFields(view:World,root:CampaignState):void {for(c
 export function brandCampaignContext(view:World,root:CampaignState,mapId?:number,group?:WorldGroupRecord):void {authorities.set(view,root);if(mapId!==undefined)mapIds.set(view,mapId);if(group)groupBindings.set(view,group);}
 export function campaignClockContext(input:CampaignState):World {const root=registeredCampaign(input),view={...root,seed:root.worldMaps!.campaignSeed,events:root.worldGroups!.events} as World;for(const key of shared)if((key!=='worldFactions'&&key!=='worldPawns'&&key!=='worldSites263'&&key!=='tradeRequests284'&&key!=='linkedStorage286'&&key!=='phaseCore297')||Object.hasOwn(root,key))Object.defineProperty(view,key,{enumerable:true,configurable:true,get:()=>(root as unknown as Record<string,unknown>)[key],set:value=>{(root as unknown as Record<string,unknown>)[key]=value;}});authorities.set(view,root);return view;}
 export const boundWorldGroup=(w:World):WorldGroupRecord|undefined=>groupBindings.get(w);
+/** Read-only mutation authority, with an EXPECTED runtime owner. Validation
+ * and group projections are not the canonical mutating map context. */
+export function isActualMapMutationContext298(expectedOwner:CampaignState,world:World):boolean {
+ if(Number(world.schemaVersion)!==298||registeredCampaign(world)!==expectedOwner||groupBindings.has(world))return false;
+ const maps=expectedOwner.worldMaps,id=registeredMapId(world);
+ if(world===expectedOwner){
+  if(!Array.isArray(world.tiles))return false;
+  if(!maps)return !world.campaignMap&&id===0&&Number.isSafeInteger(world.planet?.homeTile)&&Number(world.planet?.homeTile)>=0;
+  return maps.rootMapId!==null&&id===maps.rootMapId&&maps.sites.some(record=>record.id===id);
+ }
+ if(!maps||id===undefined)return false;
+ const cached=contexts.get(expectedOwner)?.get(id);
+ if(!cached||cached.world!==world||cached.record.id!==id||!maps.sites.includes(cached.record))return false;
+ const body=id===maps.rootMapId&&hasLoadedRoot(expectedOwner)?expectedOwner:cached.record.map;
+ return body!==undefined&&cached.body===body;
+}
 export const hasLoadedRoot=(w:CampaignState):w is World=>w.worldMaps?w.worldMaps.rootMapId!==null:Array.isArray((w as World).tiles);
 export function captureLocalMap(w:World):LocalMapState {
  const data:Record<string,unknown>={};for(const k of Object.keys(w))if(!shared.has(k)&&!presentation.has(k))data[k]=(w as unknown as Record<string,unknown>)[k];return data as unknown as LocalMapState;

@@ -33,13 +33,41 @@ function nightFactoryPlugin(){
   const key=normalize(absolute);if(key!==coreKey&&key!==extensionlessKey)return;if(query===fullToken)return fullId;if(query===dayToken)return dayId;if(query)throw Error('Unexpected test factory query: '+source);return core;
  },load(id:string){const q=id.indexOf('?'),bare=q<0?id:id.slice(0,q),query=q<0?'':id.slice(q+1);if(normalize(bare)!==coreKey)return;if(query===fullToken)return full;if(query===dayToken)return selected;if(query)throw Error('Unexpected test Core query: '+id);return router;}};
 }
+// Keep historical proof bodies/pins strict, but initialize them only when the
+// corresponding project actually resolves/loads one of its observed modules.
+// Unrelated standard tests must not depend on a historical factory snapshot.
+type HistoricalProofPlugin=ReturnType<typeof nightFactoryPlugin>;
+function lazyHistoricalProofPlugin(name:string,observedPaths:readonly string[],factory:()=>HistoricalProofPlugin){
+ const norm=(value:string)=>path.resolve(value).split(path.sep).join('/').toLowerCase();
+ const loadKeys=new Set(observedPaths.map(value=>norm(path.resolve(root,value))));
+ const resolveKeys=new Set([...loadKeys,...observedPaths.map(value=>norm(path.resolve(root,value.slice(0,-3))))]);
+ let actual:HistoricalProofPlugin|undefined;
+ const get=()=>actual??=factory();
+ const resolvesObserved=(source:string,importer?:string)=>{
+  const q=source.indexOf('?'),bare=q<0?source:source.slice(0,q);let absolute:string;
+  if(path.isAbsolute(bare))absolute=bare;
+  else if(bare.startsWith('.')&&importer){const parent=importer.split('?')[0]!;if(!path.isAbsolute(parent))return false;absolute=path.resolve(path.dirname(parent),bare);}
+  else return false;
+  return resolveKeys.has(norm(absolute));
+ };
+ return {name,enforce:'pre' as const,
+  resolveId(this:unknown,source:string,importer?:string,...rest:unknown[]){
+   if(!resolvesObserved(source,importer))return;
+   return Reflect.apply(get().resolveId,this,[source,importer,...rest]);
+  },
+  load(this:unknown,id:string,...rest:unknown[]){
+   const q=id.indexOf('?'),bare=q<0?id:id.slice(0,q);if(!loadKeys.has(norm(bare)))return;
+   return Reflect.apply(get().load,this,[id,...rest]);
+  }
+ };
+}
 export default defineConfig(async environment=>{
  const inherited=await viteConfig(environment),{test:ordinaryTest={},...vite}=inherited;
  // extends:false prevents Vitest/Vite's array concatenation from broadening Night include.
  // Both projects receive the current repository configuration explicitly.
  return {...vite,test:{...ordinaryTest,projects:[
   {...vite,extends:false,test:{...ordinaryTest,name:'standard',exclude:[...(ordinaryTest.exclude??configDefaults.exclude),nightFile,phaseFile]}},
-  {...vite,extends:false,plugins:[...(vite.plugins??[]),nightFactoryPlugin()],test:{...ordinaryTest,name:'daylight-night',include:[nightFile],pool:'forks',maxWorkers:1,fileParallelism:false,testTimeout:60000,hookTimeout:60000}},
-  {...vite,extends:false,plugins:[...(vite.plugins??[]),phaseCapturePlugin()],test:{...ordinaryTest,name:'native-phase-capture',include:[phaseFile],pool:'forks',maxWorkers:1,fileParallelism:false,testTimeout:60000,hookTimeout:60000}}
+  {...vite,extends:false,plugins:[...(vite.plugins??[]),lazyHistoricalProofPlugin('test-only-daylight-night-factories-v492',['src/sim/core-movement-297.ts'],nightFactoryPlugin)],test:{...ordinaryTest,name:'daylight-night',include:[nightFile],pool:'forks',maxWorkers:1,fileParallelism:false,testTimeout:60000,hookTimeout:60000}},
+  {...vite,extends:false,plugins:[...(vite.plugins??[]),lazyHistoricalProofPlugin('test-only-native-phase-capture-proof-v492',['src/bridge/native-message-capture.ts','src/bridge/core-phase-data-297.ts','src/bridge/native-clone-resident.ts'],phaseCapturePlugin)],test:{...ordinaryTest,name:'native-phase-capture',include:[phaseFile],pool:'forks',maxWorkers:1,fileParallelism:false,testTimeout:60000,hookTimeout:60000}}
  ]}};
 });

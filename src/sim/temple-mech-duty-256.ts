@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,validationCore297} from './core-phase-297.ts';
 import {mechRaidGroup261} from './mechanical-raid-groups-261.ts';
 import {sleepingSiteMech263,siteMechanicalDuty263} from './world-site-mechanoids-263.ts';
@@ -20,7 +21,7 @@ export function mechanicalDuty256(w:World,m:Mechanoid){
 export const sleepingTempleMech256=(m:Mechanoid)=>m.temple?.awakeAtCore===null||sleepingSiteMech263(m);
 export function wakeTempleMechGroup256(w:World,member:Mechanoid,atCore:number):void {
  const duty=member.temple;if(!duty||duty.awakeAtCore!==null)return;
- if(!isSchema256Or257(w.schemaVersion)||!w.mechanoids?.includes(member)||!Number.isSafeInteger(atCore)||atCore<duty.madeAtCore||(Number(w.schemaVersion)===297?atCore!==effectiveCore297(w):atCore<Math.max(duty.madeAtCore,(w.tick-1)*10,0)||atCore>w.tick*10))throw Error('Invalid actual Temple mechanical wake');
+ if(!isSchema256Or257(w.schemaVersion)||!w.mechanoids?.includes(member)||!Number.isSafeInteger(atCore)||atCore<duty.madeAtCore||(isCorePhysicalSchema297(Number(w.schemaVersion))?atCore!==effectiveCore297(w):atCore<Math.max(duty.madeAtCore,(w.tick-1)*10,0)||atCore>w.tick*10))throw Error('Invalid actual Temple mechanical wake');
  for(const m of w.mechanoids)if(m.temple?.group===duty.group){m.temple={...m.temple,awakeAtCore:atCore,goal:null};m.path=[];m.planCooldown=0;}
  w.events.push({tick:w.tick,type:'command',message:'Les mécanoïdes du temple s’éveillent et commencent leur assaut.'});
  if(w.events.length>80)w.events.splice(0,w.events.length-80);
@@ -28,11 +29,11 @@ export function wakeTempleMechGroup256(w:World,member:Mechanoid,atCore:number):v
 /** Invoke only after the real fog transaction, including initial Fog1500. */
 export function wakeUnfoggedTempleMechs256(w:World):void {
  if(!isSchema256Or257(w.schemaVersion)||!w.exploration)return;
- for(const m of w.mechanoids??[])if(m.temple?.awakeAtCore===null&&m.state!=='dead'&&!foggedCell256(w,m.z*w.width+m.x))wakeTempleMechGroup256(w,m,Number(w.schemaVersion)===297?effectiveCore297(w):w.tick*10);
+ for(const m of w.mechanoids??[])if(m.temple?.awakeAtCore===null&&m.state!=='dead'&&!foggedCell256(w,m.z*w.width+m.x))wakeTempleMechGroup256(w,m,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):w.tick*10);
 }
 const integer=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=min&&v<=max;
 export function validTempleMechField256(v:unknown,version:number,tick:number,coreNow297?:number):boolean {
- const core=validationCore297(version,tick,coreNow297);if(version===297&&!Number.isSafeInteger(core))return false;
+ const core=validationCore297(version,tick,coreNow297);if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(core))return false;
  if(!v||typeof v!=='object')return false;const d=Object.getOwnPropertyDescriptor(v,'temple');
  if(!d)return !('temple'in v);
  if(!isSchema256Or257(version)||!Object.hasOwn(d,'value')||!d.enumerable||!d.value||typeof d.value!=='object'||Object.getPrototypeOf(d.value)!==Object.prototype)return false;
@@ -45,7 +46,7 @@ export function validTempleMechField256(v:unknown,version:number,tick:number,cor
 }
 export function validateTempleMechGroups256(w:World):string[] {
  const next=w.worldMaps?.nextLordId??(w.campaignMap?.revision===2?w.campaignMap.nextLordId:undefined),groups=new Map<number,TempleMechDuty256>();
- for(const m of w.mechanoids??[]){if(!validTempleMechField256(m,w.schemaVersion,w.tick,Number(w.schemaVersion)===297?effectiveCore297(w):undefined))return ['Invalid actual Temple mechanical group'];const t=m.temple;if(!t)continue;
+ for(const m of w.mechanoids??[]){if(!validTempleMechField256(m,w.schemaVersion,w.tick,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined))return ['Invalid actual Temple mechanical group'];const t=m.temple;if(!t)continue;
   if(!integer(next,1,2147483646)||t.group>=next||t.goal&&(t.goal.x>=w.width||t.goal.z>=w.height))return ['Invalid actual Temple mechanical group'];
   const prior=groups.get(t.group);if(prior&&(prior.madeAtCore!==t.madeAtCore||prior.awakeAtCore!==t.awakeAtCore))return ['Inconsistent Temple mechanical wake state'];groups.set(t.group,t);
   if(w.wildlife?.hiveLords?.some(l=>l.id===t.group))return ['Temple mechanical and insect groups alias'];

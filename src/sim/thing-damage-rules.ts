@@ -1,3 +1,5 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
+import {AI_CORE_CONTENT_298} from './ai-core-content-298.ts';
 import {NOVEL_MAX_HIT_POINTS_295} from './book-state-295.ts';
 import {SHIP_CASKET_CONTENT_277} from './ship-casket-content-277.ts';
 import {SHIP_BEAM_CONTENT_276,SHIP_ENGINE_CONTENT_276} from './ship-part-content-276.ts';
@@ -23,6 +25,7 @@ const BUILDINGS:Readonly<Record<string,readonly [number,number,boolean]>>={
   'ship-beam':[SHIP_BEAM_CONTENT_276.maxHitPoints,SHIP_BEAM_CONTENT_276.flammability,SHIP_BEAM_CONTENT_276.leavesResourcesWhenKilled],
   'ship-engine':[SHIP_ENGINE_CONTENT_276.maxHitPoints,SHIP_ENGINE_CONTENT_276.flammability,SHIP_ENGINE_CONTENT_276.leavesResourcesWhenKilled],
   'ship-reactor':[500,0,true],
+  'ship-computer':[150,0,true],'ship-sensors':[100,0,true],
   'fueled-smithy':[180,1,true],'electric-smithy':[180,1,true],
   brewery:[180,1,true],'fermenting-barrel':[100,1,true],
   'insect-hive':[130,1,false],'glow-pod':[50,1,false],
@@ -66,8 +69,9 @@ export const structureFlammability=(s:Pick<Structure,'kind'|'material'>)=>isAnci
 export const structureLeavesResources=(s:Pick<Structure,'kind'>)=>isAncientMonumentKind256(s.kind)|| (BUILDINGS[s.kind]?.[2]??false);
 export const resourceMaxHp=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.hitPoints??(r.kind==='healroot'?60:r.kind==='tree'?200:r.kind==='berries'?120:r.kind==='corn'?150:r.kind==='rock'?0:85);
 export const resourceFlammability=(r:Pick<Resource,'kind'|'species'>)=>floraDefinition(r)?.flammability??(r.kind==='rock'?0:r.kind==='tree'?.8:r.kind==='haygrass'?1.3:1);
-export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=p.item==='novel'?295:isProstheticItem273(p.item)?273:isSmithingApparel267(p.item)?267:193):number {
-  if(p.item==='novel')return (version===295||(version===296||version===297))&&p.kind==='book'?NOVEL_MAX_HIT_POINTS_295:0;
+export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=p.item==='ai-core'?298:p.item==='novel'?295:isProstheticItem273(p.item)?273:isSmithingApparel267(p.item)?267:193):number {
+  if(p.item==='ai-core')return version===298&&p.kind==='ai-core'?AI_CORE_CONTENT_298.maxHitPoints:0;
+  if(p.item==='novel')return (version===295||(version===296||isCorePhysicalSchema297(version)))&&p.kind==='book'?NOVEL_MAX_HIT_POINTS_295:0;
   if(isProstheticItem273(p.item))return isSchema273OrLater(version)&&p.kind==='prosthesis'?50:0;
   if(isSmithingApparel267(p.item))return version>=267&&p.kind==='apparel'?APPAREL[p.item].hitPoints:0;
   if(version<256&&(p.item==='flak-pants'||p.item==='plasteel-flak-helmet'))return 0;
@@ -85,6 +89,7 @@ export function pileMaxHp(p:Pick<MaterialPile,'kind'|'item'>,version=p.item==='n
   return p.item==='wood'?150:p.item==='cloth'?80:p.item==='light-leather'?60:p.item==='component'?70:0;
 }
 export function pileFlammability(p:Pick<MaterialPile,'kind'|'item'>):number {
+  if(p.item==='ai-core'&&p.kind==='ai-core')return AI_CORE_CONTENT_298.flammability;
   if(p.item==='novel'&&p.kind==='book')return 1;
   if(isProstheticItem273(p.item))return .7;
   if(isSpearItem272(p.item))return SPEAR_DEFINITIONS_272[spearMaterial272(p.item)].flammability;

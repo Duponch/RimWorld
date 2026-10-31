@@ -1,3 +1,5 @@
+import {isShipComputerSensorsKind298} from '../sim/ship-computer-sensors-content-298';
+import {isCorePhysicalSchema297} from '../sim/physical-schema-297.ts';
 import {readingRefusal295} from '../sim/reading-runtime-295';
 import type { NativeControl, NativePage, NativeRow, NativeUiActions, NativeUiState } from './native-contract';
 import type { Command, Pawn, StorageSettings, Structure, World } from '../sim/types';
@@ -266,7 +268,7 @@ function pawnPage(world: World, pawn: Pawn): NativePage {
     rows.push(alive ? meterRow('recreation-level', 'Loisirs', pawn.recreation.level, 100, 'Sous 30 % : manque de loisirs ; sous 15 % : manque important ; sous 1 % : privation. À partir de 70 et 85 % : loisirs satisfaisants. Varier les activités évite la lassitude. Une famille lassante redevient intéressante sous 30 %. Repères de la jauge : 15 · 30 · 70 · 85 %.', `${pawn.recreation.level.toFixed(1)} %`) : row('recreation-level', 'Loisirs', '—'));
     const recreationLabels = { reading:'Lecture', solitary: 'Détente solitaire', dexterity: 'Dextérité', cerebral: 'Jeux cérébraux', social: 'Loisirs sociaux', television: 'Télévision', chemical: 'Consommation de boissons' };
     const pleasure = rows.find(entry => entry.id === 'recreation-level')!;
-    pleasure.hint = (pleasure.hint ?? 'Décédé · Dossier arrêté au décès.') + ` La lassitude diminue de ${Math.round((colonyExpectation(world, pawn)?.joyToleranceDropPerDay ?? .18) * 100)} points par jour éveillé. Effet sur l’humeur : ${alive ? signed(recreationMood(pawn.recreation.level)) : '—'}. ` + [...RECREATION_KINDS, 'chemical' as const,...(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))?['reading' as const]:[]].filter(kind => kind==='reading'||pawn.recreation.tolerance[kind] !== undefined).map(kind => `${recreationLabels[kind]} : ${(pawn.recreation.tolerance[kind]??0).toFixed(1)} %${pawn.recreation.bored[kind] ? ' · lassé' : ''}`).join(' · ');
+    pleasure.hint = (pleasure.hint ?? 'Décédé · Dossier arrêté au décès.') + ` La lassitude diminue de ${Math.round((colonyExpectation(world, pawn)?.joyToleranceDropPerDay ?? .18) * 100)} points par jour éveillé. Effet sur l’humeur : ${alive ? signed(recreationMood(pawn.recreation.level)) : '—'}. ` + [...RECREATION_KINDS, 'chemical' as const,...(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion))))?['reading' as const]:[]].filter(kind => kind==='reading'||pawn.recreation.tolerance[kind] !== undefined).map(kind => `${recreationLabels[kind]} : ${(pawn.recreation.tolerance[kind]??0).toFixed(1)} %${pawn.recreation.bored[kind] ? ' · lassé' : ''}`).join(' · ');
     rows.push(heading('thoughts', 'Humeur et pensées'));
     const thoughts = moodThoughts(world, pawn), thresholds = breakThresholds(pawn);
     rows.push(alive ? meterRow('need-mood', 'Humeur', pawn.mood, 100, `L’humeur évolue progressivement vers la somme des pensées. Les repères indiquent les seuils de risque de crise mentale. Actuelle : ${pawn.mood.toFixed(1)} %. Cible : ${moodTarget(thoughts).toFixed(1)} %. ${thresholds.map((value, index) => `${['Risque mineur', 'Risque majeur', 'Risque extrême'][index]} : ${value.toFixed(1)} %`).join(' · ')}.`, `${Math.round(pawn.mood)} %`) : row('need-mood', 'Humeur', '—'));
@@ -500,7 +502,7 @@ function objectPage(world: World, objects: readonly MapObjectSelection[]): Nativ
     if (use && minifiable(structure.kind)) actions.push(command('uninstall', 'Désinstaller', { type: 'designate', kind: 'uninstall', x: structure.x, z: structure.z, targetId: structure.id }));
     if (use && minifiable(structure.kind) && owner.placeFurniture) actions.push(control('reinstall', 'Réinstaller', () => owner.placeFurniture!(structure.id)));
     if (use && structure.door) rows.push(booleanRow('door-hold', 'Maintenir ouverte', !!structure.door.holdOpen, value => send({ type: 'door-policy', structureId: structure.id, setting: 'holdOpen', value })), booleanRow('door-forbidden', 'Interdire le passage', !!structure.door.forbidden, value => send({ type: 'door-policy', structureId: structure.id, setting: 'forbidden', value })));
-    if (use && structure.power) rows.push(booleanRow('power', 'Interrupteur demandé', structure.power.switchOn !== false, on => send({ type: 'power-flick', structureId: structure.id, on })));
+    if (use && structure.power && !isShipComputerSensorsKind298(structure.kind)) rows.push(booleanRow('power', 'Interrupteur demandé', structure.power.switchOn !== false, on => send({ type: 'power-flick', structureId: structure.id, on })));
     if (use && structure.fuel) rows.push(booleanRow('refuel', 'Autoriser le remplissage', structure.fuel.autoRefuel, enabled => send({ type: 'refuel-policy', structureId: structure.id, enabled })));
     if (use && ['table', 'table-square', 'table-long', 'campfire'].includes(structure.kind)) rows.push(booleanRow('gather-spot', 'Point de rencontre', structure.gatherSpot !== false, enabled => {
       const fresh = latest.world, current = fresh?.structures.find(current => current.id === structure.id);
@@ -522,7 +524,7 @@ function objectPage(world: World, objects: readonly MapObjectSelection[]): Nativ
     const pile = world.piles.find(pile => pile.id === selected.id); if (pile) {
       const max = pileMaxHp(pile, world.schemaVersion), info = itemInformation(pile, world);
       rows.push(row('pile-quantity', 'Quantité', String(pile.quantity)), meterRow('pile-condition', 'Points de vie', Math.max(0, max - pileDamage(pile)), max, undefined, `${Math.max(0, max - pileDamage(pile))} / ${max}`), ...info.rows.map((fact, index) => row(`pile-information-${index}`, `${fact.category} · ${fact.label}`, fact.value, fact.description)));
-      if(pile.book&&(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||Number(world.schemaVersion)===297))){
+      if(pile.book&&(Number(world.schemaVersion)===295||(Number(world.schemaVersion)===296||isCorePhysicalSchema297(Number(world.schemaVersion))))){
         const readers=world.pawns.filter(p=>isColonist(p)&&!p.prisoner&&!p.visitor&&p.state!=='dead');
         const readerSelect=control('book-read-select','Choisir un lecteur',()=>undefined,!readers.length);
         readerSelect.select={value:'',options:[{value:'',label:'Choisir un lecteur',disabled:true},...readers.map(p=>{

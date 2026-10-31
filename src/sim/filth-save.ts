@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297} from './core-phase-297.ts';
 import {terrainAcceptsFilth256} from './natural-terrain-runtime-256.ts';
 import { isColonist } from './affiliation.ts';
@@ -8,18 +9,18 @@ const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&
 const keys=(v:object,names:readonly string[])=>Object.keys(v).every(k=>names.includes(k));
 const int=(v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):v is number=>Number.isSafeInteger(v)&&Number(v)>=min&&Number(v)<=max;
 export function validFilthFeet(v:unknown,version=255):v is FilthFeet {
-  if(!object(v)||!keys(v,['lastTerrain','carried'])||v.lastTerrain!==undefined&&v.lastTerrain!=='dirt'||!Array.isArray(v.carried)||v.carried.length>((version===290||(version===291||(version===292||(version===293||(version===294||(version===295||(version===296||version===297)))))))?8:version>=256?7:6))return false;
-  const kinds=new Set<string>();for(const f of v.carried){if(!object(f)||!keys(f,['kind','thickness'])||!isFilthKind(f.kind)||f.kind==='firefoam'&&(version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&version!==297)))))))||version<256&&f.kind==='slime'||(f.kind==='rock-rubble'||f.kind==='building-rubble')||!int(f.thickness,1,5)||kinds.has(f.kind))return false;kinds.add(f.kind);}return !!v.carried.length||v.lastTerrain!==undefined;
+  if(!object(v)||!keys(v,['lastTerrain','carried'])||v.lastTerrain!==undefined&&v.lastTerrain!=='dirt'||!Array.isArray(v.carried)||v.carried.length>((version===290||(version===291||(version===292||(version===293||(version===294||(version===295||(version===296||isCorePhysicalSchema297(version))))))))?8:version>=256?7:6))return false;
+  const kinds=new Set<string>();for(const f of v.carried){if(!object(f)||!keys(f,['kind','thickness'])||!isFilthKind(f.kind)||f.kind==='firefoam'&&(version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&!isCorePhysicalSchema297(version))))))))||version<256&&f.kind==='slime'||(f.kind==='rock-rubble'||f.kind==='building-rubble')||!int(f.thickness,1,5)||kinds.has(f.kind))return false;kinds.add(f.kind);}return !!v.carried.length||v.lastTerrain!==undefined;
 }
 /** Call after ordinary World/Pawn collection shapes, before accepting current
  * saves. Legacy validation rejects the domain before any neutral migration. */
 export function validateFilth(w:World,version:number,ids?:Set<number>):string[] {
-  const errors:string[]=[],s=w.filth,now=w.tick*10,physicalNow297=version===297?effectiveCore297(w):now,seen=ids??new Set<number>(),cells=new Set<string>();
+  const errors:string[]=[],s=w.filth,now=w.tick*10,physicalNow297=isCorePhysicalSchema297(version)?effectiveCore297(w):now,seen=ids??new Set<number>(),cells=new Set<string>();
   if(s!==undefined){
-    if(version<89||!object(s)||!keys(s,['rng','items','cleaned'])||!int(s.rng,1,0xffffffff)||!int(s.cleaned)||!Array.isArray(s.items)||s.items.length>w.width*w.height*((version===290||(version===291||(version===292||(version===293||(version===294||(version===295||(version===296||version===297)))))))?10:version>=256?9:6))return ['Invalid filth state.'];
+    if(version<89||!object(s)||!keys(s,['rng','items','cleaned'])||!int(s.rng,1,0xffffffff)||!int(s.cleaned)||!Array.isArray(s.items)||s.items.length>w.width*w.height*((version===290||(version===291||(version===292||(version===293||(version===294||(version===295||(version===296||isCorePhysicalSchema297(version))))))))?10:version>=256?9:6))return ['Invalid filth state.'];
     const period=filthCheckPeriod(w);
     for(const f of s.items){
-      if(!object(f)||!keys(f,['id','kind','x','z','thickness','grownCore','expiresAfterCore','nextCheckCore'])||!isFilthKind(f.kind)||f.kind==='firefoam'&&(version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&version!==297)))))))||version<256&&(f.kind==='rock-rubble'||f.kind==='building-rubble'||f.kind==='slime')||!int(f.id,1,w.nextId-1)||seen.has(f.id)||!int(f.x,0,w.width-1)||!int(f.z,0,w.height-1)||!int(f.thickness,1,5)||!int(f.grownCore,0,physicalNow297)||!int(f.nextCheckCore,now+1,(version===297?Math.max(now,Number(f.grownCore)):now)+period)){errors.push('Invalid filth record.');continue;}
+      if(!object(f)||!keys(f,['id','kind','x','z','thickness','grownCore','expiresAfterCore','nextCheckCore'])||!isFilthKind(f.kind)||f.kind==='firefoam'&&(version!==290&&(version!==291&&(version!==292&&(version!==293&&(version!==294&&(version!==295&&(version!==296&&!isCorePhysicalSchema297(version))))))))||version<256&&(f.kind==='rock-rubble'||f.kind==='building-rubble'||f.kind==='slime')||!int(f.id,1,w.nextId-1)||seen.has(f.id)||!int(f.x,0,w.width-1)||!int(f.z,0,w.height-1)||!int(f.thickness,1,5)||!int(f.grownCore,0,physicalNow297)||!int(f.nextCheckCore,now+1,(isCorePhysicalSchema297(version)?Math.max(now,Number(f.grownCore)):now)+period)){errors.push('Invalid filth record.');continue;}
       const d=FILTH_DEFINITIONS[f.kind],key=`${f.x}:${f.z}:${f.kind}`;
       if(!int(f.expiresAfterCore,d.minDays*60000,d.maxDays*60000-(version>=256&&f.kind==='rock-rubble'?0:1))||cells.has(key)||!terrainAcceptsFilth256(w.tiles[f.z*w.width+f.x]!))errors.push('Invalid filth lifetime or position.');
       seen.add(f.id);cells.add(key);

@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {validationCore297} from './core-phase-297.ts';
 import {isSchema265OrLater} from './schema-compatibility-257.ts';
 import type { World } from './types.ts';
@@ -25,8 +26,8 @@ export function validMentalShape(value:unknown,version:number,tick:number,width:
   return keys(c,base);
 }
 export function validMeleeThreatShape(value:unknown,version:number,tick:number,coreNow297?:number):boolean {
-  const core=version===297?validationCore297(version,tick,coreNow297):tick*10;
-  if(version===297&&!Number.isSafeInteger(core))return false;
+  const core=isCorePhysicalSchema297(version)?validationCore297(version,tick,coreNow297):tick*10;
+  if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(core))return false;
   return value===undefined||version>=192&&object(value)&&keys(value,['attackerId','atCore'])&&integer(value.attackerId,1)&&integer(value.atCore,0,core);
 }
 export function validateMental(world:World,version:number):string[] {

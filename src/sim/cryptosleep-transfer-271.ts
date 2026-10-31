@@ -1,3 +1,4 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,heldCore297,captureOccupiedHeldCore297,suspensionDeltas297,type SuspensionClock297} from './core-phase-297.ts';
 import {isSchema271OrLater} from './schema-compatibility-257.ts';
 import {isPlayerCasket271,newCryptosleepHolder271,cryptosleepInteraction271,type PlayerCasket271} from './cryptosleep-state-271.ts';
@@ -52,7 +53,7 @@ function completedService271(w:World,c:PlayerCasket271,p:Pawn,opening=false){
  return current()?{current}:undefined;
 }
 export function planCryptosleepEntry271(w:World,c:PlayerCasket271,p:Pawn):CryptosleepTransferPlan271 {
- const preparedCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined;
+ const preparedCore297=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined;
  if(!installed(w,c)||c.cryptosleep.human||!w.pawns.includes(p)||!cryptosleepHuman271(p)||p.cryptosleepHeldAt271!==undefined)return fail('Le caisson exige son véritable occupant local vivant.');
  if(p.health&&medicalCivilTick271(p.health)!==w.tick)return fail('La dernière étape médicale du patient doit être achevée.');
  if(p.mental?.crisis||p.social?.fight||p.burning||p.flee||p.stun)return fail('Terminez la crise ou l’état physique du patient avant le cryptosommeil.');
@@ -61,7 +62,7 @@ export function planCryptosleepEntry271(w:World,c:PlayerCasket271,p:Pawn):Crypto
  const drops=planPawnDrops(w,new Set([p.id]));if(!drops)return fail('La cargaison de travail doit pouvoir être déposée.');
  const tick=w.tick,rng=w.rng,nextId=w.nextId,holder=c.cryptosleep,pawns=w.pawns,piles=w.piles,packs=w.packed,stamp=seal(p,items,packed),building=JSON.stringify([c.id,c.x,c.z,c.orientation,c.footprint,c.material]);let done=false;
  return {ok:true,commit(){
-  if(done||Number(w.schemaVersion)===297&&effectiveCore297(w)!==preparedCore297||w.tick!==tick||w.rng!==rng||w.nextId!==nextId||!installed(w,c)||c.cryptosleep!==holder||holder.human||w.pawns!==pawns||w.piles!==piles||w.packed!==packs||!w.pawns.includes(p)||seal(p,items,packed)!==stamp||JSON.stringify([c.id,c.x,c.z,c.orientation,c.footprint,c.material])!==building||!service.current())return false;
+  if(done||isCorePhysicalSchema297(Number(w.schemaVersion))&&effectiveCore297(w)!==preparedCore297||w.tick!==tick||w.rng!==rng||w.nextId!==nextId||!installed(w,c)||c.cryptosleep!==holder||holder.human||w.pawns!==pawns||w.piles!==piles||w.packed!==packs||!w.pawns.includes(p)||seal(p,items,packed)!==stamp||JSON.stringify([c.id,c.x,c.z,c.orientation,c.footprint,c.material])!==building||!service.current())return false;
   const actualItems=w.piles.filter(i=>personal(i,p.id)),actualPacked=w.packed.filter(i=>i.owner.type==='inventory'&&i.owner.pawnId===p.id);
   if(actualItems.length!==items.length||actualItems.some((i,n)=>i!==items[n])||actualPacked.length!==packed.length||actualPacked.some((i,n)=>i!==packed[n]))return false;
   if(!releaseWork(w,p,drops,true))return false;done=true;clearQueuedOrders(w,p);delete p.priorityWork;
@@ -70,7 +71,7 @@ export function planCryptosleepEntry271(w:World,c:PlayerCasket271,p:Pawn):Crypto
   delete p.motion;delete p.medicalSleep;delete p.draft;delete p.shooting;delete p.melee;delete p.bombRefuge;delete p.heatRefuge;delete p.allowedAreaReturn;delete p.transitExit;
   p.path=[];p.moveCooldown=0;p.planCooldown=0;p.collapsePending=false;p.restZeroTicks=0;p.cryptosleepHeldAt271=tick;
   if(p.state!=='downed')p.state='idle';
-  c.cryptosleep={revision:1,heldAt:tick,...Number(w.schemaVersion)===297?captureOccupiedHeldCore297(w):{},human:p,items,packed};
+  c.cryptosleep={revision:1,heldAt:tick,...isCorePhysicalSchema297(Number(w.schemaVersion))?captureOccupiedHeldCore297(w):{},human:p,items,packed};
   // Replace arrays: the engine's opening population is a stable borrowed view.
   w.pawns=w.pawns.filter(q=>q!==p);w.piles=w.piles.filter(i=>!items.includes(i));w.packed=w.packed.filter(i=>!packed.includes(i));refreshStock(w);return true;
  }};
@@ -78,7 +79,7 @@ export function planCryptosleepEntry271(w:World,c:PlayerCasket271,p:Pawn):Crypto
 /** Opening needs a real local worker; destruction callers own their separate
  * building transaction and never receive Open's sickness or Slime. */
 export function planCryptosleepRelease271(w:World,c:PlayerCasket271,mode:'open'|'deconstruct'|'kill-finalize'='open'):CryptosleepTransferPlan271 {
- const preparedCore297=Number(w.schemaVersion)===297?effectiveCore297(w):undefined;
+ const preparedCore297=isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):undefined;
  if(!installed(w,c)||!c.cryptosleep.human)return fail('Le caisson occupé doit être présent sur sa véritable carte.');
  const h=c.cryptosleep,p=h.human!,items=h.items,packed=h.packed;
  if(p.cryptosleepHeldAt271!==h.heldAt||w.pawns.some(q=>q.id===p.id)||w.piles.some(i=>items.some(j=>j.id===i.id))||w.packed.some(i=>packed.some(j=>j.building.id===i.building.id)))return fail('Le détenteur réel ou ses biens ont changé.');
@@ -88,11 +89,11 @@ export function planCryptosleepRelease271(w:World,c:PlayerCasket271,mode:'open'|
  if(w.pawns.length>=w.width*w.height||w.piles.length+items.length>32768||w.packed.length+packed.length>32768)return fail('La capacité de la carte ne permet pas cette sortie.');
  const service=mode==='open'?completedService271(w,c,p,true):undefined;if(mode==='open'&&!service)return fail('L’ouverture doit être achevée au contact du caisson.');
  let humanClock:ReturnType<typeof prepareSuspendedHumanResume271>,itemClock:ReturnType<typeof prepareCryptosleepPossessionsResume271>;
- const physical297:SuspensionClock297|undefined=Number(w.schemaVersion)===297?{version:297,heldAtCore297:heldCore297(h,297,h.heldAt),targetCore297:preparedCore297!}:undefined;
+ const physical297:SuspensionClock297|undefined=isCorePhysicalSchema297(Number(w.schemaVersion))?{version:297,heldAtCore297:heldCore297(h,297,h.heldAt),targetCore297:preparedCore297!}:undefined;
  try{humanClock=prepareSuspendedHumanResume271(p,h.heldAt,w.tick,physical297);itemClock=prepareCryptosleepPossessionsResume271(items,packed,w.tick-h.heldAt,physical297);}catch(error){return fail(String(error));}
  const tick=w.tick,rng=w.rng,nextId=w.nextId,stamp=seal(p,items,packed),pawns=w.pawns,piles=w.piles,packs=w.packed,building=JSON.stringify([c.id,c.x,c.z,c.orientation,c.footprint,c.material]);let done=false;
  return {ok:true,commit(){
-  if(done||Number(w.schemaVersion)===297&&effectiveCore297(w)!==preparedCore297||!installed(w,c)||c.cryptosleep!==h||h.human!==p||w.tick!==tick||w.rng!==rng||w.nextId!==nextId||w.pawns!==pawns||w.piles!==piles||w.packed!==packs||seal(p,items,packed)!==stamp||JSON.stringify([c.id,c.x,c.z,c.orientation,c.footprint,c.material])!==building||mode==='open'&&!service!.current()||!humanClock.current()||!itemClock.current()||occupied(cell)||!canStandAt(w,cell))return false;
+  if(done||isCorePhysicalSchema297(Number(w.schemaVersion))&&effectiveCore297(w)!==preparedCore297||!installed(w,c)||c.cryptosleep!==h||h.human!==p||w.tick!==tick||w.rng!==rng||w.nextId!==nextId||w.pawns!==pawns||w.piles!==piles||w.packed!==packs||seal(p,items,packed)!==stamp||JSON.stringify([c.id,c.x,c.z,c.orientation,c.footprint,c.material])!==building||mode==='open'&&!service!.current()||!humanClock.current()||!itemClock.current()||occupied(cell)||!canStandAt(w,cell))return false;
   done=true;if(!humanClock.commit()||!itemClock.commit())throw Error('Cryptosleep originals changed within synchronous commit');
   delete p.cryptosleepHeldAt271;Object.assign(p,cell);w.pawns=[...w.pawns,p];w.piles=[...w.piles,...items];w.packed=[...w.packed,...packed];c.cryptosleep=newCryptosleepHolder271(tick);
   if(mode==='open'){

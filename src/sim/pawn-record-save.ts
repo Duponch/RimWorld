@@ -1,3 +1,5 @@
+import {validFactionCommsPawnFields298} from './faction-comms-save-298.ts';
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
 import {effectiveCore297,effectiveLocal297,validationCore297} from './core-phase-297.ts';
 import {validCapturedCoreMove297} from './core-move-save-297.ts';
 import {validCouplePawnShape285} from './couple-save-285.ts';
@@ -78,20 +80,21 @@ function validMealMemoryClock271(memory:Record<string,unknown>,version:number,ti
 
 export type PawnRecordContext=Pick<World,'width'|'height'|'tick'|'nextId'>&Partial<Pick<World,'worldFactions'|'phaseCore297'>>&{schemaVersion?:number};
 export function validatePawnRecordShape(item:Record<string,unknown>,world:World,version:number,validationTick=world.tick,heldPlayer271?:{casketId:number;heldAt:number},coreNow297?:number):string[] {
- const physical=version===297?(coreNow297??(arguments.length<=3?effectiveCore297(world):validationTick*10)):undefined;
+ const physical=isCorePhysicalSchema297(version)?(coreNow297??(arguments.length<=3?effectiveCore297(world):validationTick*10)):undefined;
  return pawnRecordShape(item,world,version,validationTick,false,undefined,heldPlayer271,undefined,physical);
 }
 /** Explicit owner clocks below never borrow a selected-map/root phase. */
-export function validateRetainedPlayerCasketPawnShape271(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,heldPlayer271:{casketId:number;heldAt:number},coreNow297?:number):string[] {return pawnRecordShape(item,context,version,validationTick,true,undefined,{...heldPlayer271,retained:true},undefined,version===297?coreNow297??validationTick*10:undefined);}
-export function validateDetachedPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick=context.tick,coreNow297?:number):string[] {return pawnRecordShape(item,context,version,validationTick,true,undefined,undefined,undefined,version===297?coreNow297??validationTick*10:undefined);}
-export function validateAwayPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,areaIds:ReadonlySet<number>,coreNow297?:number):string[] {return pawnRecordShape(item,context,version,validationTick,true,areaIds,undefined,undefined,version===297?coreNow297??validationTick*10:undefined);}
-export function validateShipCasketPawnShape277(item:Record<string,unknown>,world:World,version:number,heldAt:number,casketId:number,coreNow297?:number):string[] {return pawnRecordShape(item,world,version,heldAt,false,undefined,undefined,{casketId,heldAt},version===297?coreNow297??heldAt*10:undefined);}
-export function validateRetainedShipCasketPawnShape277(item:Record<string,unknown>,context:PawnRecordContext,version:number,heldAt:number,casketId:number,coreNow297?:number):string[] {return pawnRecordShape(item,context,version,heldAt,true,undefined,undefined,{casketId,heldAt,retained:true},version===297?coreNow297??heldAt*10:undefined);}
+export function validateRetainedPlayerCasketPawnShape271(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,heldPlayer271:{casketId:number;heldAt:number},coreNow297?:number):string[] {return pawnRecordShape(item,context,version,validationTick,true,undefined,{...heldPlayer271,retained:true},undefined,isCorePhysicalSchema297(version)?coreNow297??validationTick*10:undefined);}
+export function validateDetachedPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick=context.tick,coreNow297?:number):string[] {return pawnRecordShape(item,context,version,validationTick,true,undefined,undefined,undefined,isCorePhysicalSchema297(version)?coreNow297??validationTick*10:undefined);}
+export function validateAwayPawnRecordShape(item:Record<string,unknown>,context:PawnRecordContext,version:number,validationTick:number,areaIds:ReadonlySet<number>,coreNow297?:number):string[] {return pawnRecordShape(item,context,version,validationTick,true,areaIds,undefined,undefined,isCorePhysicalSchema297(version)?coreNow297??validationTick*10:undefined);}
+export function validateShipCasketPawnShape277(item:Record<string,unknown>,world:World,version:number,heldAt:number,casketId:number,coreNow297?:number):string[] {return pawnRecordShape(item,world,version,heldAt,false,undefined,undefined,{casketId,heldAt},isCorePhysicalSchema297(version)?coreNow297??heldAt*10:undefined);}
+export function validateRetainedShipCasketPawnShape277(item:Record<string,unknown>,context:PawnRecordContext,version:number,heldAt:number,casketId:number,coreNow297?:number):string[] {return pawnRecordShape(item,context,version,heldAt,true,undefined,undefined,{casketId,heldAt,retained:true},isCorePhysicalSchema297(version)?coreNow297??heldAt*10:undefined);}
 function pawnRecordShape(item:Record<string,unknown>,world:PawnRecordContext,version:number,validationTick:number,detached:boolean,awayAreaIds?:ReadonlySet<number>,heldPlayer271?:{casketId:number;heldAt:number;retained?:true},heldShip277?:{casketId:number;heldAt:number;retained?:true},coreNow297?:number):string[] {
-  const physicalCoreNow297=validationCore297(version,validationTick,coreNow297),physicalLocalNow297=version===297?physicalCoreNow297/10:validationTick;
-  if(version===297&&!Number.isSafeInteger(physicalCoreNow297))return ['Invalid actual physical Pawn frontier.'];
+  const physicalCoreNow297=validationCore297(version,validationTick,coreNow297),physicalLocalNow297=isCorePhysicalSchema297(version)?physicalCoreNow297/10:validationTick;
+  if(isCorePhysicalSchema297(version)&&!Number.isSafeInteger(physicalCoreNow297))return ['Invalid actual physical Pawn frontier.'];
   const input=world as unknown as Record<string,unknown>;
   const legacyV2=version===2, size=world.width*world.height, errors:string[]=[];
+  if(!validFactionCommsPawnFields298(item,version,validationTick,world.width,world.height,coreNow297)||(detached||heldPlayer271||heldShip277)&&'factionComms298'in item)errors.push('Invalid faction communication for its actual Pawn owner.');
   const shipHeld=Object.getOwnPropertyDescriptor(item,'shipCryptosleepHeldAt277');
   if(heldShip277?(!isSchema277OrLater(version)||heldPlayer271!==undefined||detached&&!heldShip277.retained||heldShip277.heldAt!==validationTick||!shipHeld?.enumerable||!Object.hasOwn(shipHeld,'value')||shipHeld.value!==validationTick):'shipCryptosleepHeldAt277'in item)errors.push('Invalid actual spatial-casket suspension authority.');
   const held=Object.getOwnPropertyDescriptor(item,'cryptosleepHeldAt271');
