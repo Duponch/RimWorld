@@ -82,6 +82,29 @@ function projectionReferences(value:unknown,local:boolean):boolean {
 type Patch<T>={removed:number[];upserted:T[];order?:number[];growth?:Float64Array};
 type Prepared<T>={values:T[];slots:Map<number,number>;indices:number[]|undefined;edge:ResourceStructureCandidate|undefined;baseEdge:ResourceStructureCandidate|undefined};
 
+/** Growth-only tuples have no membership/order edits. Keep every old-value
+ * guard, but avoid a writes Map and repeated placement scans of the same IDs.
+ * An inconsistent predecessor index falls back without changing any owner. */
+function patchGrowthOnly<T extends {id:number}>(previous:T[],oldSlots:Map<number,number>,growth:unknown,nextId:number,growthTick:number):Prepared<T>|undefined|null {
+ if(!(growth instanceof Float64Array)||Object.getPrototypeOf(growth)!==Float64Array.prototype
+  ||growth.length%4||growth.length>previous.length*4)return;
+ const touched=new Set<number>(),indices:number[]=[],updated:ResourceStructureCandidate['updated'][number][]=[];
+ let values=previous;
+ for(let index=0;index<growth.length;index+=4){
+  const id=growth[index]!,value=growth[index+1]!,tick=growth[index+2]!,factor=growth[index+3]!,slot=oldSlots.get(id),old=previous[slot??-1] as (T&Partial<Resource>)|undefined;
+  if(!integer(id,1,nextId-1)||!old||typeof old.growth!=='number'||touched.has(id)
+   ||!Number.isFinite(value)||value<0||value>1||!integer(tick,0,growthTick)
+   ||!Number.isNaN(factor)&&(!Number.isFinite(factor)||factor<0||factor>1))return;
+  if(slot===undefined||old.id!==id)return null;
+  const changed={...old,growth:value,growthTick:tick};
+  if(Number.isNaN(factor))delete changed.growthThermalFactor;else changed.growthThermalFactor=factor;
+  if(values===previous)values=previous.slice();values[slot]=changed;
+  touched.add(id);indices.push(slot);updated.push({id,afterOrdinal:slot});
+ }
+ const edge:ResourceStructureCandidate={beforeCount:previous.length,afterCount:values.length,removed:[],added:[],updated};
+ return {values,slots:oldSlots,indices,edge,baseEdge:{...edge,updated:[]}};
+}
+
 /** No private index points at a mutable producer object. Membership/order
  * changes rebuild only that collection; sparse edits keep its stable slots. */
 function patchCollection<T extends {id:number}>(previous:T[],oldSlots:Map<number,number>,raw:unknown,nextId:number,
@@ -89,7 +112,11 @@ function patchCollection<T extends {id:number}>(previous:T[],oldSlots:Map<number
  if(!record(raw)||Object.keys(raw).some(key=>!['removed','upserted','order',...(growthTick===undefined?[]:['growth'])].includes(key))
   ||!own(raw,'removed')||!own(raw,'upserted')||!dense(raw.removed)||!identified(raw.upserted,nextId)
   ||own(raw,'order')&&!dense(raw.order))return;
- const patch=raw as unknown as Patch<T>,touched=new Set<number>(),removed:{id:number;beforeOrdinal:number}[]=[];
+ const patch=raw as unknown as Patch<T>;
+ if(growthTick!==undefined&&!patch.removed.length&&!patch.upserted.length&&!own(raw,'order')&&own(raw,'growth')){
+  const prepared=patchGrowthOnly(previous,oldSlots,patch.growth,nextId,growthTick);if(prepared!==null)return prepared;
+ }
+ const touched=new Set<number>(),removed:{id:number;beforeOrdinal:number}[]=[];
  for(const id of patch.removed){if(!integer(id,1,nextId-1)||touched.has(id)||!oldSlots.has(id))return;touched.add(id);removed.push({id,beforeOrdinal:oldSlots.get(id)!});}
  const sparse=!patch.removed.length&&!own(raw,'order')&&patch.upserted.every(value=>oldSlots.has(value.id));
  const byId=sparse?undefined:new Map(previous.map(value=>[value.id,value]));

@@ -1,6 +1,8 @@
 # Livraison des états confirmés : diagnostic du 31 octobre
 
-La fluidité générale reste ouverte. Une seule continuation instrumentée est terminée ; aucune correction de jeu n’est installée par ce diagnostic. Les mesures suivantes attendent le signal humain de fin de partie League. Les lectures hors ligne et la préparation privée peuvent continuer.
+Suivi du31octobre après fermeture de League : [trois vitesses et saut Full MAIN](three-speed-fluency-20261031.md).
+
+La fluidité générale reste ouverte. Une seule continuation instrumentée est terminée ; aucune correction de jeu n’est installée par ce diagnostic. Cette observation précédait le signal humain de fin de partie League ; la reprise autorisée et les résultats suivants sont dans le suivi lié ci-dessus. Les lectures hors ligne et la préparation privée peuvent continuer.
 
 ## Tranche acquise
 
