@@ -37,13 +37,13 @@ ACTUAL à la fin de cet essai (historique) : **5ca1ed3167c84d0da1154ec07be7a8461
 
 Preuves privées sous le checkpoint courant : `startup-supply-integration-root-v1/qualified-component.json`, `startup-supply-integrated-validation-root-v1/report.json`, `final-startup-c2-native-author-v1/native-final-startup-c2-v1/report.json` (SHA 79a4b561b6ebd8b2c41f5636a3dbd543c2a0eedba86928683a53d0acd0ce9c01) et son `three-speed-submission-analysis.json` (SHA b4777aaa609001ce936922b09ae357983cd096ca9e457f9e85b35ea574a71c2a). La carte produit compte 2080 sources, SHA8007a08c, schéma297. Aucun déploiement Cloudflare ; dernière publication attestée V491. Les six ensembles et la victoire restent suspendus.
 
-## Contrôle animal non concluant et autorité courante
+## Contrôle animal non concluant (historique)
 
 Un essai suivant du même produit a conservé 590 soumissions à ×1 et 456 à ×3, mais **aucun animal n’a été acquis** parmi les vrais animaux marchants et visibles dans le cadrage initial. À la préparation ×6, Sacha avait naturellement terminé son travail et quitté le poste : la garde de rôle humain du contrôleur a interrompu l’essai. Son statut FAILED_PRESERVE_ACTUAL reste inchangé. Ce résultat ne démontre ni défaut du jeu ni fluidité des animaux ; la fenêtre ×6 est absente. Le contrôle doit être séparé des rôles humains et cadrer les animaux par les actions UI ordinaires avant un autre essai.
 
 Le lecteur hors ligne conserve les 2 092 lignes de suffixes sans animal, ainsi que toutes les paires, et conclut NOT_ACQUIRED à ×1/×3 et ABSENT à ×6. Aucune qualification animale n’est promue depuis des valeurs manquantes. La géométrie animale en pause n’était pas instrumentée séparément et reste inconnue.
 
-**Autorité QA exclusive courante :** RAW a5b3d318bdab82d6f1592323688eaf3c4150e40cc04db63b50fcbf0f6c1b318e, gzip c7e14eba4fe1c77a6f9b9ef08ac97876b49b062e1ba3bfd58d4729d81dac1dcd, Core121130 / RNG3618896615 / nextId30350, propre recharge exacte. Elle remplace 5ca1, sans retour à un ancien état et sans rejeu du latch. Aucun état n’a été forcé pour conserver les rôles. Sources et campagnes humaines intactes. Rapport privé : final-passive-animals-native-author-v1/native-final-passive-animals-v1/report.json (SHA f65c805b728e4fd0a381167425db4019e16859facb3f494e005cc24cc2ced64b) ; diagnostic : passive-animals-offline-author-v1/result/analysis.json (SHA bdd2d0beb0bea23e9dc373a17f3a671c70dd08ef588d7f7df7dd4b95e71935bc).
+**Autorité historique de cet essai :** RAW a5b3d318bdab82d6f1592323688eaf3c4150e40cc04db63b50fcbf0f6c1b318e, gzip c7e14eba4fe1c77a6f9b9ef08ac97876b49b062e1ba3bfd58d4729d81dac1dcd, Core121130 / RNG3618896615 / nextId30350, propre recharge exacte. Elle remplace 5ca1, sans retour à un ancien état et sans rejeu du latch. Aucun état n’a été forcé pour conserver les rôles. Sources et campagnes humaines intactes. Rapport privé : final-passive-animals-native-author-v1/native-final-passive-animals-v1/report.json (SHA f65c805b728e4fd0a381167425db4019e16859facb3f494e005cc24cc2ced64b) ; diagnostic : passive-animals-offline-author-v1/result/analysis.json (SHA bdd2d0beb0bea23e9dc373a17f3a671c70dd08ef588d7f7df7dd4b95e71935bc).
 
 ## Blocage restant et piste rejetée
 
@@ -52,3 +52,30 @@ La jointure du Native C2 trouve 84 en-têtes uniques, aucun ambigu ou manquant. 
 Le format privé transmettant un World matérialisé complet est écarté, sans récepteur MAIN ni modification produit. Le contrôle V3 reste FAILED sur son budget de 180 s : premier témoin complet de 30 appels, seulement neuf appels candidat mesurés, second témoin absent. Les 39 préparations reproduisent exactement les valeurs canoniques du V2. Sur ces neuf mêmes images, les deux copies candidat prennent 230,8–304,4 ms contre 5,79–6,03 ms pour le premier témoin ; la charge passe d’environ 0,744 à 7,178 Mo. Ces observations partielles suffisent à refuser cette intégration ; elles ne deviennent pas un W/C/W complet ni une mesure navigateur/FPS. Les sorties défavorables et les échecs sont conservés. Aucune variante de ce format n’est relancée.
 
 La suite doit isoler le coût à l’intérieur des contrôles World déjà mesurés, puis traiter une cause démontrée. Répéter les mêmes gros chronomètres, profils ou essais sans nouvel élément n’est pas une optimisation. Le produit reste au correctif de code 345560ed, carte8007a08c ; la fluidité générale et les dettes de performance restent ouvertes.
+
+
+## Coût World localisé dans la voie Native réelle
+
+Deux observations nouvelles utilisent le vrai récepteur Native du produit, sans remplacer NativeCloneAssembler, sans rôle humain imposé et sans modifier les règles, la vitesse physique ou les sources produit. Chaque fenêtre dure quatre secondes à ×6. Elles mesurent des parties de validation et ne qualifient ni géométrie animale, ni FPS, ni fluidité générale. Les sources instrumentées le sont en mémoire dans un serveur privé ; aucun observateur n’est installé dans le produit.
+
+La première observation décompose les quinze conditions du groupe World de RPA : 47 appels par condition, tous en contexte ×6/delta. Le membre dynamique `guards.world` prend 466,9 ms au total, soit 9,934 ms par appel et 12,6 ms au maximum. Les autres conditions les plus coûteuses prennent individuellement 31,6–55,0 ms au total. Cela établit un coût dans la vraie voie Native, contrairement au diagnostic Node précédent où le membre virtuel par défaut était `false`. La source Native reste 0a8eef2b et RPA reste 800bccba. Preuve privée : `native-world-members-cost-root-v1/root-qualification.json`, rapport Native SHA4e4c88d1.
+
+La seconde observation subdivise seulement ce membre World. Elle conserve 43 appels par partie exécutée, tous avec le lecteur Native ; une seule carte est rencontrée et le propriétaire racine est identique à l’entrée.
+
+| Partie | Total pour 43 appels | Moyenne | Maximum |
+|---|---:|---:|---:|
+| Parcours des propriétaires |226,9 ms|5,277 ms|6,5 ms|
+| Parcours clinique complémentaire |149,2 ms|3,470 ms|4,0 ms|
+| Recensement des identifiants |31,4 ms|0,730 ms|2,5 ms|
+| Recherche |0,3 ms|0,007 ms|0,1 ms|
+| Sémantique locale après admission |3,9 ms|0,091 ms|0,2 ms|
+
+Le parcours d’un autre propriétaire local n’a pas été exécuté : son compteur reste zéro. Les deux premiers parcours dominent ce membre dans cette observation ; cela ne démontre pas qu’ils expliquent seuls chaque blocage de rendu. L’instrumentation ajoute son propre coût. Les deux fenêtres successives ne forment pas un comparatif causal d’optimisation. Les durées de cette subdivision ne doivent pas être ajoutées aux chronomètres parents de la première observation. Preuve : `native-firefoam-parts-cost-root-v1/root-qualification.json`, rapport Native SHA3428bfa7.
+
+Un inventaire du RAW historique C48 trouve 2 441 structures sans lane de possession propre sur 2 454, et 13 structures portant des bills. Il ne prouve pas leurs identités ou capacités privées au rendu. Une piste de cache des lectures adjacentes est donc laissée de côté : ces feuilles sortent déjà du parcours avant ces lectures. Une proposition distincte sautant seulement les corps sémantiques de feuilles ordinaires sans marqueur a été revue en privé. Sa garde de 19 descripteurs par feuille est trop coûteuse dans le petit comparatif de helpers : 97 640 évaluations par bras W/C/W prennent 118,555 / 244,780 / 117,742 ms ; CPU processus 125 / 265 / 125 ms.
+
+Ce dernier contrôle est un composant Node isolé, avec des objets JSON ordinaires dans un WeakSet local comme entrée explicite de benchmark. Il ne crée aucune provenance Native, ne fait aucune adoption, ne valide aucun World et ne lance ni Worker, moteur ou rendu. Le candidat reste **NO GO**, non installé ; son pilote navigateur préparé n’a pas été exécuté. Aucun gain global ni absence de régression ne sont annoncés. Le premier échec de préparation, dû à une ancienne hypothèse sur l’API locale TypeScript 7, est conservé avant tout latch ou mesure ; le harness corrigé utilise seulement le retrait de types de Node 24. Preuves : `native-empty-leaf-qualification-root-v1/isolated-cost.json` SHA83e2b391 et `root-no-go.json`. Aucune autre variante de cette piste n’est lancée sans fait nouveau.
+
+**Nouvelle autorité QA exclusive :** RAW `dfb438c564e096198bbb9da9db87961d29b479111b7ea726edcb3b8d264b2bf4`, gzip `7ce1b411522a4d71839bf011276ecfab2cc344bee628f297ae0737d24ad41ac8`, Core 122320 / phase 0 / RNG 3649308944 / nextId 30369, propre recharge exacte. Elle provient de C48/Core 121747, qui provenait d’A5b ; aucun retour à ces parents ni rejeu des latches. Pauses de 300 ms, Whole et sources exacts, aucune incertitude de conservation. La campagne humaine 94de et QA d474 restent protégées.
+
+La suite immédiate est un contrôle animal indépendant des rôles humains, cadré par Faune/Repérer puis les gestes ordinaires de caméra. Son observateur privé n’acquiert qu’une fois, après un vrai progrès Core ; il conserve les états PENDING, repos, hors champ ou non acquis et n’allonge pas la fenêtre pour obtenir un résultat favorable. Il n’est pas encore exécuté. Les longs intervalles de rendu et la qualification animale restent ouverts ; six ensembles/victoire suspendus, code 345560ed et carte 2080/8007a08c inchangés, Cloudflare V491 dernière publication attestée.
