@@ -1,3 +1,5 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {hitSkyfallerRoof256} from './roofing.ts';
 import {prepareStartingPodDischarge256} from './starting-pod-discharge-256.ts';
@@ -20,7 +22,11 @@ export function advanceCoreStartingArrival256(world:World):void {
     if(failedRoofs.has(pod.id))continue;
     pod.remainingCore=Math.max(0,pod.remainingCore-1);
     if(!pod.roofHit&&pod.remainingCore<=15){
-     if(!hitSkyfallerRoof256(world,pod.cell,core)){
+     // This arrival subsystem commits its ten-step batch at the macro frontier.
+     // Roof impacts must use that actual physical frontier, not a replayed
+     // interior step that the strict physical roof owner correctly refuses.
+     const roofCore=isCorePhysicalSchema297(Number(world.schemaVersion))?effectiveCore297(world):core;
+     if(!hitSkyfallerRoof256(world,pod.cell,roofCore)){
       // Same explicit pending refusal as the existing real flyer holder.
       // One physical attempt per local boundary, no reroute, drop or free
       // extinction. This exceptional retry is not claimed as native timing.
