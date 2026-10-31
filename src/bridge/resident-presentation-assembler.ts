@@ -82,14 +82,21 @@ function projectionReferences(value:unknown,local:boolean):boolean {
 type Patch<T>={removed:number[];upserted:T[];order?:number[];growth?:Float64Array};
 type Prepared<T>={values:T[];slots:Map<number,number>;indices:number[]|undefined;edge:ResourceStructureCandidate|undefined;baseEdge:ResourceStructureCandidate|undefined};
 
-/** Growth-only tuples have no membership/order edits. Keep every old-value
- * guard, but avoid a writes Map and repeated placement scans of the same IDs.
- * An inconsistent predecessor index falls back without changing any owner. */
-function patchGrowthOnly<T extends {id:number}>(previous:T[],oldSlots:Map<number,number>,growth:unknown,nextId:number,growthTick:number):Prepared<T>|undefined|null {
+/** Sparse existing-ID upserts and growth have no membership/order edits.
+ * Keep all tuple guards and BASE upserts, without a writes Map or ID rescans.
+ * A new ID/inconsistent index falls back without changing any owner. */
+function patchSparseGrowth<T extends {id:number}>(previous:T[],oldSlots:Map<number,number>,upserted:T[],growth:unknown,nextId:number,growthTick:number):Prepared<T>|undefined|null {
  if(!(growth instanceof Float64Array)||Object.getPrototypeOf(growth)!==Float64Array.prototype
   ||growth.length%4||growth.length>previous.length*4)return;
- const touched=new Set<number>(),indices:number[]=[],updated:ResourceStructureCandidate['updated'][number][]=[];
+ const touched=new Set<number>(),indices:number[]=[],updated:ResourceStructureCandidate['updated'][number][]=[],baseUpdated:ResourceStructureCandidate['updated'][number][]=[];
  let values=previous;
+ // identified(upserted,nextId) already checked row shape and unique IDs.
+ // New IDs require the unchanged generic membership reconstruction.
+ for(const value of upserted){
+  const slot=oldSlots.get(value.id);if(slot===undefined||previous[slot]?.id!==value.id)return null;
+  if(values===previous)values=previous.slice();values[slot]=value;
+  touched.add(value.id);indices.push(slot);updated.push({id:value.id,afterOrdinal:slot});baseUpdated.push({id:value.id,afterOrdinal:slot});
+ }
  for(let index=0;index<growth.length;index+=4){
   const id=growth[index]!,value=growth[index+1]!,tick=growth[index+2]!,factor=growth[index+3]!,slot=oldSlots.get(id),old=previous[slot??-1] as (T&Partial<Resource>)|undefined;
   if(!integer(id,1,nextId-1)||!old||typeof old.growth!=='number'||touched.has(id)
@@ -102,7 +109,7 @@ function patchGrowthOnly<T extends {id:number}>(previous:T[],oldSlots:Map<number
   touched.add(id);indices.push(slot);updated.push({id,afterOrdinal:slot});
  }
  const edge:ResourceStructureCandidate={beforeCount:previous.length,afterCount:values.length,removed:[],added:[],updated};
- return {values,slots:oldSlots,indices,edge,baseEdge:{...edge,updated:[]}};
+ return {values,slots:oldSlots,indices,edge,baseEdge:{...edge,updated:baseUpdated}};
 }
 
 /** No private index points at a mutable producer object. Membership/order
@@ -112,13 +119,12 @@ function patchCollection<T extends {id:number}>(previous:T[],oldSlots:Map<number
  if(!record(raw)||Object.keys(raw).some(key=>!['removed','upserted','order',...(growthTick===undefined?[]:['growth'])].includes(key))
   ||!own(raw,'removed')||!own(raw,'upserted')||!dense(raw.removed)||!identified(raw.upserted,nextId)
   ||own(raw,'order')&&!dense(raw.order))return;
- const patch=raw as unknown as Patch<T>;
- if(growthTick!==undefined&&!patch.removed.length&&!patch.upserted.length&&!own(raw,'order')&&own(raw,'growth')){
-  const prepared=patchGrowthOnly(previous,oldSlots,patch.growth,nextId,growthTick);if(prepared!==null)return prepared;
+ const patch=raw as unknown as Patch<T>,sparse=!patch.removed.length&&!own(raw,'order')&&patch.upserted.every(value=>oldSlots.has(value.id));
+ if(growthTick!==undefined&&sparse&&own(raw,'growth')){
+  const prepared=patchSparseGrowth(previous,oldSlots,patch.upserted,patch.growth,nextId,growthTick);if(prepared!==null)return prepared;
  }
  const touched=new Set<number>(),removed:{id:number;beforeOrdinal:number}[]=[];
  for(const id of patch.removed){if(!integer(id,1,nextId-1)||touched.has(id)||!oldSlots.has(id))return;touched.add(id);removed.push({id,beforeOrdinal:oldSlots.get(id)!});}
- const sparse=!patch.removed.length&&!own(raw,'order')&&patch.upserted.every(value=>oldSlots.has(value.id));
  const byId=sparse?undefined:new Map(previous.map(value=>[value.id,value]));
  for(const id of patch.removed)byId!.delete(id);
  const writes=new Map<number,T>();

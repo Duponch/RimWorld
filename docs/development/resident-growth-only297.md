@@ -54,3 +54,26 @@ L’instrumentation n’est pas installée dans le produit. Deux surcouches priv
 Dernier état QA réellement persisté : **RAW98238a1bb4e0186d8f0fd89c56cedadb8a9968fe3cf120af120d5addb9bf90ee**, gzipa32a52f04b4c24281eeb9ffd269283a6155dbd8ce2d2bf03d1956ce97e796c3c, **Core116940/RNG700965858/nextId30026**, propre recharge exacte. Le parent ea793 et son latch consommé ne sont plus des reprises autorisées.
 
 Preuves privées : full-main-cost-stages-native-author-v1/native-full-main-cost6-v1/report.json (e87bb046), full-main-stage-submission-analysis.json (25742c05), puis checkpoint privé courant. La campagne humaine et la QA d474 restent intouchées ; cette mesure porte sur trois rôles humains et ne qualifie pas des animaux en marche.
+
+## Extension aux mises à jour mixtes
+
+Après cette acquisition Native, la même reconstruction directe a été étendue aux upserts de ressources dont les identifiants existent déjà, accompagnés de tuples de croissance disjoints. Les insertions, suppressions et ordres explicites gardent le chemin générique. FULL retient upserts puis croissance ; BASE retient seulement les upserts. Les collisions upsert/croissance et les refus tardifs restent transactionnels.
+
+Source courante RPA800bccba, carte2080 f6d82c77, schéma297. Trois nouveaux contrats privés PASS15,409s ; intégré6PASS14,192s (trois nouveaux et trois cas de croissance seule touchés), type15,615s et PagesCODE3,676s. Les autres contrôles acquis ne sont pas rejoués.
+
+Une seule comparaison W/C/W cible la forme mixte à17 922tuples et un upsert existant, ainsi qu’une insertion générique à un tuple :300appels par cas et par bras, huit échauffements, dix blocs conservés. Projection de ressources uniquement depuis98238, sans Engine ni nouvelle campagne.
+
+| Cas et mesure, ms | Témoin1 | Candidat | Témoin2 |
+| --- | ---: | ---: | ---: |
+| Mixte : temps écoulé | 2171,757 | 1092,463 | 2202,277 |
+| Mixte : CPU processus | 2483 | 1453 | 2624 |
+| Mixte : CPU du fil | 2173 | 1078 | 2204 |
+| Insertion générique : temps écoulé | 929,217 | 875,519 | 921,673 |
+| Insertion générique : CPU processus | 984 | 921 | 1109 |
+| Insertion générique : CPU du fil | 937 | 860 | 921 |
+
+Les sorties complètes, indices, slots et journaux sont identiques ; le RAW reste inchangé. Un Map temporaire disparaît seulement dans la branche mixte. Le premier brouillon du benchmark avait un accès à indices.length invalide pour le cas générique : détecté et corrigé avant toute exécution, sans changer les oracles.
+
+Cela reste un gain de fonction, pas une preuve de fluidité globale. Le Native524 ci-dessus exécutait46fed : il ne qualifie pas800b. Aucune charge utile par collection n’avait été capturée ; le pic Native de36,8ms ne peut pas être attribué avec certitude à la forme mixte. La préparation hors du fil de dessin n’est à ce stade qu’une proposition privée, pas une fonctionnalité livrée.
+
+Le complément d’horloge acquis observe801Core confirmés sur4021,1ms entre ses deux horodatages réels, soit199,2Core/s pour une consigne nominale360Core/s à×6. C’est le débit admis de cet essai instrumenté, pas une perte CPU ou une régression mesurée contre un témoin. Les trois arrêts après200ms atteignent le front confirmé11639 pendant une arête encore active ; la prochaine publication n’était pas encore arrivée. Ces attentes ne doivent pas être masquées par une prédiction de mouvement.
