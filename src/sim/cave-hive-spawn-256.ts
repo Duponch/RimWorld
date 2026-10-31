@@ -1,3 +1,5 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {captureHiveClosewalk256} from './cave-hive-closewalk-256.ts';
 import {planTempleHiveItemsAside256} from './temple-hive-items-256.ts';
@@ -57,7 +59,7 @@ export function spawnActualHive256(w:World,cell:number,random:Pick<WorldGenerati
  c.nextHiveSpawnCore=hiveNextReproductionCore256(madeAtCore,roomHiveCount(w,cell),context.enemyReproductionRateFactor,random);
  c.jellyLeftCore=random.integer(26000,30001);c.podLeftCore=random.integer(30000,60001);
  let closewalk=captureRandomClosewalk256(w,options.runtime?captureHiveClosewalk256(w).reach:undefined);
- for(let deposit=0;deposit<10;deposit++){const near=tryRandomClosewalkCellNear256(closewalk,cell,5,random);if(near!==null)depositHiveSlime256(w,near,random,context,madeAtCore);}
+ for(let deposit=0;deposit<10;deposit++){const near=tryRandomClosewalkCellNear256(closewalk,cell,5,random);if(near!==null)depositHiveSlime256(w,near,random,context,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):madeAtCore);}
  if(options.spawnInsectsImmediately){
   const target=random.float(200,500);let points=0;
   for(let attempts=0;points<target&&attempts<1000;attempts++){

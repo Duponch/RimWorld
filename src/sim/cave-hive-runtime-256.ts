@@ -1,3 +1,5 @@
+import {isCorePhysicalSchema297} from './physical-schema-297.ts';
+import {effectiveCore297} from './core-phase-297.ts';
 import {isSchema256Or257} from './schema-compatibility-257.ts';
 import {spawnEnabledHivePawn256,enabledHivePoints256,enabledHiveChildCell256} from './temple-hive-production-256.ts';
 import {spawnActualHive256} from './cave-hive-spawn-256.ts';
@@ -126,7 +128,7 @@ export function planActualHiveRuntime256(w:World,frontier:HiveRuntimeFrontier256
    }
    if(hiveMtbOccurs256(4,2500,1,fork)){
     const physical=captureHiveClosewalk256(stage),cell=physical.tryCell(s.z*w.width+s.x,5,fork);
-    if(cell!==null){ownFilth();depositHiveSlime256(stage,cell,fork,runtime,core);}
+    if(cell!==null){ownFilth();depositHiveSlime256(stage,cell,fork,runtime,isCorePhysicalSchema297(Number(stage.schemaVersion))?effectiveCore297(stage):core);}
    }
    c.maintenanceCore++;
    if(c.maintenanceCore>=120000&&((((core|0)+groupHashOffset256(s.id))|0)%250)===0){
@@ -146,7 +148,7 @@ export function planActualHiveRuntime256(w:World,frontier:HiveRuntimeFrontier256
   for(const [original,changed] of pairs){if(hive(original)&&hive(changed))original.caveHive=changed.caveHive;if(pod(original)&&pod(changed))original.glowPod=changed.glowPod;if(changed.damage)original.damage=changed.damage;else delete original.damage;}
   const reverse=new Map([...pairs].map(([a,b])=>[b,a]));w.structures=stage.structures.map(s=>reverse.get(s)??s);
   if(copiedPiles)w.piles=stage.piles;if(copiedFilth)w.filth=stage.filth;if(copiedPacked)w.packed=stage.packed;w.nextId=stage.nextId;if(copiedPiles)refreshStock(w);
-  if(removed.length){w.destroyed=stage.destroyed;for(const row of removed)notifyRemovedHiveProp256(w,row.original,row.core,false,row.defeat);}
+  if(removed.length){w.destroyed=stage.destroyed;for(const row of removed)notifyRemovedHiveProp256(w,row.original,isCorePhysicalSchema297(Number(w.schemaVersion))?effectiveCore297(w):row.core,false,row.defeat);}
   frontier.adjacentPermutation.splice(0,8,...runtime.adjacentPermutation);frontier.adjacentUses=runtime.adjacentUses;return true;
  }};
 }
