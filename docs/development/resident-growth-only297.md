@@ -31,15 +31,26 @@ Un comptage distinct, hors mesure temporelle, observe un Map temporaire en moins
 
 Ces résultats portent uniquement sur `patchCollection`. Ils ne mesurent ni une Full complète, ni les FPS, ni la fluidité globale et ne suffisent pas à déclarer les saccades résolues.
 
-## Observation Native des six étapes Full — à compléter
+## Observation en jeu après intégration
 
-Une seule continuation à ×6 est prévue depuis l'ACTUAL exclusif `ea793a77`, gzip `d22c5edf`, Core 116100, RNG 700965858, nextId 30015. À cette rédaction, cet état reste la dernière autorité ; aucun résultat du futur essai n'est présumé.
+Une continuation à ×6, depuis ea793/Core116100, a produit **524 soumissions et 605 échantillons d’horloge** en quatre secondes. Noé marche dans232soumissions, Sacha travaille et Ada dort dans les524. Pause300ms et recharge propre sont exactes. Ada reste àY=0,5, sans pose de marche. Le commit420d826e est poussé ; CloudflareV491 reste la dernière publication attestée.
 
-Root complétera après l'essai :
+La fluidité reste **ouverte** : huit intervalles dépassent33,33ms pendant la marche, dont trois dépassent50ms ; le plus long atteint100,4ms. Dix-huit paires ont une position inchangée et une pose de marche active, dont quinze au démarrage et trois vers1588–1600ms. Ces cas sont conservés, sans les transformer en succès global ni en gain causal face à un autre essai.
 
-- Source effectivement exécutée, carte et empreintes des deux overlays explicitement adaptés à la source intégrée.
-- État du protocole, conservation et recharge propre ; dernier export réellement persisté, y compris en cas d'échec.
-- Livraisons Full observées : préflight, préparation Resident, reconstruction, contrôles World, préparation Core et adoption Timeline. Les intervalles imbriqués doivent être traités par union, sans addition trompeuse.
-- Intervalles entre présentations pendant la marche, portions attribuables aux handlers MAIN et limites restantes. Les durées de scopes ne sont pas des temps CPU exacts ni une preuve GPU.
+Le grand intervalle contient un traitement Full MAIN de88,2ms, dont69,7ms avant Timeline. Les six mesures privées ont zéro incident, débordement ou stage laissé ouvert ; elles sont jointes à33Full et utilisent la même horloge MAIN. Elles comprennent aussi le démarrage et les opérations de pause/export en fin de collecte.
 
-La référence de reprise devra suivre le dernier état réellement joué. L'ancien parent ne doit pas être rechargé pour obtenir un résultat plus favorable.
+| Étape observée | Médiane, ms | Maximum, ms |
+| --- | ---: | ---: |
+| Préflight Native | 0,0 | 0,2 |
+| Forme et transports Resident | 6,1 | 13,2 |
+| Reconstruction des collections | 0,5 | 36,8 |
+| Contrôles World et callbacks suivants | 18,7 | 22,0 |
+| Préparation Core, incluse dans la ligne précédente | 2,6 | 5,1 |
+
+Ces intervalles sont imbriqués : ils ne s’additionnent pas. Le lecteur conserve leurs unions et leurs segments de recouvrement. La préparation Core ne peut pas expliquer à elle seule le pic. Le coût des contrôles World et les pointes de reconstruction restent les prochaines voies à examiner. Les scopes mesurent du temps écoulé dans les handlers, pas un temps CPU exclusif, la fin GPU ou les FPS.
+
+L’instrumentation n’est pas installée dans le produit. Deux surcouches privées, Native5c8 et Residentcd73, sont liées exactement à Native0a8 et RPA46fed. Huit contrôles de préservation et six pannes injectées ont été vérifiés avec le vrai collecteur et des callbacks métier déclarés opaques ; cela ne remplace pas une validation de toutes les règles du jeu.
+
+Dernier état QA réellement persisté : **RAW98238a1bb4e0186d8f0fd89c56cedadb8a9968fe3cf120af120d5addb9bf90ee**, gzipa32a52f04b4c24281eeb9ffd269283a6155dbd8ce2d2bf03d1956ce97e796c3c, **Core116940/RNG700965858/nextId30026**, propre recharge exacte. Le parent ea793 et son latch consommé ne sont plus des reprises autorisées.
+
+Preuves privées : full-main-cost-stages-native-author-v1/native-full-main-cost6-v1/report.json (e87bb046), full-main-stage-submission-analysis.json (25742c05), puis checkpoint privé courant. La campagne humaine et la QA d474 restent intouchées ; cette mesure porte sur trois rôles humains et ne qualifie pas des animaux en marche.
