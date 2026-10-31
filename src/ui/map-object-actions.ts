@@ -122,6 +122,9 @@ export function mapObjectGroupActions(world: World, selected: readonly MapObject
     seen.add(key);
     const group = groups.get(action.id);
     if (group) {
+      const first=group.commands[0];
+      // actionsFor creates this envelope locally; normalize before exposure.
+      if(action.id==='material-permission'&&first?.type==='material-forbid'&&action.command.type==='material-forbid')action.command.forbidden=first.forbidden;
       group.commands.push(action.command);
       if(group.label!==action.label)group.label=action.id==='deconstruct'?'Déconstruire':action.id==='cut'?'Couper':group.label;
     }

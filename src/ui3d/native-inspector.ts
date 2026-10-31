@@ -664,7 +664,12 @@ export function buildNativeInspector(state: NativeUiState, actions: NativeUiActi
   if (!subpage && selected.length <= 1 && (!state.selectedPawnIds.length || activeTab === 'health' || activeTab === 'needs')) page.rows.push(...nativeSpecialRows(state, actions).map(entry => page!.columnRatio === undefined ? entry : activeTab==='health'?{...entry,label:entry.id==='special-environment'?'':entry.label,compact:true,column:1 as const}:{...entry,column:0 as const}));
   for (const entry of page.rows) { if (entry.detail) { entry.hint = [entry.hint, entry.detail].filter(Boolean).join(' · '); delete entry.detail; } if (entry.hint) for (const action of entry.controls ?? []) action.hint = [action.hint, entry.hint].filter(Boolean).join(' · '); }
   if (feedback) page.rows.unshift(row('inspector-feedback', feedback));
-  if (owner.clearSelection) { page.actions ??= []; page.actions.push(control('inspect-close', 'Fermer', () => owner.clearSelection!())); page.onClose = owner.clearSelection; }
+  if (owner.clearSelection) {
+    // Inspection repaint uses the host's custom page slot. Release that slot
+    // as well as selection, without changing unrelated host close callbacks.
+    const clear=owner.clearSelection,closePage=owner.closePage,close=()=>{clear();closePage?.();};
+    page.actions ??= []; page.actions.push(control('inspect-close', 'Fermer', close)); page.onClose = close;
+  }
   page.textEntities=nativeTextEntitiesFor(world,state.campaign);
   return page;
 }
